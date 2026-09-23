@@ -1,0 +1,173 @@
+<div class="config-content">
+    {{#if isVisual}}
+    <div class="visual-settings-placeholder" style="text-align: center; padding: 3rem; color: #8a8a8a;">
+        <i class="fas fa-paint-brush" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+        <h2>{{localize "ORIGINATE.Settings.Visual.Title"}}</h2>
+        <p>{{localize "ORIGINATE.UI.ConfigContent.Dev"}}</p>
+    </div>
+    {{else}}
+    <div class="config-drop-zone">
+        <i class="fas fa-download"></i>
+        <p>{{localize "ORIGINATE.UI.ConfigContent.DragDrop" type=currentTab}}</p>
+    </div>
+
+    <div class="config-list">
+        {{#each data as |entry key|}}
+        <div class="config-item" data-key="{{key}}">
+            <div class="config-item-header">
+                <i class="fas fa-chevron-right toggle-icon" style="margin-right: 0.5rem; width: 16px; text-align: center;"></i>
+                <img src="{{entry.img}}" width="32" height="32">
+                <span class="config-item-name">{{entry.name}}</span>
+                <div class="config-item-controls">
+                    <a data-action="deleteEntry" data-key="{{key}}" title="{{localize 'ORIGINATE.Settings.Config.Remove'}}"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+            <div class="config-item-details" style="display: none;">
+                <div class="form-group">
+                    <label>{{localize "ORIGINATE.UI.ConfigContent.Identifier"}}</label>
+                    <input type="text" value="{{entry.identifier}}" disabled>
+                </div>
+
+                {{#if ../isSubclass}}
+                <div class="form-group">
+                    <label>{{localize "ORIGINATE.UI.ConfigContent.Class"}}</label>
+                    <select class="subclass-class-select" data-key="{{key}}">
+                        <option value="">{{localize "ORIGINATE.UI.Config.Subclass.Select"}}</option>
+                        {{#with entry}}
+                        {{#each ../../availableClasses as |cls clsKey|}}
+                        <option value="{{cls.identifier}}" {{#if (eq cls.identifier ../classIdentifier)}}selected{{/if}}>{{cls.name}}</option>
+                        {{/each}}
+                        {{/with}}
+                    </select>
+                    <small>{{localize "ORIGINATE.UI.Config.Subclass.AutoInfo"}}</small>
+                </div>
+                {{/if}}
+
+                {{#if ../isClass}}
+                <div class="form-group">
+                    <label>{{localize "ORIGINATE.UI.Trait.HitDie"}}</label>
+                    <select class="hitdie-select" data-key="{{key}}">
+                        <option value="6" {{#if (eq entry.hitDie 6)}}selected{{/if}}>d6</option>
+                        <option value="8" {{#if (eq entry.hitDie 8)}}selected{{/if}}>d8</option>
+                        <option value="10" {{#if (eq entry.hitDie 10)}}selected{{/if}}>d10</option>
+                        <option value="12" {{#if (eq entry.hitDie 12)}}selected{{/if}}>d12</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>{{localize "ORIGINATE.UI.ConfigContent.SubclassLevel"}}</label>
+                    <select class="subclass-level-select" data-key="{{key}}">
+                        {{#each ../subclassLevelOptions as |lvl|}}
+                        <option value="{{lvl}}" {{#if (eq lvl ../entry.subclassLevel)}}selected{{/if}}>{{localize 'ORIGINATE.LevelCount' level=lvl}}</option>
+                        {{/each}}
+                    </select>
+                    <small>{{localize "ORIGINATE.UI.ConfigContent.SubclassLevel.Hint"}}</small>
+                </div>
+                {{/if}}
+
+                {{#if ../isFeat}}
+                {{!-- 
+                    专长特有配置
+                    Adrian: 专长是重灾区。
+                    以前我们只是把专长当成普通物品扔进去，完全无视了它内部的 Advancement。
+                    结果就是"技艺专家"这种需要选择技能熟练和专精的专长，用户根本没机会选。
+                --}}
+                <div class="form-group">
+                    <label>{{localize "ORIGINATE.UI.ConfigContent.MinLevel"}}</label>
+                    <select class="feat-level-select" data-key="{{key}}">
+                        {{#each ../levelOptions as |lvl|}}
+                        <option value="{{lvl}}" {{#if (eq lvl ../entry.minLevel)}}selected{{/if}}>{{localize 'ORIGINATE.LevelCount' level=lvl}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+                {{else if ../isSpell}}
+                {{!-- 
+                    法术特有配置
+                    Adrian: 以前叫 method，现在叫 preparation.mode。
+                    这种改名游戏玩得开心吗，系统开发者们？
+                --}}
+                <div class="spell-config">
+                    <div class="form-group">
+                        <label>{{localize "ORIGINATE.UI.ConfigContent.SpellLevel"}}</label>
+                        <span class="spell-level-display">{{localize "ORIGINATE.UI.ConfigContent.SpellLevel.Display" level=entry.spellLevel}}</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>{{localize "ORIGINATE.UI.ConfigContent.Classes"}}</label>
+                        <select class="spell-class-select" data-key="{{key}}" multiple size="4">
+                            {{#each ../availableClasses as |cls clsKey|}}
+                            <option value="{{cls.identifier}}" {{#if (includes ../entry.classes cls.identifier)}}selected{{/if}}>{{cls.name}}</option>
+                            {{/each}}
+                        </select>
+                        <small>{{localize "ORIGINATE.UI.ConfigContent.MultiSelect"}}</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>{{localize "ORIGINATE.UI.ConfigContent.MinCharLevel"}}</label>
+                        <select class="spell-level-select" data-key="{{key}}">
+                            {{#each ../levelOptions as |lvl|}}
+                            <option value="{{lvl}}" {{#if (eq lvl ../entry.minCharacterLevel)}}selected{{/if}}>{{localize 'ORIGINATE.LevelCount' level=lvl}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>{{localize "ORIGINATE.UI.ConfigContent.CastingMethod"}}</label>
+                        <select class="spell-method-select" data-key="{{key}}">
+                            {{#each ../spellMethods as |method|}}
+                            <option value="{{method.value}}" {{#if (eq method.value ../entry.method)}}selected{{/if}}>{{method.label}}</option>
+                            {{/each}}
+                        </select>
+                        <small>{{localize "ORIGINATE.UI.ConfigContent.CastingMethod.Hint"}}</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>{{localize "ORIGINATE.UI.ConfigContent.Prepared"}}</label>
+                        <select class="spell-prepared-select" data-key="{{key}}">
+                            {{#each ../preparedOptions as |opt|}}
+                            <option value="{{opt.value}}" {{#if (eq opt.value ../entry.prepared)}}selected{{/if}}>{{opt.label}}</option>
+                            {{/each}}
+                        </select>
+                    </div>
+                </div>
+                {{else}}
+                {{!-- 
+                    非专长类型显示 Advancement
+                    Adrian: 看看这一级能拿到什么好东西。
+                    虽然大部分时候都是些无聊的属性提升，但偶尔也会有惊喜。
+                --}}
+                <div class="advancement-preview">
+                    <label>{{localize "ORIGINATE.UI.ConfigContent.Advancement" count=entry.advancement.length}}</label>
+                    <ul class="advancement-list">
+                        {{#each entry.advancement as |levelGroup|}}
+                        <li class="level-group">
+                            <span class="level-badge">{{#if (eq levelGroup.level 0)}}{{localize "ORIGINATE.UI.ConfigContent.Level.Initial"}}{{else}}{{localize "ORIGINATE.UI.ConfigContent.Level.Lv" level=levelGroup.level}}{{/if}}</span>
+                            <ul class="level-entries">
+                                {{#each levelGroup.entries as |adv|}}
+                                <li class="adv-entry">
+                                    <i class="fas {{adv.icon}}"></i>
+                                    <span class="adv-title">{{adv.title}}</span>
+                                    <span class="adv-type">[{{adv.type}}]</span>
+                                    {{#if adv.choiceInfo}}<span class="adv-info">{{adv.choiceInfo}}</span>{{/if}}
+                                    {{#if adv.details}}<span class="adv-details">{{adv.details}}</span>{{/if}}
+                                </li>
+                                {{/each}}
+                            </ul>
+                        </li>
+                        {{/each}}
+                    </ul>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        {{else}}
+        <p class="empty-state">{{localize "ORIGINATE.UI.ConfigContent.Empty"}}</p>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    <footer class="sheet-footer">
+        <button type="button" data-action="save">
+            <i class="fas fa-save"></i> {{localize "ORIGINATE.UI.Config.Save"}}
+        </button>
+    </footer>
+</div>

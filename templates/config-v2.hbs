@@ -1,0 +1,547 @@
+<div class="originate-config-container">
+    <header class="config-header">
+        <div class="config-header-top">
+            <h1><i class="fas fa-cogs"></i> {{localize "ORIGINATE.Settings.Config.Title"}}</h1>
+        </div>
+        <p class="config-hint">{{localize "ORIGINATE.Settings.Config.Hint"}}</p>
+    </header>
+
+    <nav class="config-tabs">
+        <button type="button" class="config-tab {{#if (eq activeTab 'sources')}}active{{/if}}" data-tab="sources">
+            <span class="tab-label">{{localize "ORIGINATE.Settings.Config.Sources"}}</span>
+        </button>
+        <button type="button" class="config-tab {{#if initialShop.active}}active{{/if}}" data-tab="initialShop">
+            <span class="tab-label">{{localize "ORIGINATE.InitialShop.Title"}}</span>
+            <span class="tab-count">{{initialShop.count}}</span>
+        </button>
+        {{#each categories}}
+        <button type="button" class="config-tab {{#if active}}active{{/if}}" data-tab="{{id}}">
+            <span class="tab-label">{{label}}</span>
+            <span class="tab-count">{{count}}</span>
+        </button>
+        {{/each}}
+    </nav>
+
+    <div class="config-content">
+        <section class="config-category {{#if (eq activeTab 'sources')}}active{{/if}}" data-category="sources">
+            <div class="category-header">
+                <h2>{{localize "ORIGINATE.Settings.Config.Sources"}}</h2>
+                <div class="config-search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="search" class="config-search-input" data-category-search="sources"
+                        value="{{sourceSearchTerm}}" placeholder="{{localize 'ORIGINATE.Settings.Config.SearchPlaceholder'}}">
+                    <button type="button" class="btn-clear-search" data-category-search="sources"
+                        title="{{localize 'ORIGINATE.Settings.Config.ClearSearch'}}" {{#unless sourceSearchTerm}}hidden{{/unless}}>
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="sources-list">
+                <p class="config-hint">{{localize "ORIGINATE.Settings.Config.SourcesHint"}}</p>
+                <div class="config-search-empty" hidden>
+                    <i class="fas fa-search"></i>
+                    <p>{{localize "ORIGINATE.Settings.Config.SearchNoResults"}}</p>
+                </div>
+
+                {{!--
+                按 mod 分组的文件夹列表
+                Adrian: 东西太多了，我把它们都塞进文件夹里了。
+                就像我的房间一样，表面上很整洁，其实柜子里全是乱七八糟的。
+                --}}
+                <ul class="module-folder-list">
+                    {{#each availableModules}}
+                    <li
+                        class="module-folder {{#if expanded}}expanded{{/if}} {{#if allSelected}}all-selected{{/if}} {{#if partialSelected}}partial-selected{{/if}}"
+                        data-search-text="{{moduleName}}">
+                        {{!-- 文件夹头部 - 点这里可以展开，别怕，它们不会咬人的 --}}
+                        <div class="module-folder-header">
+                            {{!-- 展开/折叠按钮 --}}
+                            <button type="button" class="folder-toggle" data-action="toggleModuleFolder"
+                                data-module="{{moduleId}}"
+                                title="{{#if expanded}}{{localize 'ORIGINATE.Settings.Config.Collapse'}}{{else}}{{localize 'ORIGINATE.Settings.Config.Expand'}}{{/if}}">
+                                <i class="fas {{#if expanded}}fa-folder-open{{else}}fa-folder{{/if}}"></i>
+                            </button>
+
+                            {{!-- 组全选 checkbox - 懒人专用，一键全选 --}}
+                            <label class="module-checkbox-wrapper">
+                                <input type="checkbox" class="module-all-checkbox" data-action="toggleModuleAll"
+                                    data-module="{{moduleId}}" {{#if allSelected}}checked{{/if}}>
+                                <span class="checkbox-visual {{#if partialSelected}}indeterminate{{/if}}">
+                                    {{#if partialSelected}}
+                                    <i class="fas fa-minus"></i>
+                                    {{else if allSelected}}
+                                    <i class="fas fa-check"></i>
+                                    {{/if}}
+                                </span>
+                            </label>
+
+                            {{!-- 模块名称 --}}
+                            <span class="module-name" data-action="toggleModuleFolder" data-module="{{moduleId}}"
+                                title="{{#if expanded}}{{localize 'ORIGINATE.Settings.Config.Collapse'}}{{else}}{{localize 'ORIGINATE.Settings.Config.Expand'}}{{/if}}">
+                                {{moduleName}}
+                            </span>
+
+                            {{!-- 选中计数 - 看看你又往购物车里塞了多少东西 --}}
+                            <span class="module-count">
+                                ({{selectedCount}}/{{totalCount}})
+                            </span>
+                        </div>
+
+                        {{!-- 包列表（展开时显示） --}}
+                        <ul class="pack-list-nested">
+                            {{#each packs}}
+                            <li class="pack-item-nested" data-search-text="{{label}}">
+                                <label>
+                                    <input type="checkbox" data-action="toggleSourcePack" data-pack="{{id}}" {{#if
+                                        selected}}checked{{/if}}>
+                                    <span class="pack-label">{{label}}</span>
+                                </label>
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </li>
+                    {{/each}}
+                </ul>
+            </div>
+
+            <div class="sources-footer">
+                <button type="button" class="btn-save-sources {{#if hasChanges}}highlight{{/if}}"
+                    data-action="saveSourcePacks">
+                    <i class="fas fa-save"></i> {{localize "ORIGINATE.Settings.Config.SaveSources"}}
+                </button>
+            </div>
+        </section>
+
+        <section class="config-category {{#if initialShop.active}}active{{/if}}" data-category="initialShop">
+            <div class="category-header">
+                <div class="category-heading">
+                    <h2>{{localize "ORIGINATE.InitialShop.Title"}}</h2>
+                    <label class="initial-shop-rate-control">
+                        <span>{{localize "ORIGINATE.InitialShop.SellRate"}}</span>
+                        <input type="number" min="0" max="100" step="1" class="initial-shop-sell-rate"
+                            value="{{initialShop.sellRatePercent}}">
+                        <span>%</span>
+                    </label>
+                    <div class="config-search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="search" class="config-search-input" data-category-search="initialShop"
+                            value="{{initialShop.searchTerm}}" placeholder="{{localize 'ORIGINATE.Settings.Config.SearchPlaceholder'}}">
+                        <button type="button" class="btn-clear-search" data-category-search="initialShop"
+                            title="{{localize 'ORIGINATE.Settings.Config.ClearSearch'}}" {{#unless initialShop.searchTerm}}hidden{{/unless}}>
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-drop-zone initial-shop-config" data-category="initialShop">
+                <div class="config-search-empty" hidden>
+                    <i class="fas fa-search"></i>
+                    <p>{{localize "ORIGINATE.Settings.Config.SearchNoResults"}}</p>
+                </div>
+
+                {{#if initialShop.hasGroups}}
+                <div class="initial-shop-config-list">
+                    {{#each initialShop.groups}}
+                    <details class="spell-group initial-shop-group" open data-group-name="{{label}}">
+                        <summary class="spell-group-header">
+                            <span class="group-name">{{label}}</span>
+                            <span class="group-count">{{items.length}}</span>
+                        </summary>
+                        <ul class="config-item-list">
+                            {{#each items}}
+                            <li class="config-item initial-shop-config-item {{#if missing}}excluded{{/if}}"
+                                data-search-text="{{searchText}}">
+                                <img src="{{img}}" alt="{{name}}" class="item-img">
+                                <div class="item-info">
+                                    <span class="item-name">{{name}}</span>
+                                    <span class="item-desc">{{type}}</span>
+                                    {{#if sourceModuleId}}
+                                    <span class="item-source-id" title="{{sourceModuleId}}">{{sourceModuleId}}</span>
+                                    {{/if}}
+                                </div>
+                                <label class="initial-shop-field">
+                                    <span>{{localize "ORIGINATE.InitialShop.PurchasePrice"}}</span>
+                                    <input type="number" min="0" step="0.01" class="initial-shop-price"
+                                        data-uuid="{{uuid}}" data-field="purchasePriceGp" value="{{purchasePriceText}}">
+                                </label>
+                                <label class="initial-shop-field">
+                                    <span>{{localize "ORIGINATE.InitialShop.SellOverride"}}</span>
+                                    <input type="number" min="0" step="0.01" class="initial-shop-price"
+                                        data-uuid="{{uuid}}" data-field="sellPriceGp" value="{{sellPriceText}}">
+                                </label>
+                                <label class="initial-shop-purchase">
+                                    <input type="checkbox" class="initial-shop-purchase-toggle" data-uuid="{{uuid}}" {{#if canPurchase}}checked{{/if}}>
+                                    <span>{{localize "ORIGINATE.InitialShop.CanPurchase"}}</span>
+                                </label>
+                                <div class="item-actions">
+                                    <button type="button" class="btn-remove" data-action="removeShopItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Remove'}}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </details>
+                    {{/each}}
+                </div>
+                {{else}}
+                <div class="drop-placeholder">
+                    <i class="fas fa-store"></i>
+                    <p>{{localize "ORIGINATE.InitialShop.DropHint"}}</p>
+                </div>
+                {{/if}}
+            </div>
+        </section>
+
+        {{#each categories}}
+        <section class="config-category {{#if active}}active{{/if}}" data-category="{{id}}">
+            <div class="category-header">
+                <div class="category-heading">
+                    <h2>{{label}}</h2>
+                    {{#unless featBrowser}}<div class="config-search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="search" class="config-search-input" data-category-search="{{id}}"
+                            value="{{searchTerm}}" placeholder="{{localize 'ORIGINATE.Settings.Config.SearchPlaceholder'}}">
+                        <button type="button" class="btn-clear-search" data-category-search="{{id}}"
+                            title="{{localize 'ORIGINATE.Settings.Config.ClearSearch'}}" {{#unless searchTerm}}hidden{{/unless}}>
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>{{/unless}}
+                </div>
+                <div class="category-actions">
+                    <button type="button" class="btn-clear" data-action="clearCategory" data-category="{{id}}" {{#unless
+                        count}}disabled{{/unless}}>
+                        <i class="fas fa-trash"></i> {{localize "ORIGINATE.Settings.Config.ClearAll"}}
+                    </button>
+                </div>
+            </div>
+
+            <div class="config-drop-zone" data-category="{{id}}">
+                <div class="config-search-empty" hidden>
+                    <i class="fas fa-search"></i>
+                    <p>{{localize "ORIGINATE.Settings.Config.SearchNoResults"}}</p>
+                </div>
+                {{!-- 法术类别特殊处理：按职业分组显示 --}}
+                {{#if hasGroups}}
+                <div class="spell-groups-container">
+                    {{#if hasClassGroups}}
+                    <h3 class="group-divider">{{localize "ORIGINATE.Settings.Config.ClassSpells"}}</h3>
+                    {{#each groupedClasses}}
+                    <details class="spell-group {{#if allExcluded}}all-excluded{{/if}}" data-group-name="{{name}}">
+                        <summary class="spell-group-header spell-drop-target" data-class-id="{{id}}">
+                            <span class="group-name">{{name}}</span>
+                            <span class="group-count">{{spells.length}} {{localize
+                                "ORIGINATE.Settings.Config.SpellCount"}}</span>
+                        </summary>
+                        {{#if spells.length}}
+                        <div class="spell-level-filter" data-class-id="{{id}}">
+                            <button type="button" class="filter-btn active" data-level="all">{{localize
+                                "ORIGINATE.Settings.Config.FilterAll" default="All"}}</button>
+                            <button type="button" class="filter-btn" data-level="0">{{localize
+                                "ORIGINATE.Settings.Config.FilterCantrip" default="0"}}</button>
+                            <button type="button" class="filter-btn" data-level="1">1</button>
+                            <button type="button" class="filter-btn" data-level="2">2</button>
+                            <button type="button" class="filter-btn" data-level="3">3</button>
+                            <button type="button" class="filter-btn" data-level="4">4</button>
+                            <button type="button" class="filter-btn" data-level="5">5</button>
+                            <button type="button" class="filter-btn" data-level="6">6</button>
+                            <button type="button" class="filter-btn" data-level="7">7</button>
+                            <button type="button" class="filter-btn" data-level="8">8</button>
+                            <button type="button" class="filter-btn" data-level="9">9</button>
+                        </div>
+                        {{/if}}
+                        <ul class="config-item-list spell-group-list">
+                            {{#each spells}}
+                            <li class="config-item {{#unless isManual}}auto-scanned{{/unless}} {{#if isExcluded}}excluded{{/if}}"
+                                data-spell-level="{{level}}" data-search-text="{{name}} {{sourceModuleId}}">
+                                <img src="{{img}}" alt="{{name}}" class="item-img">
+                                <span class="item-name">{{name}}</span>
+                                {{#if sourceModuleId}}
+                                <span class="item-source-id" title="{{sourceModuleId}}">{{sourceModuleId}}</span>
+                                {{/if}}
+                                <span class="spell-level-badge">{{level}}</span>
+                                <div class="item-actions">
+                                    {{#if isCustomInGroup}}
+                                    <button type="button" class="btn-remove" data-action="removeCustomSpell"
+                                        data-uuid="{{uuid}}" data-class-id="{{../id}}"
+                                        title="{{localize 'ORIGINATE.Settings.Config.Remove'}}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {{else}}
+                                    {{#if isExcluded}}
+                                    <button type="button" class="btn-include" data-action="includeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Include'}}">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                    {{else}}
+                                    <button type="button" class="btn-exclude" data-action="excludeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Exclude'}}">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    {{/if}}
+                                    {{/if}}
+                                </div>
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </details>
+                    {{/each}}
+                    {{/if}}
+
+                    {{#if hasSubclassGroups}}
+                    <h3 class="group-divider">{{localize "ORIGINATE.Settings.Config.SubclassSpells"}}</h3>
+                    {{#each groupedSubclasses}}
+                    <details class="spell-group {{#if allExcluded}}all-excluded{{/if}}" data-group-name="{{name}}">
+                        <summary class="spell-group-header spell-drop-target" data-class-id="{{id}}">
+                            <span class="group-name">{{name}}</span>
+                            <span class="group-count">{{spells.length}} {{localize
+                                "ORIGINATE.Settings.Config.SpellCount"}}</span>
+                        </summary>
+                        {{#if spells.length}}
+                        <div class="spell-level-filter" data-class-id="{{id}}">
+                            <button type="button" class="filter-btn active" data-level="all">{{localize
+                                "ORIGINATE.Settings.Config.FilterAll" default="All"}}</button>
+                            <button type="button" class="filter-btn" data-level="0">{{localize
+                                "ORIGINATE.Settings.Config.FilterCantrip" default="0"}}</button>
+                            <button type="button" class="filter-btn" data-level="1">1</button>
+                            <button type="button" class="filter-btn" data-level="2">2</button>
+                            <button type="button" class="filter-btn" data-level="3">3</button>
+                            <button type="button" class="filter-btn" data-level="4">4</button>
+                            <button type="button" class="filter-btn" data-level="5">5</button>
+                            <button type="button" class="filter-btn" data-level="6">6</button>
+                            <button type="button" class="filter-btn" data-level="7">7</button>
+                            <button type="button" class="filter-btn" data-level="8">8</button>
+                            <button type="button" class="filter-btn" data-level="9">9</button>
+                        </div>
+                        {{/if}}
+                        <ul class="config-item-list spell-group-list">
+                            {{#each spells}}
+                            <li class="config-item {{#unless isManual}}auto-scanned{{/unless}} {{#if isExcluded}}excluded{{/if}}"
+                                data-spell-level="{{level}}" data-search-text="{{name}} {{sourceModuleId}}">
+                                <img src="{{img}}" alt="{{name}}" class="item-img">
+                                <span class="item-name">{{name}}</span>
+                                {{#if sourceModuleId}}
+                                <span class="item-source-id" title="{{sourceModuleId}}">{{sourceModuleId}}</span>
+                                {{/if}}
+                                <span class="spell-level-badge">{{level}}</span>
+                                <div class="item-actions">
+                                    {{#if isCustomInGroup}}
+                                    <button type="button" class="btn-remove" data-action="removeCustomSpell"
+                                        data-uuid="{{uuid}}" data-class-id="{{../id}}"
+                                        title="{{localize 'ORIGINATE.Settings.Config.Remove'}}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {{else}}
+                                    {{#if isExcluded}}
+                                    <button type="button" class="btn-include" data-action="includeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Include'}}">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                    {{else}}
+                                    <button type="button" class="btn-exclude" data-action="excludeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Exclude'}}">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    {{/if}}
+                                    {{/if}}
+                                </div>
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </details>
+                    {{/each}}
+                    {{/if}}
+
+                    {{#if hasOtherGroups}}
+                    <h3 class="group-divider">{{localize "ORIGINATE.Settings.Config.OtherSpells"}}</h3>
+                    {{#each groupedOthers}}
+                    <details class="spell-group" data-group-name="{{name}}">
+                        <summary class="spell-group-header">
+                            <span class="group-name">{{name}}</span>
+                            <span class="group-count">{{spells.length}} {{localize
+                                "ORIGINATE.Settings.Config.SpellCount"}}</span>
+                        </summary>
+                        <ul class="config-item-list spell-group-list">
+                            {{#each spells}}
+                            <li class="config-item {{#unless isManual}}auto-scanned{{/unless}} {{#if isExcluded}}excluded{{/if}}"
+                                data-spell-level="{{level}}" data-search-text="{{name}} {{sourceModuleId}}">
+                                <img src="{{img}}" alt="{{name}}" class="item-img">
+                                <span class="item-name">{{name}}</span>
+                                {{#if sourceModuleId}}
+                                <span class="item-source-id" title="{{sourceModuleId}}">{{sourceModuleId}}</span>
+                                {{/if}}
+                                <span class="spell-level-badge">{{level}}</span>
+                                <div class="item-actions">
+                                    {{#if isExcluded}}
+                                    <button type="button" class="btn-include" data-action="includeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Include'}}">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                    {{else}}
+                                    <button type="button" class="btn-exclude" data-action="excludeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Exclude'}}">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    {{/if}}
+                                </div>
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </details>
+                    {{/each}}
+                    {{/if}}
+
+                    {{#if hasUncategorized}}
+                    <h3 class="group-divider">{{localize "ORIGINATE.Settings.Config.Uncategorized"}}</h3>
+                    {{#each uncategorizedSpells}}
+                    <details class="spell-group" open data-group-name="{{name}}">
+                        <summary class="spell-group-header">
+                            <span class="group-name">{{name}}</span>
+                            <span class="group-count">{{spells.length}} {{localize
+                                "ORIGINATE.Settings.Config.SpellCount"}}</span>
+                        </summary>
+                        <ul class="config-item-list spell-group-list">
+                            {{#each spells}}
+                            <li
+                                class="config-item {{#unless isManual}}auto-scanned{{/unless}} {{#if isExcluded}}excluded{{/if}}"
+                                data-search-text="{{name}} {{sourceModuleId}}">
+                                <img src="{{img}}" alt="{{name}}" class="item-img">
+                                <span class="item-name">{{name}}</span>
+                                {{#if sourceModuleId}}
+                                <span class="item-source-id" title="{{sourceModuleId}}">{{sourceModuleId}}</span>
+                                {{/if}}
+                                <div class="item-actions">
+                                    {{#if isExcluded}}
+                                    <button type="button" class="btn-include" data-action="includeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Include'}}">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                    {{else}}
+                                    <button type="button" class="btn-exclude" data-action="excludeItem"
+                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Exclude'}}">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    {{/if}}
+                                </div>
+                            </li>
+                            {{/each}}
+                        </ul>
+                    </details>
+                    {{/each}}
+                    {{/if}}
+                </div>
+                {{else if featBrowser}}
+                {{{featBrowser}}}
+                {{else if items.length}}
+                <ul class="config-item-list">
+                    {{#each items}}
+                    <li
+                        class="config-item {{#unless isManual}}auto-scanned{{/unless}} {{#if isExcluded}}excluded{{/if}}"
+                        data-search-text="{{name}} {{desc}} {{sourceModuleId}}">
+                        <img src="{{img}}" alt="{{name}}" class="item-img">
+                        <div class="item-info">
+                            <span class="item-name">{{name}}</span>
+                            {{#if sourceModuleId}}
+                            <span class="item-source-id" title="{{sourceModuleId}}">{{sourceModuleId}}</span>
+                            {{/if}}
+                            {{#if desc}}
+                            <span class="item-desc"
+                                style="font-size: 0.8em; color: var(--color-text-dark-secondary); display: block;">{{desc}}</span>
+                            {{/if}}
+                        </div>
+                        <div class="item-actions">
+                            {{#if (or (or (eq ../id "races") (eq ../id "classes")) (or (eq ../id "subclasses") (eq ../id
+                            "backgrounds")))}}
+                            <button type="button" class="btn-image {{#if hasCustomImage}}has-custom{{/if}}"
+                                data-action="setCustomImage" data-uuid="{{uuid}}" data-category="{{../id}}"
+                                data-name="{{name}}" title="{{localize 'ORIGINATE.Settings.Config.SetCustomImage'}}">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            {{#if hasCustomImage}}
+                            <button type="button" class="btn-clear-image" data-action="clearCustomImage"
+                                data-uuid="{{uuid}}" data-category="{{../id}}" data-name="{{name}}"
+                                title="{{localize 'ORIGINATE.Settings.Config.ClearCustomImage'}}">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                            {{/if}}
+                            {{/if}}
+
+                            {{#if (or (or (eq ../id "races") (eq ../id "classes")) (or (eq ../id "subclasses") (eq ../id
+                            "backgrounds")))}}
+                            <button type="button" class="btn-description {{#if customDescription}}has-custom{{/if}}"
+                                data-action="editDescription" data-uuid="{{uuid}}" data-category="{{../id}}"
+                                data-name="{{name}}" data-description="{{customDescription}}"
+                                title="{{localize 'ORIGINATE.Settings.Config.EditDescription'}}">
+                                <i class="fas fa-align-left"></i>
+                            </button>
+                            {{/if}}
+
+                            {{#if isManual}}
+                            <button type="button" class="btn-remove" data-action="removeItem" data-uuid="{{uuid}}"
+                                data-category="{{../id}}" title="{{localize 'ORIGINATE.Settings.Config.Remove'}}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            {{else}}
+                            {{#if isExcluded}}
+                            <button type="button" class="btn-include" data-action="includeItem" data-uuid="{{uuid}}"
+                                title="{{localize 'ORIGINATE.Settings.Config.Include'}}">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            {{else}}
+                            <button type="button" class="btn-exclude" data-action="excludeItem" data-uuid="{{uuid}}"
+                                title="{{localize 'ORIGINATE.Settings.Config.Exclude'}}">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                            {{/if}}
+                            {{/if}}
+                        </div>
+                    </li>
+                    {{/each}}
+                </ul>
+                {{else}}
+                <div class="drop-placeholder">
+                    <i class="fas fa-plus-circle"></i>
+                    <p>{{localize "ORIGINATE.Settings.Config.DropHint"}}</p>
+                </div>
+                {{/if}}
+            </div>
+
+            <div class="import-section">
+                <label>{{localize "ORIGINATE.Settings.Config.ImportFromPack"}}</label>
+                <div class="import-controls">
+                    <select class="pack-selector">
+                        <option value="">-- {{localize "ORIGINATE.Settings.Config.SelectPack"}} --</option>
+                        {{#each ../availablePacks}}
+                        <option value="{{id}}">{{label}}</option>
+                        {{/each}}
+                    </select>
+                    <button type="button" class="btn-import" data-action="importFromPack">
+                        <i class="fas fa-file-import"></i> {{localize "ORIGINATE.Settings.Config.Import"}}
+                    </button>
+                </div>
+            </div>
+        </section>
+        {{/each}}
+
+    </div>
+
+    <footer class="config-footer">
+        <div class="config-footer-actions">
+            <button type="button" class="btn-export" data-action="exportSettings"
+                title="{{localize 'ORIGINATE.Settings.Config.ExportTitle'}}">
+                <i class="fas fa-file-export"></i> {{localize "ORIGINATE.Settings.Config.Export"}}
+            </button>
+            <button type="button" class="btn-import" data-action="importSettings"
+                title="{{localize 'ORIGINATE.Settings.Config.ImportTitle'}}">
+                <i class="fas fa-file-import"></i> {{localize "ORIGINATE.Settings.Config.ImportSettings"}}
+            </button>
+            <button type="button" class="btn-spell-rules" data-action="openSpellRules"
+                title="{{localize 'ORIGINATE.Settings.SpellRules.TabTitle'}}">
+                <i class="fas fa-hat-wizard"></i> {{localize "ORIGINATE.Settings.SpellRules.TabTitle"}}
+            </button>
+        </div>
+    </footer>
+</div>

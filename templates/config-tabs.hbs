@@ -1,0 +1,12 @@
+<!-- 
+    配置界面标签页
+    Adrian: 这里的分类逻辑简直是个谜。
+    为什么单数变复数这么麻烦？英语真是门奇怪的语言。
+-->
+<nav class="sheet-tabs tabs" aria-role="tablist">
+    {{#each tabs}}
+    <a class="item {{#if this.active}}active{{/if}}" data-action="changeTab" data-tab="{{this.id}}">
+        <i class="{{this.icon}}"></i> {{this.label}}
+    </a>
+    {{/each}}
+</nav>

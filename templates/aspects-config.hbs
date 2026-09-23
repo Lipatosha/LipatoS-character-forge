@@ -1,0 +1,127 @@
+<div class="aspects-layout">
+        <!-- 左侧配置栏 -->
+        <div class="aspects-sidebar">
+            <header class="sidebar-header">
+                <h2>{{localize "ORIGINATE.Aspects.Title"}}</h2>
+                <p class="notes">{{localize "ORIGINATE.Aspects.Hint"}}</p>
+            </header>
+
+            <!-- 左栏标签：通用 + 主题专属（专属标签的显隐/文案随所选主题走，见 aspects-config.js） -->
+            <nav class="aspects-tabs">
+                <button type="button" class="aspects-tab {{#if (eq activeSettingsTab 'general')}}active{{/if}}" data-action="activateTab" data-tab="general">{{localize "ORIGINATE.Aspects.TabGeneral"}}</button>
+                <button type="button" class="aspects-tab aspects-tab-theme {{#if (eq activeSettingsTab 'theme')}}active{{/if}}" data-action="activateTab" data-tab="theme"{{#unless themePanel}} hidden{{/unless}}>{{#if themePanel}}{{themePanel.label}}{{/if}}</button>
+            </nav>
+
+            <!-- 通用页：主题 / 背景 / 欢迎语 / 字体，本体原有外观设置 -->
+            <div class="aspects-pane {{#if (eq activeSettingsTab 'general')}}active{{/if}}" data-pane="general">
+
+            <!-- 视觉主题 (按钮组) -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.VisualTheme.Name"}}</label>
+                <div class="form-fields theme-options-grid">
+                    <input type="hidden" name="visualTheme" value="{{visualTheme}}">
+                    {{#each themeChoices as |label key|}}
+                    <button type="button" class="theme-option {{#if (eq ../visualTheme key)}}active{{/if}}"
+                        data-action="chooseTheme" data-value="{{key}}">
+                        <span class="theme-preview {{key}}"></span>
+                        <span class="theme-label">{{label}}</span>
+                    </button>
+                    {{/each}}
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.VisualTheme.Hint"}}</p>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- 开始页面背景设置 -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.StartPageBackground.Name"}}</label>
+                <div class="form-fields">
+                    <input type="text" name="startPageBackground" value="{{startPageBackground}}" data-dtype="String" />
+                    <button type="button" class="file-picker-btn" data-action="browseFile" data-target="startPageBackground" data-type="imagevideo" title="Browse Files"><i class="fas fa-file-import fa-fw"></i></button>
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.StartPageBackground.Hint"}}</p>
+            </div>
+
+            <!-- 详情页面背景设置 -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.DetailsPageBackground.Name"}}</label>
+                <div class="form-fields">
+                    <input type="text" name="detailsPageBackground" value="{{detailsPageBackground}}"
+                        data-dtype="String" />
+                    <button type="button" class="file-picker-btn" data-action="browseFile" data-target="detailsPageBackground" data-type="imagevideo" title="Browse Files"><i class="fas fa-file-import fa-fw"></i></button>
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.DetailsPageBackground.Hint"}}</p>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- 欢迎语设置 -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.WelcomeMessage.Name"}}</label>
+                <div class="form-fields">
+                    <input type="text" name="welcomeMessage" value="{{welcomeMessage}}" data-dtype="String" />
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.WelcomeMessage.Hint"}}</p>
+            </div>
+
+            <!-- 欢迎语字体 (磁贴列表) -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.WelcomeMessageFont.Name"}}</label>
+                <div class="form-fields font-options-list">
+                    <input type="hidden" name="welcomeMessageFont" value="{{welcomeMessageFont}}">
+                    {{#each fontChoices as |label key|}}
+                    <button type="button" class="font-option {{#if (eq ../welcomeMessageFont key)}}active{{/if}}" data-action="chooseFont" data-value="{{key}}"
+                        style="font-family: '{{key}}', serif;">
+                        <span class="font-preview">Typeface Preview</span>
+                        <span class="font-name">{{label}}</span>
+                    </button>
+                    {{/each}}
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.WelcomeMessageFont.Hint"}}</p>
+            </div>
+
+            {{!-- 自定义字体管理 --}}
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.CustomFonts.Name"}}</label>
+                <div class="form-fields" style="flex-direction: column; align-items: stretch;">
+                    {{#if customFonts.length}}
+                    {{#each customFonts}}
+                    <div class="custom-font-entry" style="display: flex; align-items: center; gap: 8px; padding: 4px 0;">
+                        <span class="custom-font-name" style="font-family: '{{this.family}}', serif; flex: 0 0 auto;">{{this.family}}</span>
+                        <span class="custom-font-path" title="{{this.path}}" style="flex: 1; opacity: 0.6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85em;">{{this.path}}</span>
+                        <button type="button" class="remove-custom-font" data-action="removeCustomFont" data-index="{{@index}}" title="{{localize "ORIGINATE.Settings.CustomFonts.Remove"}}" style="flex: 0 0 auto; padding: 2px 6px;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    {{/each}}
+                    {{/if}}
+                    <button type="button" class="add-custom-font-btn" data-action="addCustomFont" style="margin-top: 4px; width: fit-content;">
+                        <i class="fas fa-plus"></i> {{localize "ORIGINATE.Settings.CustomFonts.Add"}}
+                    </button>
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.CustomFonts.Hint"}}</p>
+            </div>
+            </div><!-- /通用页 -->
+
+            <!-- 主题专属页：空容器，交给所选主题的 panel.render 填内容（本体不碰具体控件） -->
+            <div class="aspects-pane {{#if (eq activeSettingsTab 'theme')}}active{{/if}}" data-pane="theme">
+                <div class="theme-panel-mount"></div>
+            </div>
+
+            <footer class="sheet-footer">
+                <button type="submit" name="submit">
+                    <i class="fas fa-save"></i> {{localize "SETTINGS.Save"}}
+                </button>
+            </footer>
+        </div>
+
+        <!-- 右侧预览舞台 -->
+        <div class="aspects-preview">
+            <div class="preview-header">
+                <i class="fas fa-eye"></i> {{localize "ORIGINATE.Aspects.PreviewTitle"}}
+                <div class="preview-mode-buttons"></div>
+            </div>
+            <div id="aspects-preview-stage" class="preview-stage originate-container"></div>
+        </div>
+    </div>

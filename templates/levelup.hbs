@@ -1,0 +1,46 @@
+<div class="originate-levelup-wizard originate-container">
+    {{!-- 关闭按钮 --}}
+    <button type="button" class="originate-close-btn" data-action="close" title="{{localize 'ORIGINATE.UI.Button.Close'}}">
+        <i class="fas fa-times"></i>
+    </button>
+
+    <div class="levelup-header">
+        <h2>{{localize "ORIGINATE.LevelUp.TitleWithLevel" name=actor.name level=targetLevel}}</h2>
+        <div class="step-indicator">
+            {{localize "ORIGINATE.UI.Step.Indicator" current=(add currentStepIndex 1) total=steps.length}}
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{calculateProgress currentStepIndex steps.length}}%"></div>
+        </div>
+    </div>
+
+    <div class="levelup-content">
+        {{#if isLoading}}
+        <div class="loading-container"
+            style="display: flex; justify-content: center; align-items: center; height: 100%;">
+            <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--originate-accent);"></i>
+        </div>
+        {{else}}
+        {{{stepContentHtml}}}
+        {{/if}}
+    </div>
+
+    <div class="levelup-footer">
+        <button type="button" class="prev-btn" {{#if isFirstStep}}disabled{{/if}} data-action="prevStep">
+            <i class="fas fa-arrow-left"></i>
+            {{localize "ORIGINATE.UI.Button.Prev"}}
+        </button>
+
+        {{#if isLastStep}}
+        <button type="button" class="finish-btn" data-action="finish" disabled>
+            {{localize "ORIGINATE.UI.Button.FinishLevelUp"}}
+            <i class="fas fa-check"></i>
+        </button>
+        {{else}}
+        <button type="button" class="next-btn" data-action="nextStep" disabled>
+            {{localize "ORIGINATE.UI.Button.Next"}}
+            <i class="fas fa-arrow-right"></i>
+        </button>
+        {{/if}}
+    </div>
+</div>

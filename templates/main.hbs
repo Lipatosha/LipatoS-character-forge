@@ -1,0 +1,910 @@
+<div class="originate-container theme-{{visualTheme}}">
+    {{!-- 鍏叡璇︽儏鑳屾櫙灞?- 鏀惧湪姝ラ鏉′欢涔嬪锛岄伩鍏嶅垏鎹㈡楠ゆ椂閲嶆柊娓叉煋 --}}
+    {{#if isDetailsStep}}
+    {{#if detailsPageBackground}}
+    <div class="details-background-media global-details-bg">
+        {{#if detailsPageBackgroundIsVideo}}
+        <video class="bg-video" autoplay muted loop playsinline>
+            <source src="{{detailsPageBackground}}" type="video/webm">
+            <source src="{{detailsPageBackground}}" type="video/mp4">
+        </video>
+        {{else}}
+        <img src="{{detailsPageBackground}}" class="bg-img" alt="Details Background">
+        {{/if}}
+        <div class="bg-overlay"></div>
+    </div>
+    {{/if}}
+    {{/if}}
+    {{#if canCreationTimelineBack}}
+    {{#unless isCreationSelectionStep}}
+    <button type="button" class="creation-timeline-back-btn" data-action="prevStep">
+        <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
+    </button>
+    {{/unless}}
+    {{/if}}
+    {{#if isWelcomeStep}}
+    <!-- 
+        娆㈣繋鐣岄潰 - 閲嶆瀯鐗?
+        Adrian: 鏃㈢劧浣犻兘鐐硅繘鏉ヤ簡锛岄偅鎴戝氨寰楃粰浣犳暣鐐逛华寮忔劅銆?
+        杩欎簺绮掑瓙鏁堟灉鏄垜璋冧簡鍗婂ぉ鐨勶紝铏界劧 Claude 寤鸿鎴戠敤鏇村鏉傜殑鐫€鑹插櫒锛?
+        浣嗘垜鎬曟妸浣犱滑鐨勬樉鍗＄儳浜嗭紝鎵€浠ヨ繕鏄敤 CSS 鍑戝悎涓€涓嬪惂銆?
+    -->
+    <div class="welcome-screen">
+        {{#if startPageBackground}}
+        <div class="welcome-background-media">
+            {{#if startPageBackgroundIsVideo}}
+            <video class="bg-video" autoplay muted loop playsinline>
+                <source src="{{startPageBackground}}" type="video/webm">
+                <source src="{{startPageBackground}}" type="video/mp4">
+            </video>
+            {{else}}
+            <img src="{{startPageBackground}}" class="bg-img" alt="Welcome Background">
+            {{/if}}
+            <div class="bg-overlay"></div>
+        </div>
+        {{/if}}
+        <div class="welcome-content">
+            {{#unless startPageBackground}}
+            <div class="welcome-visual">
+                <div class="particle-system">
+                    <div class="particle p1"></div>
+                    <div class="particle p2"></div>
+                    <div class="particle p3"></div>
+                    <div class="particle p4"></div>
+                    <div class="core-glow"></div>
+                </div>
+            </div>
+            {{/unless}}
+            <h1 class="welcome-title shimmer-effect" style="font-family: '{{welcomeMessageFont}}', serif;">
+                {{welcomeMessage}}</h1>
+            <button type="button" class="start-btn" data-action="start">
+                {{localize "ORIGINATE.UI.Welcome.Start"}}
+            </button>
+        </div>
+    </div>
+    {{else if isLevelStep}}
+    <!-- 
+        绛夌骇閫夋嫨鐣岄潰 - 閲嶆瀯鐗?
+        Adrian: 鏋佺畝涓讳箟涓囧瞾锛佸叾瀹炴槸鍥犱负鎴戞噿寰楃敾澶嶆潅鐨勮儗鏅簡銆?
+        鍦ㄨ繖閲岄€夊ソ浣犵殑绛夌骇锛屽埆閫夊お楂橈紝20绾т互鍚庣殑浠ｇ爜鎴戣繕娌″啓锛堝ぇ姒傛案杩滀笉浼氬啓锛夈€?
+    -->
+    <div class="level-selection-layout minimal">
+        <div class="level-content-wrapper">
+            <div class="level-selector-minimal">
+                <button type="button" class="level-arrow prev" data-action="changeTotalLevel" data-delta="-1">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="level-number-display">
+                    <span class="level-digit">{{characterLevel}}</span>
+                    <div class="level-label">LEVEL</div>
+                </div>
+                <button type="button" class="level-arrow next" data-action="changeTotalLevel" data-delta="1">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <div class="level-footer">
+                <button type="button" class="level-confirm-btn" data-action="nextStep">
+                    {{localize "ORIGINATE.UI.Level.Confirm"}} <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else if isAbilitiesStep}}
+    <!--
+        属性步骤支持自由分配、买点、掷骰和标准数组。
+        掷骰与标准数组共用分配界面，但进入分配前的流程并不相同，模板判断别合并。
+    -->
+    <div class="abilities-selection-layout" data-mode="{{abilityMode}}">
+        <div class="abilities-content-wrapper">
+            <div class="abilities-header">
+                {{#if isAbilityAssignmentPhase}}
+                {{#if isStandardArrayMode}}
+                <h1 class="abilities-title">{{localize "ORIGINATE.UI.Abilities.StandardArray.Title"}}</h1>
+                <p class="abilities-subtitle">{{localize "ORIGINATE.UI.Abilities.StandardArray.Subtitle"}}</p>
+                {{else}}
+                <h1 class="abilities-title">{{localize "ORIGINATE.UI.Abilities.Assign.Title"}}</h1>
+                <p class="abilities-subtitle">{{localize "ORIGINATE.UI.Abilities.Assign.Subtitle"}}</p>
+                {{/if}}
+                {{else if (eq abilityMode "pointbuy")}}
+                <h1 class="abilities-title">{{localize "ORIGINATE.UI.Abilities.PointBuy.Title"}}</h1>
+                <p class="abilities-subtitle">{{localize "ORIGINATE.UI.Abilities.PointBuy.Subtitle"}}</p>
+                <div class="point-buy-info">
+                    <span class="point-buy-label">{{localize "ORIGINATE.UI.Abilities.PointBuy.Remaining"}}:</span>
+                    <span class="point-buy-remaining">{{pointBuy.remainingPoints}}</span>
+                    <span class="point-buy-total">/ {{pointBuy.totalPoints}}</span>
+                </div>
+                {{else if (eq abilityMode "roll")}}
+                <h1 class="abilities-title">{{localize "ORIGINATE.UI.Abilities.Roll.Title"}}</h1>
+                <p class="abilities-subtitle">{{localize "ORIGINATE.UI.Abilities.Roll.Subtitle"}}</p>
+                <div class="roll-info">
+                    <span class="roll-formula-display"><i class="fas fa-dice-d20"></i> {{roll.formula}}</span>
+                    <span class="roll-attempts-remaining">{{localize "ORIGINATE.UI.Abilities.Roll.AttemptsRemaining"
+                        count=roll.attemptsRemaining}}</span>
+                </div>
+                {{else}}
+                <h1 class="abilities-title">{{localize "ORIGINATE.UI.Abilities.Title"}}</h1>
+                <p class="abilities-subtitle">{{localize "ORIGINATE.UI.Abilities.Subtitle"}}</p>
+                {{/if}}
+            </div>
+
+            {{#if isRollSelectionPhase}}
+            <!-- 鎺烽妯″紡锛氳€佽檸鏈洪鏍?UI -->
+            <div class="roll-slot-machine">
+                <div class="slot-display">
+                    <div class="slot-column" data-ability="str">
+                        <div class="slot-label">{{localize "ORIGINATE.Ability.Str"}}</div>
+                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
+                            {{#if roll.hasSelection}}{{abilityData.str.value}}{{else}}?{{/if}}
+                        </div>
+                        <div class="slot-mod {{abilityData.str.modClass}}">{{abilityData.str.modFormatted}}</div>
+                    </div>
+                    <div class="slot-column" data-ability="dex">
+                        <div class="slot-label">{{localize "ORIGINATE.Ability.Dex"}}</div>
+                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
+                            {{#if roll.hasSelection}}{{abilityData.dex.value}}{{else}}?{{/if}}
+                        </div>
+                        <div class="slot-mod {{abilityData.dex.modClass}}">{{abilityData.dex.modFormatted}}</div>
+                    </div>
+                    <div class="slot-column" data-ability="con">
+                        <div class="slot-label">{{localize "ORIGINATE.Ability.Con"}}</div>
+                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
+                            {{#if roll.hasSelection}}{{abilityData.con.value}}{{else}}?{{/if}}
+                        </div>
+                        <div class="slot-mod {{abilityData.con.modClass}}">{{abilityData.con.modFormatted}}</div>
+                    </div>
+                    <div class="slot-column" data-ability="int">
+                        <div class="slot-label">{{localize "ORIGINATE.Ability.Int"}}</div>
+                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
+                            {{#if roll.hasSelection}}{{abilityData.int.value}}{{else}}?{{/if}}
+                        </div>
+                        <div class="slot-mod {{abilityData.int.modClass}}">{{abilityData.int.modFormatted}}</div>
+                    </div>
+                    <div class="slot-column" data-ability="wis">
+                        <div class="slot-label">{{localize "ORIGINATE.Ability.Wis"}}</div>
+                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
+                            {{#if roll.hasSelection}}{{abilityData.wis.value}}{{else}}?{{/if}}
+                        </div>
+                        <div class="slot-mod {{abilityData.wis.modClass}}">{{abilityData.wis.modFormatted}}</div>
+                    </div>
+                    <div class="slot-column" data-ability="cha">
+                        <div class="slot-label">{{localize "ORIGINATE.Ability.Cha"}}</div>
+                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
+                            {{#if roll.hasSelection}}{{abilityData.cha.value}}{{else}}?{{/if}}
+                        </div>
+                        <div class="slot-mod {{abilityData.cha.modClass}}">{{abilityData.cha.modFormatted}}</div>
+                    </div>
+                </div>
+
+                <button type="button" class="roll-abilities-btn" {{#if (eq roll.attemptsRemaining 0)}}disabled{{/if}}>
+                    <i class="fas fa-dice-d20"></i> {{localize "ORIGINATE.UI.Abilities.Roll.RollButton"}}
+                </button>
+            </div>
+
+            <!-- 鍘嗗彶璁板綍鍖哄煙 -->
+            <div class="roll-history-section">
+                <h3 class="roll-history-title">{{localize "ORIGINATE.UI.Abilities.Roll.History"}}</h3>
+                {{#if roll.history.length}}
+                <div class="roll-history-list">
+                    {{#each roll.history}}
+                    <div class="roll-history-item {{#if (eq @index ../roll.selectedIndex)}}selected{{/if}}"
+                        data-index="{{@index}}">
+                        <span class="history-index">#{{add @index 1}}</span>
+                        <span class="history-values">{{join this.values ", "}}</span>
+                        <span class="history-total">{{localize "ORIGINATE.UI.Abilities.Roll.Total"}}:
+                            {{this.total}}</span>
+                        {{#if (eq @index ../roll.selectedIndex)}}<i class="fas fa-check"></i>{{/if}}
+                    </div>
+                    {{/each}}
+                </div>
+                {{else}}
+                <div class="roll-history-empty">{{localize "ORIGINATE.UI.Abilities.Roll.NoRolls"}}</div>
+                {{/if}}
+            </div>
+
+            {{else if isAbilityAssignmentPhase}}
+            <!-- 鑷敱鍒嗛厤闃舵锛氬垎閰嶉鐐圭粨鏋?-->
+            <div class="roll-assignment-phase">
+                <div class="assignment-available">
+                    {{#each abilityAssignment.available}}
+                    <div class="available-value" data-value-index="{{@index}}">{{this}}</div>
+                    {{/each}}
+                </div>
+                <div class="assignment-targets">
+                    {{#each abilityData}}
+                    <div class="assignment-target {{#if this.isAssigned}}assigned{{/if}} {{#if this.isPrimary}}primary-ability{{/if}}" data-ability="{{@key}}">
+                        <div class="target-value">{{#if this.isAssigned}}{{this.value}}{{else}}-{{/if}}</div>
+                        <div class="target-label">{{upper @key}}</div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+            {{else}}
+            <!-- 鑷敱鍒嗛厤 / 涔扮偣娉曞叡鐢ㄧ殑灞炴€у崱鐗囩綉鏍?-->
+            <div class="abilities-grid">
+                <!-- 鍔涢噺 STR -->
+                <div class="ability-card {{#if abilityData.str.isPrimary}}primary-ability{{/if}}" data-ability="str">
+                    <div class="ability-icon">
+                        <i class="fas fa-fist-raised"></i>
+                    </div>
+                    <div class="ability-name">{{localize "ORIGINATE.Ability.Str"}}</div>
+                    <div class="ability-abbr">STR</div>
+                    <div class="ability-value-wrapper">
+                        <button type="button" class="ability-btn decrement ability-dec-btn"
+                            data-action="decrementAbility" data-ability="str">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        {{#if (eq abilityMode "free")}}
+                        <input type="number" class="ability-value-input" data-ability="str"
+                            value="{{abilityData.str.value}}" min="1" max="30">
+                        {{else}}
+                        <span class="ability-value-display">{{abilityData.str.value}}</span>
+                        {{/if}}
+                        <button type="button" class="ability-btn increment ability-inc-btn"
+                            data-action="incrementAbility" data-ability="str">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="ability-modifier {{abilityData.str.modClass}}">
+                        {{abilityData.str.modFormatted}}
+                    </div>
+                </div>
+
+                <!-- 鏁忔嵎 DEX -->
+                <div class="ability-card {{#if abilityData.dex.isPrimary}}primary-ability{{/if}}" data-ability="dex">
+                    <div class="ability-icon">
+                        <i class="fas fa-running"></i>
+                    </div>
+                    <div class="ability-name">{{localize "ORIGINATE.Ability.Dex"}}</div>
+                    <div class="ability-abbr">DEX</div>
+                    <div class="ability-value-wrapper">
+                        <button type="button" class="ability-btn decrement ability-dec-btn"
+                            data-action="decrementAbility" data-ability="dex">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        {{#if (eq abilityMode "free")}}
+                        <input type="number" class="ability-value-input" data-ability="dex"
+                            value="{{abilityData.dex.value}}" min="1" max="30">
+                        {{else}}
+                        <span class="ability-value-display">{{abilityData.dex.value}}</span>
+                        {{/if}}
+                        <button type="button" class="ability-btn increment ability-inc-btn"
+                            data-action="incrementAbility" data-ability="dex">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="ability-modifier {{abilityData.dex.modClass}}">
+                        {{abilityData.dex.modFormatted}}
+                    </div>
+                </div>
+
+                <!-- 浣撹川 CON -->
+                <div class="ability-card {{#if abilityData.con.isPrimary}}primary-ability{{/if}}" data-ability="con">
+                    <div class="ability-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="ability-name">{{localize "ORIGINATE.Ability.Con"}}</div>
+                    <div class="ability-abbr">CON</div>
+                    <div class="ability-value-wrapper">
+                        <button type="button" class="ability-btn decrement ability-dec-btn"
+                            data-action="decrementAbility" data-ability="con">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        {{#if (eq abilityMode "free")}}
+                        <input type="number" class="ability-value-input" data-ability="con"
+                            value="{{abilityData.con.value}}" min="1" max="30">
+                        {{else}}
+                        <span class="ability-value-display">{{abilityData.con.value}}</span>
+                        {{/if}}
+                        <button type="button" class="ability-btn increment ability-inc-btn"
+                            data-action="incrementAbility" data-ability="con">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="ability-modifier {{abilityData.con.modClass}}">
+                        {{abilityData.con.modFormatted}}
+                    </div>
+                </div>
+
+                <!-- 鏅哄姏 INT -->
+                <div class="ability-card {{#if abilityData.int.isPrimary}}primary-ability{{/if}}" data-ability="int">
+                    <div class="ability-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="ability-name">{{localize "ORIGINATE.Ability.Int"}}</div>
+                    <div class="ability-abbr">INT</div>
+                    <div class="ability-value-wrapper">
+                        <button type="button" class="ability-btn decrement ability-dec-btn"
+                            data-action="decrementAbility" data-ability="int">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        {{#if (eq abilityMode "free")}}
+                        <input type="number" class="ability-value-input" data-ability="int"
+                            value="{{abilityData.int.value}}" min="1" max="30">
+                        {{else}}
+                        <span class="ability-value-display">{{abilityData.int.value}}</span>
+                        {{/if}}
+                        <button type="button" class="ability-btn increment ability-inc-btn"
+                            data-action="incrementAbility" data-ability="int">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="ability-modifier {{abilityData.int.modClass}}">
+                        {{abilityData.int.modFormatted}}
+                    </div>
+                </div>
+
+                <!-- 鎰熺煡 WIS -->
+                <div class="ability-card {{#if abilityData.wis.isPrimary}}primary-ability{{/if}}" data-ability="wis">
+                    <div class="ability-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="ability-name">{{localize "ORIGINATE.Ability.Wis"}}</div>
+                    <div class="ability-abbr">WIS</div>
+                    <div class="ability-value-wrapper">
+                        <button type="button" class="ability-btn decrement ability-dec-btn"
+                            data-action="decrementAbility" data-ability="wis">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        {{#if (eq abilityMode "free")}}
+                        <input type="number" class="ability-value-input" data-ability="wis"
+                            value="{{abilityData.wis.value}}" min="1" max="30">
+                        {{else}}
+                        <span class="ability-value-display">{{abilityData.wis.value}}</span>
+                        {{/if}}
+                        <button type="button" class="ability-btn increment ability-inc-btn"
+                            data-action="incrementAbility" data-ability="wis">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="ability-modifier {{abilityData.wis.modClass}}">
+                        {{abilityData.wis.modFormatted}}
+                    </div>
+                </div>
+
+                <!-- 榄呭姏 CHA -->
+                <div class="ability-card {{#if abilityData.cha.isPrimary}}primary-ability{{/if}}" data-ability="cha">
+                    <div class="ability-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="ability-name">{{localize "ORIGINATE.Ability.Cha"}}</div>
+                    <div class="ability-abbr">CHA</div>
+                    <div class="ability-value-wrapper">
+                        <button type="button" class="ability-btn decrement ability-dec-btn"
+                            data-action="decrementAbility" data-ability="cha">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        {{#if (eq abilityMode "free")}}
+                        <input type="number" class="ability-value-input" data-ability="cha"
+                            value="{{abilityData.cha.value}}" min="1" max="30">
+                        {{else}}
+                        <span class="ability-value-display">{{abilityData.cha.value}}</span>
+                        {{/if}}
+                        <button type="button" class="ability-btn increment ability-inc-btn"
+                            data-action="incrementAbility" data-ability="cha">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div class="ability-modifier {{abilityData.cha.modClass}}">
+                        {{abilityData.cha.modFormatted}}
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+
+            <div class="abilities-footer">
+                {{#if isRollSelectionPhase}}
+                {{#if roll.hasSelection}}
+                <button type="button" class="abilities-confirm-btn" data-action="confirmRollResult">
+                    {{localize "ORIGINATE.UI.Abilities.Roll.ConfirmSelection"}} <i class="fas fa-arrow-right"></i>
+                </button>
+                {{else}}
+                <div class="abilities-hint">{{localize "ORIGINATE.UI.Abilities.Roll.SelectResult"}}</div>
+                {{/if}}
+                {{else}}
+                <button type="button" class="abilities-confirm-btn" data-action="nextStep" {{#unless canConfirmAbilities}}disabled{{/unless}}>
+                    {{localize "ORIGINATE.UI.Abilities.Confirm"}} <i class="fas fa-arrow-right"></i>
+                </button>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    {{else if isAsiBonusStep}}
+    <!--
+        灞炴€у姞鎴愬垎閰嶇晫闈?
+        Adrian: 绉嶆棌鍜岃儗鏅甫鏉ョ殑灞炴€у姞鎴愶紝鍏堝喅瀹氬熀纭€灞炴€у啀鍔犱笂杩欎簺銆?
+        杩欐牱鐢ㄦ埛灏辩煡閬撹嚜宸辩殑鍩虹鍊兼槸澶氬皯锛岀劧鍚庣湅鍒扮鏃?鑳屾櫙鐨勯澶栧姞鎸併€?
+    -->
+    <div class="asi-bonus-layout">
+        <div class="asi-bonus-content-wrapper">
+            <h1 class="step-title">{{localize "ORIGINATE.UI.AsiBonus.Title"}}</h1>
+            <p class="step-subtitle">{{localize "ORIGINATE.UI.AsiBonus.Subtitle"}}</p>
+
+            {{!-- 鍙垎閰嶇偣鏁版彁绀?--}}
+            {{#if hasPointsToAllocate}}
+            <div class="asi-header">
+                <div class="asi-remaining">
+                    {{localize "ORIGINATE.UI.AsiBonus.PointsRemaining"}}:
+                    <span class="asi-points-remaining {{#unless asiPointsRemaining}}all-spent{{/unless}}">
+                        {{asiPointsRemaining}}
+                    </span>
+                </div>
+            </div>
+            {{/if}}
+
+            <div class="abilities-grid asi-grid">
+                {{#each asiBonusData}}
+                <div class="ability-card asi-card {{#if this.isLocked}}locked{{/if}} {{#if this.isPrimary}}primary-ability{{/if}}" data-ability="{{@key}}">
+                    <div class="ability-icon"><i class="fas {{this.abilityIcon}}"></i></div>
+                    <div class="ability-name">{{localize (concat "ORIGINATE.Ability." (capitalize @key))}}</div>
+                    <div class="ability-abbr">{{this.abilityAbbr}}</div>
+                    <div class="ability-current-value">
+                        {{localize "ORIGINATE.UI.AsiBonus.Base"}}: {{this.base}}
+                    </div>
+
+                    {{!-- 鏈夊彲鍒嗛厤鐐规暟鏃舵樉绀?+/- 鎺т欢 --}}
+                    {{#if ../hasPointsToAllocate}}
+                    <div class="ability-value-wrapper asi-controls">
+                        <button type="button" class="ability-btn decrement asi-decrease" data-action="asiAllocDecrease"
+                            data-ability="{{@key}}" {{#unless this.canDecrease}}disabled{{/unless}}>
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="asi-value ability-value-display" data-ability="{{@key}}">
+                            {{#if this.bonus}}+{{this.bonus}}{{else}}0{{/if}}
+                        </span>
+                        <button type="button" class="ability-btn increment asi-increase" data-action="asiAllocIncrease"
+                            data-ability="{{@key}}" {{#unless this.canIncrease}}disabled{{/unless}}>
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    {{else}}
+                    {{!-- 绾浐瀹氬姞鎴愶細鍙鏄剧ず鍔犳垚鍊?--}}
+                    <div class="ability-value-wrapper asi-controls">
+                        <span class="asi-value ability-value-display">
+                            {{#if this.bonus}}+{{this.bonus}}{{else}}0{{/if}}
+                        </span>
+                    </div>
+                    {{/if}}
+
+                    <div class="ability-modifier {{this.finalModClass}}" data-ability="{{@key}}">
+                        {{this.finalModFormatted}}
+                    </div>
+
+                    {{!-- 閿佸畾鎸囩ず鍣?--}}
+                    {{#if this.isLocked}}
+                    <div class="locked-indicator">
+                        <i class="fas fa-lock"></i> {{localize "ORIGINATE.ASI.Locked"}}
+                    </div>
+                    {{/if}}
+
+                    {{!-- 鏉ユ簮鏍囩 --}}
+                    <div class="asi-bonus-sources">
+                        {{#each this.details}}
+                        <span class="asi-source-tag" title="{{this.source}}">{{this.source}} +{{this.value}}</span>
+                        {{/each}}
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+
+            <div class="step-footer">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep" {{#unless
+                    allPointsAllocated}}disabled{{/unless}}>
+                    {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else if isNameStep}}
+    <!-- 
+        濮撳悕杈撳叆鐣岄潰
+        Adrian: 杩欓噷灏辨槸缁欒鑹茶捣鍚嶅瓧鐨勫湴鏂广€?
+        绠€鍗曠矖鏆达紝涓€涓ぇ杈撳叆妗嗭紝鍒暣閭ｄ簺鑺遍噷鑳″摠鐨勩€?
+    -->
+    <div class="name-selection-layout">
+        <div class="name-content-wrapper">
+            <h1 class="step-title">{{localize "ORIGINATE.UI.Name.Title"}}</h1>
+            <p class="step-subtitle">{{localize "ORIGINATE.UI.Name.Subtitle"}}</p>
+
+            <div class="name-input-container">
+                <input type="text" class="detail-input giant-input" name="name" value="{{details.name}}"
+                    placeholder="{{localize 'ORIGINATE.UI.Name.Placeholder'}}" autocomplete="off">
+            </div>
+
+            <div class="step-footer">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                    {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else if isAlignmentStep}}
+    <!-- 
+        闃佃惀涓庝俊浠伴€夋嫨鐣岄潰
+        Adrian: 涔濆鏍奸樀钀ラ€夋嫨锛屽鍔犱竴涓俊浠拌緭鍏ユ銆?
+        绁炵鍙ㄥ彣鐨勪笢瑗块兘鍦ㄨ繖閲屽～銆?
+    -->
+    <div class="alignment-selection-layout">
+        <div class="alignment-content-wrapper">
+            <h1 class="step-title">{{localize "ORIGINATE.UI.Alignment.Title"}}</h1>
+
+            <div class="alignment-grid">
+                {{#each alignments}}
+                <div class="alignment-btn {{#if this.active}}selected{{/if}}" data-key="{{this.key}}">
+                    <div class="alignment-label">{{this.label}}</div>
+                </div>
+                {{/each}}
+            </div>
+
+            <div class="faith-section">
+                <label class="detail-label">{{localize "ORIGINATE.UI.Faith.Label"}}</label>
+                <input type="text" class="detail-input faith-input" data-field="faith" value="{{details.faith}}"
+                    placeholder="{{localize 'ORIGINATE.UI.Faith.Placeholder'}}">
+            </div>
+
+            <div class="step-footer">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                    {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else if isAppearanceStep}}
+    <!-- 
+        澶栬矊璇︽儏鐣岄潰
+        Adrian: 杩欓噷濉韩楂樹綋閲嶄笁鍥?..涓嶅锛屾病鏈変笁鍥淬€?
+        宸﹁竟濉暟鎹紝鍙宠竟鍐欏皬浣滄枃銆?
+    -->
+    <div class="appearance-selection-layout">
+        <div class="appearance-content-wrapper">
+            <h1 class="step-title">{{localize "ORIGINATE.UI.Appearance.Title"}}</h1>
+
+            <div class="appearance-container">
+                <!-- 宸︿晶鍩虹鏁版嵁缃戞牸 -->
+                <div class="appearance-grid">
+                    <div class="detail-group">
+                        <label>{{localize "ORIGINATE.UI.Details.Gender"}}</label>
+                        <input type="text" class="detail-input" data-field="gender" value="{{details.gender}}">
+                    </div>
+                    <div class="detail-group">
+                        <label>{{localize "ORIGINATE.UI.Details.Age"}}</label>
+                        <input type="text" class="detail-input" data-field="age" value="{{details.age}}">
+                    </div>
+                    <div class="detail-group">
+                        <label>{{localize "ORIGINATE.UI.Details.Height"}}</label>
+                        <input type="text" class="detail-input" data-field="height" value="{{details.height}}">
+                    </div>
+                    <div class="detail-group">
+                        <label>{{localize "ORIGINATE.UI.Details.Weight"}}</label>
+                        <input type="text" class="detail-input" data-field="weight" value="{{details.weight}}">
+                    </div>
+                    <div class="detail-group">
+                        <label>{{localize "ORIGINATE.UI.Details.Eyes"}}</label>
+                        <input type="text" class="detail-input" data-field="eyes" value="{{details.eyes}}">
+                    </div>
+                    <div class="detail-group">
+                        <label>{{localize "ORIGINATE.UI.Details.Skin"}}</label>
+                        <input type="text" class="detail-input" data-field="skin" value="{{details.skin}}">
+                    </div>
+                    <div class="detail-group full-width">
+                        <label>{{localize "ORIGINATE.UI.Details.Hair"}}</label>
+                        <input type="text" class="detail-input" data-field="hair" value="{{details.hair}}">
+                    </div>
+                </div>
+
+                <!-- 鍙充晶澶栬矊鎻忚堪 -->
+                <div class="appearance-description">
+                    <label>{{localize "ORIGINATE.UI.Details.Appearance"}}</label>
+                    <textarea class="detail-input detail-textarea"
+                        data-field="appearance">{{details.appearance}}</textarea>
+                </div>
+            </div>
+
+            <div class="step-footer">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                    {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else if isPersonalityStep}}
+    <!-- 
+        涓€ц鎯呯晫闈?
+        Adrian: 鍥涜薄闄愬竷灞€锛屼笉寰椾笉璇磋繖涓竷灞€杩樻槸鎸虹粡鍏哥殑銆?
+        鐗硅川銆佺悊鎯炽€佺緛缁娿€佺己鐐癸紝缂轰竴涓嶅彲銆?
+    -->
+    <div class="personality-selection-layout">
+        <div class="personality-content-wrapper">
+            <h1 class="step-title">{{localize "ORIGINATE.UI.Personality.Title"}}</h1>
+
+            <div class="personality-grid">
+                <div class="personality-card">
+                    <div class="card-header"><i class="fas fa-puzzle-piece"></i> {{localize
+                        "ORIGINATE.UI.Details.Traits"}}</div>
+                    <textarea class="detail-input detail-textarea" data-field="trait">{{details.trait}}</textarea>
+                </div>
+                <div class="personality-card">
+                    <div class="card-header"><i class="fas fa-seedling"></i> {{localize "ORIGINATE.UI.Details.Ideal"}}
+                    </div>
+                    <textarea class="detail-input detail-textarea" data-field="ideal">{{details.ideal}}</textarea>
+                </div>
+                <div class="personality-card">
+                    <div class="card-header"><i class="fas fa-link"></i> {{localize "ORIGINATE.UI.Details.Bond"}}</div>
+                    <textarea class="detail-input detail-textarea" data-field="bond">{{details.bond}}</textarea>
+                </div>
+                <div class="personality-card">
+                    <div class="card-header"><i class="fas fa-heart-broken"></i> {{localize
+                        "ORIGINATE.UI.Details.Flaw"}}</div>
+                    <textarea class="detail-input detail-textarea" data-field="flaw">{{details.flaw}}</textarea>
+                </div>
+            </div>
+
+            <div class="step-footer">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                    {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else if isPortraitStep}}
+    <div class="portrait-selection-layout">
+        <div class="portrait-content-wrapper">
+            <h1 class="step-title">{{localize "ORIGINATE.UI.Portrait.Title"}}</h1>
+            <p class="step-subtitle">{{localize "ORIGINATE.UI.Portrait.Subtitle"}}</p>
+
+            <div class="portrait-stage">
+                <div class="portrait-preview-frame {{#if hasPortrait}}has-portrait{{/if}}">
+                    <img src="{{portraitPreview}}" class="portrait-preview-img"
+                        alt="{{localize 'ORIGINATE.UI.Portrait.Title'}}">
+                </div>
+
+                <div class="portrait-controls">
+                    <label class="detail-label">{{localize "ORIGINATE.UI.Portrait.PathLabel"}}</label>
+                    <div class="portrait-path-row">
+                        <input type="text" class="detail-input portrait-path-input" data-field="portrait"
+                            value="{{details.portrait}}"
+                            placeholder="{{localize 'ORIGINATE.UI.Portrait.Placeholder'}}">
+                        <button type="button" class="portrait-action-btn portrait-picker-btn">
+                            <i class="fas fa-file-image"></i>
+                            {{localize "ORIGINATE.UI.Portrait.Choose"}}
+                        </button>
+                        <button type="button" class="portrait-action-btn portrait-clear-btn" {{#unless
+                            hasPortrait}}disabled{{/unless}}>
+                            <i class="fas fa-times"></i>
+                            {{localize "ORIGINATE.UI.Portrait.Clear"}}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-footer">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                    {{#if isLastStep}}
+                    {{localize "ORIGINATE.UI.Navigation.Finish"}} <i class="fas fa-check"></i>
+                    {{else}}
+                    {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
+                    {{/if}}
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else if isBiographyStep}}
+    <!-- 
+        浼犺缂栬緫鐣岄潰
+        Adrian: 鏈€鍚庣殑鏈€鍚庯紝鍐欎笅浣犵殑浼犲鏁呬簨鍚с€?
+        杩欓噷鐢ㄤ簡 Foundry 鑷甫鐨勭紪杈戝櫒锛屽笇鏈涘畠浠婂ぉ蹇冩儏濂藉埆鎶ラ敊銆?
+    -->
+    <div class="biography-selection-layout">
+        <div class="biography-content-wrapper">
+            <h1 class="step-title">{{localize "ORIGINATE.UI.Biography.Title"}}</h1>
+
+            <div class="biography-editor-container">
+                {{!--
+                Adrian: 鍘熸湰鎯崇敤 Foundry 鐨?editor 甯墜鍑芥暟锛屼絾鍦ㄥ悜瀵兼ā寮忎笅鑰佸嚭闂銆?
+                鎵€浠ヨ繖閲岀敤涓櫘閫氱殑 textarea锛岀畝鍗曠矖鏆翠絾绠＄敤銆?
+                --}}
+                <textarea class="detail-input biography-textarea" data-field="biography"
+                    placeholder="{{localize 'ORIGINATE.UI.Biography.Placeholder'}}">{{details.biography}}</textarea>
+            </div>
+
+            <div class="step-footer">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                    {{localize "ORIGINATE.UI.Navigation.Finish"}} <i class="fas fa-check"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{else}}
+    <!-- 
+        閫氱敤閫夋嫨鐣岄潰 (鑱屼笟/绉嶆棌/鑳屾櫙) - 褰遍櫌绾у竷灞€
+        Adrian: 娆㈣繋鏉ュ埌鎴戠殑绉佷汉褰遍櫌銆備负浜嗘悶瀹氳繖涓叏灞忔矇娴稿紡浣撻獙锛?
+        鎴戣窡 CSS 鐨勫眰鍙犱笂涓嬫枃鎵撲簡涓€鏁存櫄鐨勬灦銆?
+    -->
+    <div class="view-selection-root step-{{currentStep}}">
+
+        <!-- 1. 鑳屾櫙灞?(姘涘洿缁? - 璐熻矗鎶婇偅浜涢珮娓呭ぇ鍥炬ā绯婃帀锛岃惀閫犱竴绉嶆湨鑳х編 -->
+        <div class="cinematic-background">
+            {{#if selectedOption.heroImage}}
+            {{#if selectedOption.heroImageIsVideo}}
+            <video class="bg-video" autoplay muted loop playsinline>
+                <source src="{{selectedOption.heroImage}}" type="video/webm">
+                <source src="{{selectedOption.heroImage}}" type="video/mp4">
+            </video>
+            {{else}}
+            <img src="{{selectedOption.heroImage}}" alt="Background" class="bg-img">
+            {{/if}}
+            {{else}}
+            <div class="bg-placeholder"></div>
+            {{/if}}
+            <div class="bg-overlay"></div>
+        </div>
+
+        <!-- 2. 涓昏瑙夊眰 (C浣嶆媴褰? - 杩欓噷鏀剧殑鏄竻鏅扮殑绔嬬粯锛屽埆鐩潃鐪嬪お涔咃紝瀹冧滑浼氬缇炵殑 -->
+        {{#unless (eq currentStep "subclass")}}
+        <div class="cinematic-visual">
+            {{#if selectedOption.heroImage}}
+            {{#if selectedOption.heroImageIsVideo}}
+            <video class="visual-img{{#if selectedOption.heroImageFit}} image-fit-{{selectedOption.heroImageFit}}{{/if}}" autoplay muted loop playsinline>
+                <source src="{{selectedOption.heroImage}}" type="video/webm">
+                <source src="{{selectedOption.heroImage}}" type="video/mp4">
+            </video>
+            {{else}}
+            <img src="{{selectedOption.heroImage}}" alt="{{selectedOption.name}}"
+                class="visual-img{{#if selectedOption.heroImageFit}} image-fit-{{selectedOption.heroImageFit}}{{/if}}">
+            {{/if}}
+            {{/if}}
+        </div>
+        {{/unless}}
+
+        <!-- 3. 搴曢儴瀛楀箷灞?(鐢靛奖瀛楀箷) - 杩欓噷鐨勯噾灞炶川鎰熸笎鍙樻槸鎴戞渶鍚庣殑鍊斿己 -->
+        {{#unless (eq currentStep "subclass")}}
+        <div class="cinematic-caption">
+            <div class="caption-gradient"></div>
+            <div class="caption-content">
+                {{#if selectedOption}}
+                <h1 class="caption-title">{{localize selectedOption.name}}</h1>
+                {{#if selectedOption.tagline}}
+                <div class="caption-subtitle">{{localize selectedOption.tagline}}</div>
+                {{/if}}
+
+                {{#if selectedOption.coreTraits}}
+                <div class="caption-traits">
+                    {{#if selectedOption.coreTraits.primary}}
+                    <div class="trait-tag"><span class="trait-label">{{localize "ORIGINATE.UI.Trait.Primary"}}:</span>
+                        {{localize selectedOption.coreTraits.primary}}</div>
+                    {{/if}}
+                    {{#if selectedOption.coreTraits.hitDie}}
+                    <div class="trait-tag"><span class="trait-label">{{localize "ORIGINATE.UI.Trait.HitDie"}}:</span>
+                        {{selectedOption.coreTraits.hitDie}}</div>
+                    {{/if}}
+                </div>
+                {{/if}}
+                {{else}}
+                <!-- 
+                        鏈€夋嫨鏃剁殑鍗犱綅鎻愮ず
+                        Adrian: 鏃㈢劧浣犺繕娌￠€夛紝閭ｆ垜灏卞彧鑳界粰浣犵湅鐐圭┖璇濅簡銆?
+                    -->
+                <div class="caption-placeholder">
+                    {{#if (eq currentStep "class")}}
+                    <h1 class="caption-title placeholder">{{localize "ORIGINATE.UI.Hero.Class.Title"}}</h1>
+                    <p class="caption-hint">{{localize "ORIGINATE.UI.Hero.Class.Hint"}}</p>
+                    {{else if (eq currentStep "race")}}
+                    <h1 class="caption-title placeholder">{{localize "ORIGINATE.UI.Hero.Race.Title"}}</h1>
+                    <p class="caption-hint">{{localize "ORIGINATE.UI.Hero.Race.Hint"}}</p>
+                    {{else if (eq currentStep "background")}}
+                    <h1 class="caption-title placeholder">{{localize "ORIGINATE.UI.Hero.Background.Title"}}</h1>
+                    <p class="caption-hint">{{localize "ORIGINATE.UI.Hero.Background.Hint"}}</p>
+                    {{/if}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+        {{/unless}}
+
+        <!-- 4. 宸︿晶鎶藉眽 (钘忓疂闃? - 閲岄潰濉炴弧浜嗙‖鏍告暟鎹紝鐐归偅涓皬鍦嗗湀灏辫兘婊戝嚭鏉?-->
+        <div class="left-sidebar-drawer {{#unless leftDrawerExpanded}}collapsed{{/unless}} {{#unless selectedOption}}hidden{{/unless}} {{#if leftDrawerSwitching}}switching{{/if}}">
+            <div class="drawer-handle" data-action="toggleLeftDrawer">
+                <i class="fas fa-info-circle"></i>
+                <span class="handle-text">{{localize "ORIGINATE.UI.Details.Toggle"}}</span>
+                <i class="fas fa-chevron-left toggle-icon"></i>
+            </div>
+            <div class="drawer-content">
+                {{#if selectedOption}}
+                <h2 class="drawer-title">{{localize selectedOption.name}}</h2>
+                <div class="drawer-body">
+                    {{{selectedOption.description}}}
+                </div>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- 5. 搴曢儴瀵艰埅鏍?(鎮诞鎿嶄綔鍙? - 浣犵殑閫夋嫨閮藉湪杩欏効 -->
+        {{#unless (eq currentStep "subclass")}}
+        <div class="cinematic-nav">
+            <div class="nav-track">
+                {{#each options}}
+                <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                    data-action="selectOption" data-id="{{this.id}}">
+                    <div class="nav-icon-wrapper">
+                        {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                    </div>
+                    <div class="nav-label">{{localize this.name}}</div>
+                </div>
+                {{/each}}
+            </div>
+            <button type="button" class="nav-grid-expand-btn" data-action="openGridSelector"
+                data-tooltip="{{localize 'ORIGINATE.UI.GridSelector.Expand'}}">
+                <i class="fas fa-th"></i>
+            </button>
+        </div>
+        {{/unless}}
+
+        <!-- 6. 纭鎸夐挳 (鍛借繍鐨勬妷鎷? - 鐐逛簡瀹冿紝浣犲氨绂诲彈鑻︽洿杩戜竴姝ヤ簡 -->
+        {{#unless (eq currentStep "subclass")}}
+        <div class="cinematic-actions">
+            <button type="button" class="cinematic-confirm-btn" data-action="confirmSelection" {{#unless
+                selectedOption}}disabled{{/unless}}>
+                {{localize "ORIGINATE.UI.Navigation.Confirm"}} <i class="fas fa-check"></i>
+            </button>
+        </div>
+        {{/unless}}
+
+        <!-- 杩斿洖鎸夐挳 (鍚庢倲鑽? - 鐖嚭鍏斿瓙娲炵殑鍞竴璺緞 -->
+        {{#if canNavigateUp}}
+        <button type="button" class="cinematic-back-btn" data-action="navigateUp">
+            <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
+        </button>
+        {{else if canCreationTimelineBack}}
+        <button type="button" class="cinematic-back-btn" data-action="prevStep">
+            <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
+        </button>
+        {{/if}}
+
+        <!-- 
+            瀛愯亴鐗规畩甯冨眬 (閫夌鐜板満)
+            Adrian: 杩欓噷鐨勫崱鐗囧竷灞€鏄垜鍙傝€冧簡鏃犳暟涓父鎴?UI 鍚庡畾涓嬫潵鐨勩€?
+            甯屾湜浣犱滑鑳介€夊埌涓€涓績浠殑瀛愯亴銆?
+        -->
+        {{#if (eq currentStep "subclass")}}
+        <div class="subclass-selection-container">
+            <div class="subclass-cards-wrapper">
+                {{#each options}}
+                <figure class="subclass-anchor-unit {{#if (eq this.id ../currentSelectedId)}}selected{{/if}}"
+                    data-action="selectOption" data-id="{{this.id}}">
+                    <div class="subclass-image-wrapper">
+                        {{#if this.heroImageIsVideo}}
+                        <video class="subclass-standing-art" autoplay muted loop playsinline>
+                            <source src="{{this.heroImage}}" type="video/webm">
+                            <source src="{{this.heroImage}}" type="video/mp4">
+                        </video>
+                        {{else}}
+                        <img src="{{this.heroImage}}" class="subclass-standing-art" alt="{{this.name}}">
+                        {{/if}}
+                    </div>
+                    <figcaption class="subclass-info-caption">
+                        <h2 class="subclass-name">{{localize this.name}}</h2>
+                        {{#if this.tagline}}
+                        <div class="subclass-tagline">{{localize this.tagline}}</div>
+                        {{/if}}
+                    </figcaption>
+                </figure>
+                {{/each}}
+            </div>
+
+            <div class="subclass-footer">
+                <button type="button" class="subclass-confirm-btn" data-action="confirmSelection" disabled>
+                    {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+        {{/if}}
+
+    </div>
+    {{/if}}
+</div>

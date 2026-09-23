@@ -1,0 +1,60 @@
+{
+  "id": "character-forge",
+  "title": "Character Forge",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "authors": [
+    {
+      "name": "LipatoS"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.0.0",
+          "verified": "6.0.5"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/originate.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "zh",
+      "name": "Chinese",
+      "path": "lang/zh.json"
+    },
+    {
+      "lang": "cn",
+      "name": "Chinese (Simplified)",
+      "path": "lang/zh.json"
+    },
+    {
+      "lang": "zh-cn",
+      "name": "Chinese (Simplified)",
+      "path": "lang/zh.json"
+    },
+    {
+      "lang": "zh-Hans",
+      "name": "Chinese (Simplified)",
+      "path": "lang/zh.json"
+    }
+  ],
+  "description": "Optimized visual character creation and level-up wizard for D&D 5e on Foundry VTT 14."
+}
