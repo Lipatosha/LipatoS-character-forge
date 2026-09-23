@@ -11293,3 +11293,125 @@ body.originate-active #ui-notifications .notification.error {
         width: calc(100vw - clamp(320px, 38vw, 390px) - 48px) !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.1.8 — таблицы, ширина панели и предметы
+   ============================================================ */
+
+/* Панель подробностей немного шире и подходит ближе к нижнему меню выбора. */
+.view-selection-root.step-class .left-sidebar-drawer,
+.view-selection-root.step-race .left-sidebar-drawer,
+.view-selection-root.step-background .left-sidebar-drawer {
+    --left-drawer-min-width: clamp(500px, 30vw, 540px);
+    --left-drawer-max-width: min(760px, calc(100vw - 110px));
+}
+
+/* Текст сверху смещён с учётом новой ширины панели. */
+.view-selection-root.step-class .cinematic-caption,
+.view-selection-root.step-race .cinematic-caption,
+.view-selection-root.step-background .cinematic-caption {
+    left: calc(50% + clamp(250px, 15vw, 270px)) !important;
+    width: min(
+        780px,
+        calc(100vw - clamp(500px, 30vw, 540px) - 80px)
+    ) !important;
+}
+
+/* Таблицам разрешаем занимать реальную ширину содержимого и прокручиваться,
+   вместо насильственного ужимания слов по буквам. */
+.view-selection-root .drawer-content {
+    overflow-x: auto;
+}
+
+.view-selection-root .drawer-body table {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+.view-selection-root .drawer-body th,
+.view-selection-root .drawer-body td {
+    min-width: 72px;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: auto;
+    vertical-align: top;
+}
+
+.view-selection-root .drawer-body th {
+    white-space: nowrap;
+}
+
+.view-selection-root .drawer-body th:first-child,
+.view-selection-root .drawer-body td:first-child {
+    width: auto;
+    min-width: 82px;
+}
+
+.view-selection-root .drawer-body .content-link,
+.view-selection-root .drawer-body .inline-roll {
+    max-width: none;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+/* Hover-подсказка для ссылок на предметы из описания Laaru. */
+.character-forge-item-tooltip {
+    position: fixed;
+    z-index: 100050;
+    width: min(420px, calc(100vw - 32px));
+    max-height: min(520px, calc(100vh - 32px));
+    overflow: auto;
+    pointer-events: none;
+    padding: 12px 14px;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.65);
+    border-radius: 7px;
+    background: rgba(8, 8, 10, 0.97);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8);
+    color: #ddd;
+    font-family: var(--originate-font);
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-header img {
+    width: 38px;
+    height: 38px;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 4px;
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-title {
+    color: var(--originate-accent);
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-body {
+    line-height: 1.45;
+    font-size: .9rem;
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-body > :first-child {
+    margin-top: 0;
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-body > :last-child {
+    margin-bottom: 0;
+}
+
+/* Открытый из Character Forge лист предмета обязан быть поверх полноэкранного мастера. */
+body.originate-active .character-forge-item-sheet-front {
+    z-index: 100060 !important;
+}
