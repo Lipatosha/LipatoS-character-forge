@@ -974,5 +974,16 @@
   "ORIGINATE.Ability.Abbr.Cha": "ХАР",
   "ORIGINATE.UI.Level.Label": "УРОВЕНЬ",
   "ORIGINATE.Button.Loading": "Загрузка...",
-  "ORIGINATE.UI.Details.NoDescription": "Описание отсутствует."
+  "ORIGINATE.UI.Details.NoDescription": "Описание отсутствует.",
+  "ORIGINATE.UI.Welcome.Message": "Готовы отправиться в путь, искатель приключений?",
+  "ORIGINATE.LevelUpGrant.Title": "Выдать повышение уровня",
+  "ORIGINATE.LevelUpGrant.Manage": "Выдать повышение уровня персонажам",
+  "ORIGINATE.LevelUpGrant.Confirm": "Подтвердить",
+  "ORIGINATE.LevelUpGrant.Saved": "Разрешения на повышение уровня обновлены.",
+  "ORIGINATE.LevelUpGrant.NoCharacters": "Персонажи не найдены.",
+  "ORIGINATE.LevelUpGrant.Owner": "Владельцы: {owners}",
+  "ORIGINATE.LevelUpGrant.NoOwner": "Персонаж ГМ",
+  "ORIGINATE.LevelUpGrant.ButtonTooltip": "Повысить уровень",
+  "ORIGINATE.LevelUpGrant.NoPermission": "ГМ ещё не выдал этому персонажу повышение уровня.",
+  "ORIGINATE.LevelUpGrant.NotOwner": "У вас нет прав владельца на этого персонажа."
 }
