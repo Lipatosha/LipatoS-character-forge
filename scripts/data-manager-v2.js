@@ -180,7 +180,9 @@ export class DataManager {
             const regex = /\b(str|dex|con|int|wis|cha)\b/gi;
             let node = walker.nextNode();
             while (node) {
-                node.nodeValue = String(node.nodeValue || '').replace(regex, (_match, ability) =>
+                let text = String(node.nodeValue || '');
+                text = text.replace(/Умения\s+в\s+испытаниях/giu, 'Спасброски');
+                node.nodeValue = text.replace(regex, (_match, ability) =>
                     this._getLocalizedAbilityLabel(ability)
                 );
                 node = walker.nextNode();
