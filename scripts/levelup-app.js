@@ -83,6 +83,62 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this._cancelLevelUpConfirmOpen = false;
         this._statusDrawerOpen = false;
         this._statusDrawerTab = 'features';
+
+        this._restoreLockedHitPointRoll();
+    }
+
+    _getLockedHitPointRollKey() {
+        const classItem = this.levelUpManager?.classItem;
+        const classKey = String(
+            classItem?.id
+            || classItem?.system?.identifier
+            || 'class'
+        ).replace(/[^a-zA-Z0-9_-]+/g, '-');
+        return classKey + ':' + this._state.targetLevel;
+    }
+
+    _readLockedHitPointRoll() {
+        const rolls = this.actor?.getFlag?.('character-forge', 'lockedHitPointRolls') || {};
+        return rolls?.[this._getLockedHitPointRollKey()] || null;
+    }
+
+    _restoreLockedHitPointRoll() {
+        const saved = this._readLockedHitPointRoll();
+        if (!saved || saved.method !== 'roll') return false;
+
+        this._state.hpGain = Number(saved.hp);
+        this._state.hpMethod = 'roll';
+        this._state.hpRollResult = Number(saved.rollResult);
+        return Number.isFinite(this._state.hpGain) && Number.isFinite(this._state.hpRollResult);
+    }
+
+    async _persistLockedHitPointRoll(choice) {
+        if (!choice || choice.method !== 'roll') return;
+
+        const key = this._getLockedHitPointRollKey();
+        const existing = foundry.utils.deepClone(
+            this.actor?.getFlag?.('character-forge', 'lockedHitPointRolls') || {}
+        );
+
+        if (existing[key]?.method === 'roll') {
+            this._state.hpGain = Number(existing[key].hp);
+            this._state.hpMethod = 'roll';
+            this._state.hpRollResult = Number(existing[key].rollResult);
+            return;
+        }
+
+        existing[key] = {
+            method: 'roll',
+            level: Number(choice.level || this._state.targetLevel),
+            hp: Number(choice.hp),
+            rollResult: Number(choice.rollResult),
+            constitutionModifier: Number(this._getConstitutionModifier()),
+            classId: this.levelUpManager?.classItem?.id || null,
+            classIdentifier: this.levelUpManager?.classItem?.system?.identifier || null,
+            rolledAt: new Date().toISOString()
+        };
+
+        await this.actor.setFlag('character-forge', 'lockedHitPointRolls', existing);
     }
 
     static DEFAULT_OPTIONS = {
