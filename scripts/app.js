@@ -570,6 +570,8 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
 
         let description = doc.system?.description?.value
             ?? doc.system?.description
+            ?? doc.text?.content
+            ?? doc.content
             ?? doc.description
             ?? '';
 
@@ -633,21 +635,25 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         this._removeDrawerItemTooltip();
 
         try {
-            doc.sheet.render(true);
-            setTimeout(() => {
-                try {
-                    doc.sheet.bringToFront?.();
-                    const element = doc.sheet.element instanceof HTMLElement
-                        ? doc.sheet.element
-                        : doc.sheet.element?.[0];
-                    if (element) {
-                        element.classList.add('character-forge-item-sheet-front');
-                        element.style.setProperty('z-index', '100060', 'important');
+            const renderResult = doc.sheet.render(true);
+            if (renderResult?.then instanceof Function) await renderResult;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    try {
+                        doc.sheet.bringToFront?.();
+                        const element = doc.sheet.element instanceof HTMLElement
+                            ? doc.sheet.element
+                            : doc.sheet.element?.[0];
+                        if (element) {
+                            element.classList.add('character-forge-item-sheet-front');
+                            element.style.setProperty('z-index', '100060', 'important');
+                        }
+                    } catch (error) {
+                        console.debug('Character Forge | Не удалось поднять лист документа поверх мастера:', error);
                     }
-                } catch (error) {
-                    console.debug('Character Forge | Не удалось поднять лист предмета поверх мастера:', error);
-                }
-            }, 40);
+                });
+            });
             return true;
         } catch (error) {
             console.warn('Character Forge | Не удалось открыть предмет из описания:', error);
@@ -656,28 +662,34 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
     }
 
     _bindDrawerContentLinks() {
-        const links = this.element?.querySelectorAll?.('.drawer-body a.content-link[data-uuid], .drawer-body .content-link[data-uuid]') || [];
+        const root = this.element;
+        if (!root || root.dataset.characterForgeContentLinksBound === 'true') return;
+        root.dataset.characterForgeContentLinksBound = 'true';
 
-        for (const link of links) {
-            if (link.dataset.characterForgeBound === 'true') continue;
-            link.dataset.characterForgeBound = 'true';
+        root.addEventListener('pointerover', event => {
+            const link = event.target?.closest?.('.content-link[data-uuid]');
+            if (!link || !root.contains(link)) return;
+            if (event.relatedTarget && link.contains(event.relatedTarget)) return;
+            void this._showDrawerItemTooltip(link);
+        });
 
-            link.addEventListener('mouseenter', () => {
-                void this._showDrawerItemTooltip(link);
-            });
+        root.addEventListener('pointerout', event => {
+            const link = event.target?.closest?.('.content-link[data-uuid]');
+            if (!link || !root.contains(link)) return;
+            if (event.relatedTarget && link.contains(event.relatedTarget)) return;
+            link._characterForgeHoverToken = null;
+            this._removeDrawerItemTooltip();
+        });
 
-            link.addEventListener('mouseleave', () => {
-                link._characterForgeHoverToken = null;
-                this._removeDrawerItemTooltip();
-            });
+        root.addEventListener('click', event => {
+            const link = event.target?.closest?.('.content-link[data-uuid]');
+            if (!link || !root.contains(link)) return;
 
-            link.addEventListener('click', event => {
-                event.preventDefault();
-                event.stopPropagation();
-                event.stopImmediatePropagation?.();
-                void this._openDrawerLinkedDocument(link);
-            });
-        }
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
+            void this._openDrawerLinkedDocument(link);
+        }, true);
     }
 
     /**
