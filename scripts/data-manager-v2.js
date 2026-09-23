@@ -532,7 +532,7 @@ export class DataManager {
 
             const fields = [
                 'name', 'type', 'img', 'system.type.value', 'system.type.subtype',
-                'system.prerequisites.level', 'system.prerequisites.repeatable', 'system.repeatable',
+                'system.prerequisites.level', 'system.prerequisites.items', 'system.prerequisites.repeatable', 'system.repeatable',
                 'system.level', 'system.school', 'system.sourceClass', 'system.identifier',
                 'system.classIdentifier'
             ];
