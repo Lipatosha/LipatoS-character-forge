@@ -64,13 +64,9 @@ export const NavigationMixin = (Base) => class extends Base {
             } else if (this.currentStep === 'alignment' && !String(this.context.details?.alignment || '').trim()) {
                 canProceed = false;
                 warningMessage = game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep");
-            } else if (this.currentStep === 'portrait' && !String(this.context.details?.portrait || '').trim()) {
-                canProceed = false;
-                warningMessage = game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep");
             } else {
                 // Все detail-шаги хранят значение внутри context.details, а не context[step].
-                // Поэтому после отдельной проверки обязательных name/alignment/portrait их нельзя
-                // повторно прогонять через проверку выбора карточки.
+                // Имя и мировоззрение проверяются выше; портрет специально остаётся необязательным.
                 const nonSelectionSteps = [...DETAIL_STEPS, 'asiBonus'];
                 if (!nonSelectionSteps.includes(this.currentStep) && !this.context[this.currentStep]) {
                     canProceed = false;
