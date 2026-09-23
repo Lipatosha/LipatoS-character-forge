@@ -6,6 +6,7 @@
  */
 
 import { SpellRules } from '../spell-rules.js';
+import { acquireForgeStyles, releaseForgeStyles } from '../runtime-style.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
@@ -39,7 +40,14 @@ export class SpellRulesConfigApp extends HandlebarsApplicationMixin(ApplicationV
 
     constructor(options = {}) {
         super(options);
+        acquireForgeStyles(this).catch(error => console.warn('Character Forge | Не удалось загрузить стили правил заклинаний:', error));
         this._expandedClasses = new Set();
+    }
+
+    async close(options = {}) {
+        const result = await super.close(options);
+        releaseForgeStyles(this);
+        return result;
     }
 
     async _prepareContext(options) {
