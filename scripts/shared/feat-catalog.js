@@ -4,8 +4,21 @@ const NON_FEAT_TYPES = new Set(['class', 'monster', 'background', 'race', 'speci
 const FEAT_CATEGORIES = new Set(['general', 'origin', 'fightingStyle', 'epicBoon']);
 
 export function isPlayerFeat(item = {}) {
-    return (!item.type || item.type === 'feat' || item.type === 'item')
-        && !NON_FEAT_TYPES.has(item.system?.type?.value);
+    if (item.type && !['feat', 'item'].includes(item.type)) return false;
+
+    const value = String(item.system?.type?.value || '').trim();
+    const subtype = String(item.system?.type?.subtype || '').trim();
+
+    // В dnd5e 6.x обычные особенности класса/расы тоже являются Item типа "feat".
+    // Настоящие выбираемые черты помечены feature type = "feat".
+    // Старый широкий фильтр пропускал сюда полторы тысячи обычных особенностей.
+    if (value === 'feat') return true;
+
+    // Небольшой legacy-fallback для старых источников, где категория черты лежала прямо в value/subtype.
+    if (FEAT_CATEGORIES.has(value)) return true;
+    if (!value && FEAT_CATEGORIES.has(subtype)) return true;
+
+    return false;
 }
 
 export function getRequiredLevel(item = {}) {
