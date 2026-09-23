@@ -322,6 +322,26 @@ export const AbilitiesMixin = (Base) => class extends Base {
         context.abilityAssignment = this._rollState.assignedValues;
         context.canConfirmAbilities = !context.isStandardArrayMode || this._rollState.assignmentComplete;
 
+        const assignedMap = this._rollState.assignedValues?.assigned || {};
+        context.assignmentModifiers = ['str', 'dex', 'con', 'int', 'wis', 'cha'].map(key => {
+            const assignedValue = assignedMap[key];
+            if (assignedValue === null || assignedValue === undefined) {
+                return {
+                    key,
+                    label: this._getAbilityAbbreviation(key),
+                    modFormatted: '—',
+                    modClass: 'neutral'
+                };
+            }
+            const mod = this._getAbilityModifier(Number(assignedValue));
+            return {
+                key,
+                label: this._getAbilityAbbreviation(key),
+                modFormatted: this._formatModifier(mod),
+                modClass: mod > 0 ? 'positive' : (mod < 0 ? 'negative' : 'neutral')
+            };
+        });
+
         // 模式特定数据
         if (abilityMode === 'pointbuy') {
             const totalPoints = game.settings.get('character-forge', 'pointBuyTotal') || 27;
