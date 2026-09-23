@@ -7,6 +7,7 @@
  */
 
 import { DataManager } from './data-manager-v2.js';
+import { releaseForgeStyles } from './runtime-style.js';
 import { SpellRules } from './spell-rules.js';
 import { usesSpellBrowser } from './shared/advancement-choice-rules.js';
 import { LevelUpManager } from './levelup-manager.js';
@@ -2748,6 +2749,9 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
         });
         // 清理可能残留的 tooltip
         document.querySelectorAll('.originate-tooltip, .originate-spell-tooltip').forEach(el => el.remove());
+
+        // После закрытия Level Up тяжёлый CSS полностью удаляется из страницы.
+        releaseForgeStyles(this);
         return result;
     }
 
