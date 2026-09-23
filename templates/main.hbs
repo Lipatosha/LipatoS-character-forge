@@ -22,32 +22,8 @@
         杩欎簺绮掑瓙鏁堟灉鏄垜璋冧簡鍗婂ぉ鐨勶紝铏界劧 Claude 寤鸿鎴戠敤鏇村鏉傜殑鐫€鑹插櫒锛?
         浣嗘垜鎬曟妸浣犱滑鐨勬樉鍗＄儳浜嗭紝鎵€浠ヨ繕鏄敤 CSS 鍑戝悎涓€涓嬪惂銆?
     -->
-    <div class="welcome-screen">
-        {{#if startPageBackground}}
-        <div class="welcome-background-media">
-            {{#if startPageBackgroundIsVideo}}
-            <video class="bg-video" autoplay muted loop playsinline>
-                <source src="{{startPageBackground}}" type="video/webm">
-                <source src="{{startPageBackground}}" type="video/mp4">
-            </video>
-            {{else}}
-            <img src="{{startPageBackground}}" class="bg-img" alt="Welcome Background">
-            {{/if}}
-            <div class="bg-overlay"></div>
-        </div>
-        {{/if}}
+    <div class="welcome-screen welcome-screen-static">
         <div class="welcome-content">
-            {{#unless startPageBackground}}
-            <div class="welcome-visual">
-                <div class="particle-system">
-                    <div class="particle p1"></div>
-                    <div class="particle p2"></div>
-                    <div class="particle p3"></div>
-                    <div class="particle p4"></div>
-                    <div class="core-glow"></div>
-                </div>
-            </div>
-            {{/unless}}
             <h1 class="welcome-title shimmer-effect" style="font-family: '{{welcomeMessageFont}}', serif;">
                 {{welcomeMessage}}</h1>
             <button type="button" class="start-btn" data-action="start">
