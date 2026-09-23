@@ -240,9 +240,38 @@ export class WizardUIMixin {
         contentContainer.innerHTML = await this._renderStepContent(currentStep);
 
         this._bindProgressionEvents(overlay, currentStep);
+        this._autoSelectForcedItemChoices(overlay, currentStep);
         this._bindTooltips(overlay);
         this._checkProgressionCanProceed(overlay);
         this._refreshLevelupStatusDrawer?.();
+    }
+
+    _autoSelectForcedItemChoices(overlay, step) {
+        if (!overlay || step?.type !== 'item_choice') return false;
+
+        const section = overlay.querySelector('.item-choice-section[data-type="item-choice"]');
+        if (!section || section.dataset.pureReplacement === 'true') return false;
+
+        const required = Number.parseInt(section.dataset.count || step.event?.count || step.count || '0', 10);
+        if (!Number.isFinite(required) || required <= 0) return false;
+
+        const inputs = Array.from(section.querySelectorAll('.item-choices-list input[type="checkbox"][name^="item-choice-"]'))
+            .filter(input => !input.disabled)
+            .filter(input => input.closest('.option-card')?.getAttribute('aria-invalid') !== 'true');
+
+        if (inputs.length !== required) return false;
+
+        let changed = false;
+        for (const input of inputs) {
+            if (!input.checked) {
+                input.checked = true;
+                changed = true;
+            }
+            input.closest('.option-card')?.classList.add('selected');
+        }
+
+        if (changed) this._syncStepDraftFromOverlay?.(step, overlay);
+        return changed;
     }
 
     // 共享步骤内容渲染。这里只读宿主状态，选择结果仍由各宿主自己的下一步回调保存。
