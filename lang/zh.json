@@ -948,5 +948,9 @@
   "ORIGINATE.LevelUpGrant.NoOwner": "GM 角色",
   "ORIGINATE.LevelUpGrant.ButtonTooltip": "升级",
   "ORIGINATE.LevelUpGrant.NoPermission": "GM 尚未向该角色授予升级。",
-  "ORIGINATE.LevelUpGrant.NotOwner": "你不是该角色的拥有者。"
+  "ORIGINATE.LevelUpGrant.NotOwner": "你不是该角色的拥有者。",
+  "ORIGINATE.FeatCatalog.PreviewTitle": "专长说明",
+  "ORIGINATE.FeatCatalog.PreviewHint": "将鼠标悬停在专长上或选择它以查看完整说明。",
+  "ORIGINATE.UI.Progression.SubclassPreviewHint": "将鼠标悬停在子职上或选择它以查看完整说明。",
+  "ORIGINATE.UI.Progression.HPRollPermanent": "第一次生命值骰结果会永久锁定到该等级。取消升级后也不能重新掷骰。"
 }
