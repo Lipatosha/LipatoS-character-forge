@@ -1,8 +1,8 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "description": "Lightweight character creation wizard for D&D 5e on Foundry VTT.",
-  "version": "1.0.0",
+  "description": "Лёгкий мастер создания персонажа для D&D 5e: имя, вид/раса, предыстория, класс и характеристики с загрузкой вариантов из компендиумов.",
+  "version": "1.0.1",
   "authors": [{"name": "LipatoS"}],
   "compatibility": {"minimum": "14", "verified": "14"},
   "relationships": {
