@@ -4381,6 +4381,20 @@ export const ProgressionMixin = (Base) => {
                 const actorToOpen = result.actor || this.actor;
                 const deferredFinalize = result.deferredFinalize;
 
+                // Одноразовый допуск игрока расходуется только после успешного создания.
+                // До этого момента кнопку можно закрывать/открывать сколько угодно, а бросок
+                // характеристик остаётся закреплён за тем же grantId.
+                if (this.creationGrantId) {
+                    try {
+                        await game.modules.get('character-forge')?.api?.consumeCreationGrant?.({
+                            grantId: this.creationGrantId,
+                            actorId: actorToOpen?.id
+                        });
+                    } catch (grantError) {
+                        console.warn('Character Forge | Не удалось подтвердить расход разрешения:', grantError);
+                    }
+                }
+
                 try {
                     // Финальный экран не анимируем: персонаж уже создан, здесь важнее
                     // как можно быстрее освободить полноэкранный Forge перед листом.
