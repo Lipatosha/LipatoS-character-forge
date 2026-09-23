@@ -463,31 +463,38 @@ export function updateTooltipPosition(e, tooltip) {
  * @param {Object} dataManager DataManager 实例（用于 getDocument）
  */
 export function bindTooltips(container, dataManager) {
-    document.querySelectorAll('.originate-spell-tooltip, .originate-nested-tooltip').forEach(el => el.remove());
+    const preservedPinnedTooltip = document.querySelector('.originate-spell-tooltip.is-pinned[data-pinned="true"]');
 
-    const tooltip = document.createElement('div');
-    tooltip.className = 'originate-spell-tooltip';
-    tooltip.dataset.pinned = 'false';
-    Object.assign(tooltip.style, {
-        position: 'fixed',
-        display: 'none',
-        maxWidth: '450px',
-        minWidth: '250px',
-        width: 'auto',
-        overflowY: 'auto',
-        padding: '12px 14px',
-        background: 'linear-gradient(135deg, rgba(20,18,15,0.97), rgba(35,30,25,0.97))',
-        border: '1px solid rgba(200,163,95,0.4)',
-        borderRadius: '6px',
-        color: '#e8dcc8',
-        fontSize: '0.85rem',
-        lineHeight: '1.6',
-        zIndex: '100000',
-        pointerEvents: 'auto',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-        backdropFilter: 'blur(8px)'
+    document.querySelectorAll('.originate-spell-tooltip').forEach(el => {
+        if (el !== preservedPinnedTooltip) el.remove();
     });
-    document.body.appendChild(tooltip);
+    document.querySelectorAll('.originate-nested-tooltip').forEach(el => el.remove());
+
+    const tooltip = preservedPinnedTooltip || document.createElement('div');
+    if (!preservedPinnedTooltip) {
+        tooltip.className = 'originate-spell-tooltip';
+        tooltip.dataset.pinned = 'false';
+        Object.assign(tooltip.style, {
+            position: 'fixed',
+            display: 'none',
+            maxWidth: '450px',
+            minWidth: '250px',
+            width: 'auto',
+            overflowY: 'auto',
+            padding: '12px 14px',
+            background: 'linear-gradient(135deg, rgba(20,18,15,0.97), rgba(35,30,25,0.97))',
+            border: '1px solid rgba(200,163,95,0.4)',
+            borderRadius: '6px',
+            color: '#e8dcc8',
+            fontSize: '0.85rem',
+            lineHeight: '1.6',
+            zIndex: '100000',
+            pointerEvents: 'auto',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(8px)'
+        });
+        document.body.appendChild(tooltip);
+    }
 
     let hideTimer = null;
     let currentSourceEl = null;
@@ -533,26 +540,30 @@ export function bindTooltips(container, dataManager) {
         }, 220);
     };
 
-    tooltip.addEventListener('wheel', (e) => {
-        const hasOverflow = tooltip.scrollHeight > tooltip.clientHeight;
-        if (!hasOverflow) return;
-        const atTop = tooltip.scrollTop <= 0 && e.deltaY < 0;
-        const atBottom = (tooltip.scrollTop + tooltip.clientHeight >= tooltip.scrollHeight - 1) && e.deltaY > 0;
-        if (atTop || atBottom) return;
-        e.preventDefault();
-        e.stopPropagation();
-        tooltip.scrollTop += e.deltaY;
-    }, { passive: false });
+    if (tooltip.dataset.characterForgeTooltipListenersBound !== 'true') {
+        tooltip.dataset.characterForgeTooltipListenersBound = 'true';
 
-    tooltip.addEventListener('mouseenter', cancelHide);
-    tooltip.addEventListener('mouseleave', scheduleHide);
-    tooltip.addEventListener('auxclick', (event) => {
-        if (event.button !== 1) return;
-        event.preventDefault();
-        event.stopPropagation();
-        setPinned(!isPinned());
-        if (!isPinned()) scheduleHide();
-    });
+        tooltip.addEventListener('wheel', (e) => {
+            const hasOverflow = tooltip.scrollHeight > tooltip.clientHeight;
+            if (!hasOverflow) return;
+            const atTop = tooltip.scrollTop <= 0 && e.deltaY < 0;
+            const atBottom = (tooltip.scrollTop + tooltip.clientHeight >= tooltip.scrollHeight - 1) && e.deltaY > 0;
+            if (atTop || atBottom) return;
+            e.preventDefault();
+            e.stopPropagation();
+            tooltip.scrollTop += e.deltaY;
+        }, { passive: false });
+
+        tooltip.addEventListener('mouseenter', cancelHide);
+        tooltip.addEventListener('mouseleave', scheduleHide);
+        tooltip.addEventListener('auxclick', (event) => {
+            if (event.button !== 1) return;
+            event.preventDefault();
+            event.stopPropagation();
+            setPinned(!isPinned());
+            if (!isPinned()) scheduleHide();
+        });
+    }
 
     const positionTooltip = (card) => {
         tooltip.style.maxHeight = 'none';
