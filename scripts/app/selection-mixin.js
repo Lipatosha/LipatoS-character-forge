@@ -72,6 +72,14 @@ export const SelectionMixin = (Base) => class extends Base {
     }
 
     async _renderSubInterface(type, option) {
+        if (type === 'background' && option) {
+            option = {
+                ...option,
+                displayName: String(option.displayName || option.name || '')
+                    .replace(/\s*\(([A-Z0-9][A-Z0-9&+.'’\- ]{1,24})\)\s*$/u, '')
+                    .trim()
+            };
+        }
         window.OriginateLog(`Originate | _renderSubInterface 开始，type=${type}, option=${option.name}。好戏开场。`);
         window.OriginateLog(`Originate | option.uuid: ${option.uuid}`);
 
