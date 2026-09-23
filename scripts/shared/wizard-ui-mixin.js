@@ -434,7 +434,7 @@ export class WizardUIMixin {
                         <h3>${game.i18n.localize('ORIGINATE.UI.Progression.HPTitle')}</h3>
                         <div class="hp-subtitle">${game.i18n.format('ORIGINATE.UI.Progression.HPSubtitle', { die: hitDie, mod: conMod })}</div>
                     </div>
-                    <div class="hp-options-wrapper ${rollLocked ? 'hp-options-wrapper--locked' : ''}">
+                    <div class="hp-options-wrapper ${rollLocked ? 'hp-options-wrapper--locked' : ''} ${this.levelUpManager ? 'hp-roll-only' : ''}">
                         <div class="hp-option-card ${savedHP?.method === 'average' ? 'selected' : ''}" data-method="average" data-hp="${avgHP}" aria-disabled="${rollLocked}">
                             <div class="hp-option-icon"><i class="fas fa-shield-alt"></i></div>
                             <div class="hp-option-title">${game.i18n.localize('ORIGINATE.UI.Progression.HPAverage')}</div>
@@ -1643,6 +1643,10 @@ export class WizardUIMixin {
                         state.hpGain = choice.hp;
                         state.hpMethod = choice.method;
                         state.hpRollResult = choice.rollResult;
+
+                        if (choice.method === 'roll' && typeof this._persistLockedHitPointRoll === 'function') {
+                            await this._persistLockedHitPointRoll(choice);
+                        }
 
                         overlay.querySelectorAll('.hp-option-card').forEach(option => {
                             option.classList.toggle('selected', option.dataset.method === choice.method);
