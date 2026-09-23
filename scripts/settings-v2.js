@@ -9,6 +9,7 @@
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 import { setCustomImage, getCustomImageConfig, hasCustomImage, getAllCustomImages, setAllCustomImages } from './phb-image-mapping.js';
+import { acquireForgeStyles, releaseForgeStyles } from './runtime-style.js';
 import { AspectsConfigApp } from './app/aspects-config.js';
 import { openCustomImageConfig } from './app/custom-image-config.js';
 import { PropertiesConfigApp } from './app/properties-config.js';
@@ -121,6 +122,7 @@ export class OriginateConfigApp extends HandlebarsApplicationMixin(ApplicationV2
 
     constructor(options = {}) {
         super(options);
+        acquireForgeStyles(this).catch(error => console.warn('Character Forge | Не удалось загрузить стили настроек:', error));
         this._activeTab = 'sources'; // 默认打开数据源标签页，因为那里最热闹
         this._pendingSourcePacks = null; // 暂存的数据源配置，防止手滑
         this._scrollPositions = {}; // 存储滚动位置，用户体验细节
@@ -988,7 +990,9 @@ export class OriginateConfigApp extends HandlebarsApplicationMixin(ApplicationV2
     async close(options) {
         cleanupWindowScaling(this._windowScaleObserver);
         this._windowScaleObserver = null;
-        return super.close(options);
+        const result = await super.close(options);
+        releaseForgeStyles(this);
+        return result;
     }
 
     /**
