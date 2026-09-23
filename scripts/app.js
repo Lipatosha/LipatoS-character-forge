@@ -625,6 +625,9 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         tooltip.querySelectorAll('[data-tooltip]').forEach(el => el.removeAttribute('data-tooltip'));
         tooltip.querySelectorAll('.content-link').forEach(el => {
             el.removeAttribute('data-tooltip');
+            el.removeAttribute('data-tooltip-direction');
+            el.classList.remove('content-link');
+            el.classList.add('cf-tooltip-link');
             el.style.pointerEvents = 'auto';
         });
 
@@ -651,7 +654,7 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
             tooltip.dataset.pinned = tooltip.classList.contains('is-pinned') ? 'true' : 'false';
         });
         tooltip.addEventListener('click', event => {
-            const nested = event.target?.closest?.('.content-link[data-uuid]');
+            const nested = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
             if (!nested) return;
             event.preventDefault();
             event.stopPropagation();
