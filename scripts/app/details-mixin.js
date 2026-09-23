@@ -289,7 +289,14 @@ export const DetailsMixin = (Base) => class extends Base {
             // 不过我们可以手动处理 save
         }
     }
-    async _onNextStep(event) {
+    async _onNextStep(event, target) {
+        // Имя синхронизируем прямо перед проверкой. Это защищает от ситуации,
+        // когда браузер ещё не успел отдать input/change до клика по «Далее».
+        if (this.currentStep === 'name') {
+            const nameInput = this.element.querySelector('.name-selection-layout input[name="name"]');
+            if (nameInput) this.context.details.name = String(nameInput.value || '').trim();
+        }
+
         // 如果离开传记页，保存传记内容
         // Adrian: textarea 比较老实，直接从 data-field 找就行
         if (this.currentStep === 'biography') {
@@ -299,7 +306,7 @@ export const DetailsMixin = (Base) => class extends Base {
             }
         }
 
-        await super._onNextStep(event);
+        return await super._onNextStep(event, target);
     }
 };
 
