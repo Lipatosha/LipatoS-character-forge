@@ -220,7 +220,12 @@ export const NavigationMixin = (Base) => class extends Base {
         } else {
             // 选中选项
             this.context[type] = id;
-            this.context[`${type}Name`] = option.name;
+            const displayName = type === 'background'
+                ? String(option.displayName || option.name || '')
+                    .replace(/\s*\(([A-Z0-9][A-Z0-9&+.'’\- ]{1,24})\)\s*$/u, '')
+                    .trim()
+                : option.name;
+            this.context[`${type}Name`] = displayName;
             this._leftDrawerSwitching = type !== 'subclass' && !!this._leftDrawerExpanded && !!previousId && previousId !== id;
             try {
                 await this.render();
