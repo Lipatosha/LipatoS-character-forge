@@ -12372,3 +12372,20 @@ body.originate-active .character-forge-item-sheet-front {
         grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
     }
 }
+
+
+.originate-progression-wizard .hp-permanent-roll-warning {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    max-width: 620px;
+    margin: 0.8rem auto 0;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.28);
+    border-radius: 6px;
+    background: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.06);
+    color: rgba(220, 202, 163, 0.78);
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
