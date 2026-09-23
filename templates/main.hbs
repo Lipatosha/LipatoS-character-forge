@@ -730,6 +730,7 @@
 
         <!-- 1. 鑳屾櫙灞?(姘涘洿缁? - 璐熻矗鎶婇偅浜涢珮娓呭ぇ鍥炬ā绯婃帀锛岃惀閫犱竴绉嶆湨鑳х編 -->
         <div class="cinematic-background">
+            {{#if (eq currentStep "subclass")}}
             {{#if selectedOption.heroImage}}
             {{#if selectedOption.heroImageIsVideo}}
             <video class="bg-video" autoplay muted loop playsinline>
@@ -741,6 +742,9 @@
             {{/if}}
             {{else}}
             <div class="bg-placeholder"></div>
+            {{/if}}
+            {{else}}
+            <div class="bg-placeholder selection-static-background"></div>
             {{/if}}
             <div class="bg-overlay"></div>
         </div>
@@ -808,18 +812,22 @@
         {{/unless}}
 
         <!-- 4. 宸︿晶鎶藉眽 (钘忓疂闃? - 閲岄潰濉炴弧浜嗙‖鏍告暟鎹紝鐐归偅涓皬鍦嗗湀灏辫兘婊戝嚭鏉?-->
-        <div class="left-sidebar-drawer {{#unless leftDrawerExpanded}}collapsed{{/unless}} {{#unless selectedOption}}hidden{{/unless}} {{#if leftDrawerSwitching}}switching{{/if}}">
+        <div class="left-sidebar-drawer {{#if (eq currentStep "subclass")}}{{#unless leftDrawerExpanded}}collapsed{{/unless}} {{#unless selectedOption}}hidden{{/unless}}{{else}}always-open{{/if}} {{#if leftDrawerSwitching}}switching{{/if}}">
+            {{#if (eq currentStep "subclass")}}
             <div class="drawer-handle" data-action="toggleLeftDrawer">
                 <i class="fas fa-info-circle"></i>
                 <span class="handle-text">{{localize "ORIGINATE.UI.Details.Toggle"}}</span>
                 <i class="fas fa-chevron-left toggle-icon"></i>
             </div>
+            {{/if}}
             <div class="drawer-content">
                 {{#if selectedOption}}
                 <h2 class="drawer-title">{{localize selectedOption.name}}</h2>
                 <div class="drawer-body">
                     {{{selectedOption.description}}}
                 </div>
+                {{else}}
+                <div class="drawer-empty-state">{{localize "ORIGINATE.UI.Details.Placeholder"}}</div>
                 {{/if}}
             </div>
         </div>
