@@ -153,6 +153,44 @@ export class DataManager {
         return russianPart || text;
     }
 
+    _getLocalizedAbilityLabel(ability) {
+        const key = String(ability || '').trim().toLowerCase();
+        const suffix = key ? key.charAt(0).toUpperCase() + key.slice(1) : '';
+        const ownKey = suffix ? `ORIGINATE.Ability.${suffix}` : '';
+        const ownLabel = ownKey ? game.i18n.localize(ownKey) : '';
+        if (ownLabel && ownLabel !== ownKey) return ownLabel;
+
+        const configLabel = CONFIG.DND5E?.abilities?.[key]?.label;
+        if (configLabel) {
+            const localized = game.i18n.localize(configLabel);
+            if (localized && localized !== configLabel) return localized;
+        }
+
+        return key;
+    }
+
+    _localizeAbilityTokensInHtml(html) {
+        if (!html || typeof html !== 'string') return html;
+        if (!game.i18n.lang?.toLowerCase?.().startsWith('ru')) return html;
+
+        try {
+            const root = document.createElement('div');
+            root.innerHTML = html;
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const regex = /\b(str|dex|con|int|wis|cha)\b/gi;
+            let node = walker.nextNode();
+            while (node) {
+                node.nodeValue = String(node.nodeValue || '').replace(regex, (_match, ability) =>
+                    this._getLocalizedAbilityLabel(ability)
+                );
+                node = walker.nextNode();
+            }
+            return root.innerHTML;
+        } catch {
+            return html;
+        }
+    }
+
     _isBrokenDisplayValue(value) {
         if (value === null || value === undefined) return true;
         if (typeof value !== 'string') return false;
@@ -774,11 +812,13 @@ export class DataManager {
             const doc = option.uuid ? await this.getDocument(option.uuid) : null;
             const TE = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
             option.description = await TE.enrichHTML(raw, { async: true, relativeTo: doc || undefined });
+            option.description = this._localizeAbilityTokensInHtml(option.description);
         } catch (error) {
             console.warn('Character Forge | Description enrichment failed; using raw HTML', error);
+            option.description = this._localizeAbilityTokensInHtml(raw);
         }
         option._descriptionEnriched = true;
-        return option.description || raw;
+        return option.description || this._localizeAbilityTokensInHtml(raw);
     }
 
     /**
@@ -1693,14 +1733,14 @@ export class DataManager {
     _getPrimaryAbility(item) {
         // 1. 从 spellcasting 推断
         if (item.system.spellcasting?.ability) {
-            return CONFIG.DND5E.abilities[item.system.spellcasting.ability]?.label || null;
+            return this._getLocalizedAbilityLabel(item.system.spellcasting.ability) || null;
         }
 
         // 2. 使用预定义映射表
         if (item.system.identifier && DND5E_MAPPING.classPrimaryAbilities) {
             const abilityKey = DND5E_MAPPING.classPrimaryAbilities[item.system.identifier];
             if (abilityKey) {
-                return CONFIG.DND5E.abilities[abilityKey]?.label || null;
+                return this._getLocalizedAbilityLabel(abilityKey) || null;
             }
         }
 
@@ -1730,7 +1770,7 @@ export class DataManager {
                 for (const grant of adv.configuration.grants) {
                     if (grant.startsWith('saves:')) {
                         const ability = grant.split(':')[1];
-                        const label = CONFIG.DND5E.abilities[ability]?.label;
+                        const label = this._getLocalizedAbilityLabel(ability);
                         if (label) saves.push(label);
                     }
                 }
