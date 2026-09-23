@@ -10,10 +10,6 @@
         <button type="button" class="config-tab {{#if (eq activeTab 'sources')}}active{{/if}}" data-tab="sources">
             <span class="tab-label">{{localize "ORIGINATE.Settings.Config.Sources"}}</span>
         </button>
-        <button type="button" class="config-tab {{#if initialShop.active}}active{{/if}}" data-tab="initialShop">
-            <span class="tab-label">{{localize "ORIGINATE.InitialShop.Title"}}</span>
-            <span class="tab-count">{{initialShop.count}}</span>
-        </button>
         {{#each categories}}
         <button type="button" class="config-tab {{#if active}}active{{/if}}" data-tab="{{id}}">
             <span class="tab-label">{{label}}</span>
@@ -110,89 +106,6 @@
                     data-action="saveSourcePacks">
                     <i class="fas fa-save"></i> {{localize "ORIGINATE.Settings.Config.SaveSources"}}
                 </button>
-            </div>
-        </section>
-
-        <section class="config-category {{#if initialShop.active}}active{{/if}}" data-category="initialShop">
-            <div class="category-header">
-                <div class="category-heading">
-                    <h2>{{localize "ORIGINATE.InitialShop.Title"}}</h2>
-                    <label class="initial-shop-rate-control">
-                        <span>{{localize "ORIGINATE.InitialShop.SellRate"}}</span>
-                        <input type="number" min="0" max="100" step="1" class="initial-shop-sell-rate"
-                            value="{{initialShop.sellRatePercent}}">
-                        <span>%</span>
-                    </label>
-                    <div class="config-search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="search" class="config-search-input" data-category-search="initialShop"
-                            value="{{initialShop.searchTerm}}" placeholder="{{localize 'ORIGINATE.Settings.Config.SearchPlaceholder'}}">
-                        <button type="button" class="btn-clear-search" data-category-search="initialShop"
-                            title="{{localize 'ORIGINATE.Settings.Config.ClearSearch'}}" {{#unless initialShop.searchTerm}}hidden{{/unless}}>
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="config-drop-zone initial-shop-config" data-category="initialShop">
-                <div class="config-search-empty" hidden>
-                    <i class="fas fa-search"></i>
-                    <p>{{localize "ORIGINATE.Settings.Config.SearchNoResults"}}</p>
-                </div>
-
-                {{#if initialShop.hasGroups}}
-                <div class="initial-shop-config-list">
-                    {{#each initialShop.groups}}
-                    <details class="spell-group initial-shop-group" open data-group-name="{{label}}">
-                        <summary class="spell-group-header">
-                            <span class="group-name">{{label}}</span>
-                            <span class="group-count">{{items.length}}</span>
-                        </summary>
-                        <ul class="config-item-list">
-                            {{#each items}}
-                            <li class="config-item initial-shop-config-item {{#if missing}}excluded{{/if}}"
-                                data-search-text="{{searchText}}">
-                                <img src="{{img}}" alt="{{name}}" class="item-img">
-                                <div class="item-info">
-                                    <span class="item-name">{{name}}</span>
-                                    <span class="item-desc">{{type}}</span>
-                                    {{#if sourceModuleId}}
-                                    <span class="item-source-id" title="{{sourceModuleId}}">{{sourceModuleId}}</span>
-                                    {{/if}}
-                                </div>
-                                <label class="initial-shop-field">
-                                    <span>{{localize "ORIGINATE.InitialShop.PurchasePrice"}}</span>
-                                    <input type="number" min="0" step="0.01" class="initial-shop-price"
-                                        data-uuid="{{uuid}}" data-field="purchasePriceGp" value="{{purchasePriceText}}">
-                                </label>
-                                <label class="initial-shop-field">
-                                    <span>{{localize "ORIGINATE.InitialShop.SellOverride"}}</span>
-                                    <input type="number" min="0" step="0.01" class="initial-shop-price"
-                                        data-uuid="{{uuid}}" data-field="sellPriceGp" value="{{sellPriceText}}">
-                                </label>
-                                <label class="initial-shop-purchase">
-                                    <input type="checkbox" class="initial-shop-purchase-toggle" data-uuid="{{uuid}}" {{#if canPurchase}}checked{{/if}}>
-                                    <span>{{localize "ORIGINATE.InitialShop.CanPurchase"}}</span>
-                                </label>
-                                <div class="item-actions">
-                                    <button type="button" class="btn-remove" data-action="removeShopItem"
-                                        data-uuid="{{uuid}}" title="{{localize 'ORIGINATE.Settings.Config.Remove'}}">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </li>
-                            {{/each}}
-                        </ul>
-                    </details>
-                    {{/each}}
-                </div>
-                {{else}}
-                <div class="drop-placeholder">
-                    <i class="fas fa-store"></i>
-                    <p>{{localize "ORIGINATE.InitialShop.DropHint"}}</p>
-                </div>
-                {{/if}}
             </div>
         </section>
 
