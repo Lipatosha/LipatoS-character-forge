@@ -591,10 +591,17 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
             ? `<img src="${doc.img}" alt="">`
             : '';
 
+        const safeName = String(doc.name || link.textContent?.trim() || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
         tooltip.innerHTML = `
             <div class="cf-item-tooltip-header">
                 ${image}
-                <div class="cf-item-tooltip-title">${foundry.utils.escapeHTML(doc.name || link.textContent?.trim() || '')}</div>
+                <div class="cf-item-tooltip-title">${safeName}</div>
             </div>
             <div class="cf-item-tooltip-body">${description || game.i18n.localize('ORIGINATE.UI.Details.NoDescription')}</div>
         `;
