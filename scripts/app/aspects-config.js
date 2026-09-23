@@ -1,4 +1,5 @@
 import { FontLoader } from "../utils/font-loader.js";
+import { acquireForgeStyles, releaseForgeStyles } from "../runtime-style.js";
 import { applyWindowScaling, cleanupWindowScaling } from "../utils/scaling-helper.js";
 import {
     getThemeChoices,
@@ -54,6 +55,7 @@ export class AspectsConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
 
     constructor(options = {}) {
         super(options);
+        acquireForgeStyles(this).catch(error => console.warn('Character Forge | Не удалось загрузить стили внешнего вида:', error));
         const visualTheme = game.settings.get('character-forge', 'visualTheme');
         this._activeSettingsTab = getThemePanel(visualTheme) ? 'theme' : 'general';
         this._previewMode = getThemePreview(visualTheme)?.defaultMode || 'start';
@@ -121,7 +123,9 @@ export class AspectsConfigApp extends HandlebarsApplicationMixin(ApplicationV2) 
         this._destroyPreview();
         cleanupWindowScaling(this._windowScaleObserver);
         this._windowScaleObserver = null;
-        return super.close(options);
+        const result = await super.close(options);
+        releaseForgeStyles(this);
+        return result;
     }
 
     _onActivateTab(_event, target) {
