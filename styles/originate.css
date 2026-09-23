@@ -11418,3 +11418,175 @@ body.originate-active #ui-notifications .notification.error {
 body.originate-active .character-forge-item-sheet-front {
     z-index: 100060 !important;
 }
+
+
+/* ============================================================
+   Character Forge 1.1.9 — компоновка, характеристики и навигация
+   ============================================================ */
+
+/* Шапка: Назад слева, заголовок строго по центру, Выход справа. */
+.originate-header {
+    position: relative;
+    justify-content: center !important;
+}
+
+.originate-header-back-slot {
+    position: absolute;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    z-index: 2;
+}
+
+.originate-header-back-btn {
+    background: transparent;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.45);
+    color: var(--originate-accent);
+    padding: 0.45rem 0.9rem;
+    font-family: "Cinzel", serif;
+    cursor: pointer;
+}
+
+.originate-title {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.originate-title h2 {
+    margin: 0;
+}
+
+.originate-controls {
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+/* Класс / вид / предыстория: подробности занимают правую половину экрана. */
+.view-selection-root.step-class .left-sidebar-drawer,
+.view-selection-root.step-race .left-sidebar-drawer,
+.view-selection-root.step-background .left-sidebar-drawer {
+    left: auto !important;
+    right: 0 !important;
+    width: 50% !important;
+    min-width: 50% !important;
+    max-width: 50% !important;
+    --left-drawer-min-width: 50% !important;
+    --left-drawer-max-width: 50% !important;
+    --left-drawer-content-width: 50% !important;
+    border-right: 0 !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Заголовок и краткое описание центрируются в свободной левой половине. */
+.view-selection-root.step-class .cinematic-caption,
+.view-selection-root.step-race .cinematic-caption,
+.view-selection-root.step-background .cinematic-caption {
+    left: 25% !important;
+    width: calc(50% - 80px) !important;
+    max-width: none !important;
+    transform: translateX(-50%) !important;
+}
+
+/* Нижнее меню тоже не заходит под правую панель. */
+.view-selection-root.step-class .cinematic-nav,
+.view-selection-root.step-race .cinematic-nav,
+.view-selection-root.step-background .cinematic-nav {
+    left: 25% !important;
+    width: calc(50% - 32px);
+    max-width: calc(50% - 32px);
+    bottom: 96px;
+    transform: translateX(-50%) !important;
+}
+
+.view-selection-root.step-class .cinematic-nav .nav-track,
+.view-selection-root.step-race .cinematic-nav .nav-track,
+.view-selection-root.step-background .cinematic-nav .nav-track {
+    width: calc(100% - 54px);
+    max-width: calc(100% - 54px);
+}
+
+/* Подтвердить выбор — ровно по центру под названием выбранного варианта. */
+.view-selection-root.step-class .cinematic-actions,
+.view-selection-root.step-race .cinematic-actions,
+.view-selection-root.step-background .cinematic-actions {
+    left: 25% !important;
+    right: auto !important;
+    bottom: 28px !important;
+    transform: translateX(-50%) !important;
+}
+
+/* Бросок характеристик: шесть одинаковых квадратных ячеек, только число. */
+.roll-slot-machine .slot-display {
+    gap: 1rem;
+}
+
+.roll-slot-machine .slot-column {
+    width: 88px;
+    min-width: 88px;
+    height: 88px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.roll-slot-machine .slot-value {
+    width: 100%;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+}
+
+.roll-slot-machine .slot-label,
+.roll-slot-machine .slot-mod {
+    display: none !important;
+}
+
+/* В распределении характеристик ничего не подсвечивается как "основное" заранее. */
+.roll-assignment-phase .assignment-target.primary-ability {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    background: rgba(0, 0, 0, 0.3) !important;
+    box-shadow: none !important;
+}
+
+.roll-assignment-phase .assignment-target.primary-ability::after {
+    display: none !important;
+}
+
+/* Кнопки Далее: только текст + стрелка, без декоративных точек/ромбов. */
+.nav-btn.next-btn::before,
+.nav-btn.next-btn::after,
+.abilities-confirm-btn::before,
+.abilities-confirm-btn::after,
+.sub-interface-footer .confirm-btn[data-action="nextWizardStep"]::before,
+.sub-interface-footer .confirm-btn[data-action="nextWizardStep"]::after,
+.originate-levelup-wizard .next-btn::before,
+.originate-levelup-wizard .next-btn::after {
+    content: none !important;
+    display: none !important;
+}
+
+/* Ссылки правил/предметов явно показывают, что у них есть hover-описание. */
+.originate-container .content-link[data-uuid] {
+    cursor: help;
+    transition: color .15s ease, text-shadow .15s ease, border-color .15s ease;
+}
+
+.originate-container .content-link[data-uuid]:hover {
+    color: var(--originate-accent) !important;
+    border-color: var(--originate-accent) !important;
+    text-shadow: 0 0 8px rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .35);
+}
