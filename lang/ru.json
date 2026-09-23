@@ -958,5 +958,7 @@
   "ORIGINATE.Ability.Abbr.Int": "ИНТ",
   "ORIGINATE.Ability.Abbr.Wis": "МДР",
   "ORIGINATE.Ability.Abbr.Cha": "ХАР",
-  "ORIGINATE.UI.Level.Label": "УРОВЕНЬ"
+  "ORIGINATE.UI.Level.Label": "УРОВЕНЬ",
+  "ORIGINATE.Button.Loading": "Загрузка...",
+  "ORIGINATE.UI.Details.NoDescription": "Описание отсутствует."
 }
