@@ -347,14 +347,16 @@ export const AbilitiesMixin = (Base) => class extends Base {
             const totalPoints = game.settings.get('character-forge', 'pointBuyTotal') || 27;
             const maxScore = game.settings.get('character-forge', 'pointBuyMaxScore') || 15;
             const usedPoints = this._calculateUsedPoints();
+            const remainingPoints = totalPoints - usedPoints;
 
             context.pointBuy = {
                 totalPoints,
                 maxScore,
                 usedPoints,
-                remainingPoints: totalPoints - usedPoints,
+                remainingPoints,
                 costs: POINT_BUY_COSTS
             };
+            context.canConfirmAbilities = remainingPoints === 0;
         } else if (abilityMode === 'roll') {
             const rollFormula = game.settings.get('character-forge', 'rollFormula') || '4d6kh3';
             const rollAttempts = game.settings.get('character-forge', 'rollAttempts') || 1;
@@ -480,12 +482,14 @@ export const AbilitiesMixin = (Base) => class extends Base {
     }
 
     _updatePointBuyDisplay() {
+        const totalPoints = game.settings.get('character-forge', 'pointBuyTotal') || 27;
+        const remaining = totalPoints - this._calculateUsedPoints();
+
         const remainingDisplay = this.element.querySelector('.point-buy-remaining');
-        if (remainingDisplay) {
-            const totalPoints = game.settings.get('character-forge', 'pointBuyTotal') || 27;
-            const remaining = totalPoints - this._calculateUsedPoints();
-            remainingDisplay.textContent = remaining;
-        }
+        if (remainingDisplay) remainingDisplay.textContent = remaining;
+
+        const nextButton = this.element.querySelector('.abilities-footer .abilities-confirm-btn');
+        if (nextButton) nextButton.disabled = remaining !== 0;
     }
 
     /**
