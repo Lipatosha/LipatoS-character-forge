@@ -906,35 +906,53 @@ export function renderSubclassCards(options, { selectedUuid = null } = {}) {
  * 子职选择区连同左侧详情抽屉。外层流程只需要补自己的 header 和 footer。
  */
 export function renderSubclassSelectionPanel(options, { selectedUuid = null } = {}) {
-    const detailsLabel = escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Details.Toggle'));
+    const selectedKey = String(selectedUuid || '');
+    const selected = (options || []).find(option =>
+        selectedKey && (String(option.uuid || '') === selectedKey || String(option.id || '') === selectedKey)
+    ) || null;
+
+    const detailContent = selected
+        ? `
+            <h2 class="subclass-detail-title">${escapeSubclassText(selected.name)}</h2>
+            <div class="subclass-detail-body">${selected.description || ''}</div>
+        `
+        : `
+            <div class="subclass-detail-placeholder">
+                <i class="fas fa-shield-halved"></i>
+                <h3>${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}</h3>
+                <p>${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SubclassPreviewHint'))}</p>
+            </div>
+        `;
 
     return `
-        <div class="subclass-selection-container" id="progression-subclass-content">
-            <div class="subclass-cards-wrapper">
-                ${renderSubclassCards(options, { selectedUuid })}
-            </div>
-            <aside class="subclass-detail-drawer collapsed hidden" data-subclass-detail-drawer aria-hidden="true">
-                <button type="button" class="subclass-detail-handle" data-subclass-detail-toggle
-                    aria-expanded="false" title="${detailsLabel}">
-                    <i class="fas fa-info-circle"></i>
-                    <span>${detailsLabel}</span>
-                    <i class="fas fa-chevron-left subclass-detail-toggle-icon"></i>
-                </button>
-                <div class="subclass-detail-content drawer-content" data-subclass-detail-content aria-hidden="true"></div>
+        <div class="subclass-selection-container subclass-classlike-layout" id="progression-subclass-content">
+            <aside class="subclass-classlike-detail" data-subclass-detail-content>
+                ${detailContent}
             </aside>
+            <section class="subclass-classlike-main">
+                <div class="subclass-classlike-toolbar">
+                    <button type="button" class="subclass-status-button" data-subclass-status>
+                        <i class="fas fa-id-card"></i>
+                        <span>${escapeSubclassText(game.i18n.localize('ORIGINATE.LevelUp.Status.Toggle'))}</span>
+                    </button>
+                </div>
+                <div class="subclass-cards-wrapper">
+                    ${renderSubclassCards(options, { selectedUuid })}
+                </div>
+            </section>
         </div>
     `;
 }
 
 /**
- * 绑定卡片、键盘选择和抽屉。这里只管展示，宿主通过 onSelect 保存自己的草稿。
+ * Подкласс теперь выбирается тем же способом, что и основной класс:
+ * список справа, постоянное подробное описание слева.
  */
 export function bindSubclassSelectionPanel(root, options, { selectedUuid = null, onSelect = null } = {}) {
     const panel = root?.querySelector?.('#progression-subclass-content');
-    const drawer = panel?.querySelector?.('[data-subclass-detail-drawer]');
-    const content = drawer?.querySelector?.('[data-subclass-detail-content]');
-    const toggle = drawer?.querySelector?.('[data-subclass-detail-toggle]');
-    if (!panel || !drawer || !content || !toggle) return null;
+    const content = panel?.querySelector?.('[data-subclass-detail-content]');
+    const statusButton = panel?.querySelector?.('[data-subclass-status]');
+    if (!panel || !content) return null;
 
     const optionByKey = new Map();
     for (const option of options || []) {
@@ -943,38 +961,17 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
     }
 
     const cards = Array.from(panel.querySelectorAll('.subclass-anchor-unit'));
-    let currentKey = '';
 
-    const syncDrawerState = () => {
-        const expanded = !drawer.classList.contains('collapsed');
-        toggle.setAttribute('aria-expanded', String(expanded));
-        content.setAttribute('aria-hidden', String(!expanded));
-    };
-
-    const showDetails = (option, { expand = false } = {}) => {
+    const showDetails = option => {
         if (!option) return;
-
-        const nextKey = getSubclassOptionKey(option);
-        const isSwitching = !!currentKey && currentKey !== nextKey && !drawer.classList.contains('collapsed');
-        currentKey = nextKey;
-
         content.innerHTML = `
-            <h2 class="subclass-detail-title drawer-title">${escapeSubclassText(option.name)}</h2>
-            <div class="subclass-detail-body drawer-body">${option.description || ''}</div>
+            <h2 class="subclass-detail-title">${escapeSubclassText(option.name)}</h2>
+            <div class="subclass-detail-body">${option.description || ''}</div>
         `;
-        drawer.classList.remove('hidden');
-        drawer.setAttribute('aria-hidden', 'false');
-        if (expand) drawer.classList.remove('collapsed');
-
-        drawer.classList.remove('switching');
-        if (isSwitching) {
-            void drawer.offsetWidth;
-            drawer.classList.add('switching');
-        }
-        syncDrawerState();
+        content.scrollTop = 0;
     };
 
-    const selectCard = (card, { notify = true, expand = false } = {}) => {
+    const selectCard = (card, { notify = true } = {}) => {
         if (!card) return null;
         const option = optionByKey.get(card.dataset.uuid) || optionByKey.get(card.dataset.id);
         if (!option) return null;
@@ -985,17 +982,10 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
             otherCard.setAttribute('aria-pressed', String(selected));
         }
 
-        // 选中只露出详情操作柄；玩家主动展开后，切换子职才保持当前展开状态。
-        showDetails(option, { expand });
+        showDetails(option);
         if (notify && typeof onSelect === 'function') onSelect(option, card);
         return option;
     };
-
-    toggle.addEventListener('click', () => {
-        drawer.classList.toggle('collapsed');
-        drawer.classList.remove('switching');
-        syncDrawerState();
-    });
 
     for (const card of cards) {
         card.addEventListener('click', () => selectCard(card));
@@ -1004,15 +994,25 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
             event.preventDefault();
             selectCard(card);
         });
+        card.addEventListener('pointerenter', () => {
+            const option = optionByKey.get(card.dataset.uuid) || optionByKey.get(card.dataset.id);
+            if (option) showDetails(option);
+        });
     }
+
+    statusButton?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const appRoot = panel.closest('.originate-levelup-app') || root.parentElement;
+        appRoot?.querySelector?.('.levelup-status-toggle')?.click();
+    });
 
     const selectedKey = String(selectedUuid || '');
     const selectedCard = cards.find(card =>
         card.classList.contains('selected')
         || (!!selectedKey && (card.dataset.uuid === selectedKey || card.dataset.id === selectedKey))
     );
-    if (selectedCard) selectCard(selectedCard, { notify: false, expand: false });
+    if (selectedCard) selectCard(selectedCard, { notify: false });
 
-    syncDrawerState();
-    return { selectCard };
+    return { selectCard, showDetails };
 }
