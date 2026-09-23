@@ -749,22 +749,8 @@
             <div class="bg-overlay"></div>
         </div>
 
-        <!-- 2. 涓昏瑙夊眰 (C浣嶆媴褰? - 杩欓噷鏀剧殑鏄竻鏅扮殑绔嬬粯锛屽埆鐩潃鐪嬪お涔咃紝瀹冧滑浼氬缇炵殑 -->
-        {{#unless (eq currentStep "subclass")}}
-        <div class="cinematic-visual">
-            {{#if selectedOption.heroImage}}
-            {{#if selectedOption.heroImageIsVideo}}
-            <video class="visual-img{{#if selectedOption.heroImageFit}} image-fit-{{selectedOption.heroImageFit}}{{/if}}" autoplay muted loop playsinline>
-                <source src="{{selectedOption.heroImage}}" type="video/webm">
-                <source src="{{selectedOption.heroImage}}" type="video/mp4">
-            </video>
-            {{else}}
-            <img src="{{selectedOption.heroImage}}" alt="{{selectedOption.name}}"
-                class="visual-img{{#if selectedOption.heroImageFit}} image-fit-{{selectedOption.heroImageFit}}{{/if}}">
-            {{/if}}
-            {{/if}}
-        </div>
-        {{/unless}}
+        <!-- Центральный арт на выборе класса/вида/предыстории намеренно отключён.
+             Он больше не вспыхивает на весь экран при переключении вариантов. -->
 
         <!-- 3. 搴曢儴瀛楀箷灞?(鐢靛奖瀛楀箷) - 杩欓噷鐨勯噾灞炶川鎰熸笎鍙樻槸鎴戞渶鍚庣殑鍊斿己 -->
         {{#unless (eq currentStep "subclass")}}
