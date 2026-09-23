@@ -961,5 +961,16 @@
   "ORIGINATE.Ability.Abbr.Cha": "CHA",
   "ORIGINATE.UI.Level.Label": "LEVEL",
   "ORIGINATE.Button.Loading": "Loading...",
-  "ORIGINATE.UI.Details.NoDescription": "No description available."
+  "ORIGINATE.UI.Details.NoDescription": "No description available.",
+  "ORIGINATE.UI.Welcome.Message": "Ready to embark on your journey, adventurer?",
+  "ORIGINATE.LevelUpGrant.Title": "Grant Level Up",
+  "ORIGINATE.LevelUpGrant.Manage": "Grant level ups to characters",
+  "ORIGINATE.LevelUpGrant.Confirm": "Confirm",
+  "ORIGINATE.LevelUpGrant.Saved": "Level-up permissions updated.",
+  "ORIGINATE.LevelUpGrant.NoCharacters": "No characters found.",
+  "ORIGINATE.LevelUpGrant.Owner": "Owners: {owners}",
+  "ORIGINATE.LevelUpGrant.NoOwner": "GM character",
+  "ORIGINATE.LevelUpGrant.ButtonTooltip": "Level Up",
+  "ORIGINATE.LevelUpGrant.NoPermission": "The GM has not granted this character a level up yet.",
+  "ORIGINATE.LevelUpGrant.NotOwner": "You do not own this character."
 }
