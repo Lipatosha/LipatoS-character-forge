@@ -50,27 +50,29 @@ export const NavigationMixin = (Base) => class extends Base {
                 }
             }
 
-            // 其他步骤检查是否已完成选择
-            // 这些步骤存的是草稿或派生数据，可以留空，不应该挡住继续流程。
-            const detailSteps = [...DETAIL_STEPS, 'asiBonus'];
-            if (!detailSteps.includes(this.currentStep) && !this.context[this.currentStep]) {
+            // Обязательные шаги создания нельзя пропустить подтверждением.
+            if (this.currentStep === 'name' && !String(this.context.details?.name || '').trim()) {
+                canProceed = false;
+                warningMessage = game.i18n.localize("ORIGINATE.UI.Name.Required");
+            } else if (this.currentStep === 'alignment' && !String(this.context.details?.alignment || '').trim()) {
                 canProceed = false;
                 warningMessage = game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep");
+            } else if (this.currentStep === 'portrait' && !String(this.context.details?.portrait || '').trim()) {
+                canProceed = false;
+                warningMessage = game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep");
+            } else {
+                const optionalDetailSteps = DETAIL_STEPS.filter(step => !['name', 'alignment', 'portrait'].includes(step));
+                const nonSelectionSteps = [...optionalDetailSteps, 'asiBonus'];
+                if (!nonSelectionSteps.includes(this.currentStep) && !this.context[this.currentStep]) {
+                    canProceed = false;
+                    warningMessage = game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep");
+                }
             }
         }
 
-        // 如果检查未通过，弹出确认框
         if (!canProceed) {
-            const confirmed = await this._showConfirmDialog({
-                title: game.i18n.localize("ORIGINATE.UI.Navigation.ConfirmTitle"),
-                content: `<p>${warningMessage}</p><p>${game.i18n.localize("ORIGINATE.UI.Navigation.ConfirmWarning")}</p>`,
-                yesLabel: game.i18n.localize("ORIGINATE.UI.Button.Confirm"),
-                noLabel: game.i18n.localize("ORIGINATE.UI.Button.Cancel"),
-                defaultYes: false
-            });
-
-            // 如果用户怂了（取消），那就停在这里
-            if (!confirmed) return false;
+            ui.notifications.warn(warningMessage || game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep"));
+            return false;
         }
 
         this._syncCurrentCreationPageDraft?.();
