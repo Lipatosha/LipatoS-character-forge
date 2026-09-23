@@ -15,13 +15,6 @@
     </div>
     {{/if}}
     {{/if}}
-    {{#if canCreationTimelineBack}}
-    {{#unless isCreationSelectionStep}}
-    <button type="button" class="creation-timeline-back-btn" data-action="prevStep">
-        <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
-    </button>
-    {{/unless}}
-    {{/if}}
     {{#if isWelcomeStep}}
     <!-- 
         娆㈣繋鐣岄潰 - 閲嶆瀯鐗?
@@ -133,46 +126,34 @@
             <div class="roll-slot-machine">
                 <div class="slot-display">
                     <div class="slot-column" data-ability="str">
-                        <div class="slot-label">{{localize "ORIGINATE.Ability.Str"}}</div>
                         <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
                             {{#if roll.hasSelection}}{{abilityData.str.value}}{{else}}?{{/if}}
                         </div>
-                        <div class="slot-mod {{abilityData.str.modClass}}">{{abilityData.str.modFormatted}}</div>
                     </div>
                     <div class="slot-column" data-ability="dex">
-                        <div class="slot-label">{{localize "ORIGINATE.Ability.Dex"}}</div>
                         <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
                             {{#if roll.hasSelection}}{{abilityData.dex.value}}{{else}}?{{/if}}
                         </div>
-                        <div class="slot-mod {{abilityData.dex.modClass}}">{{abilityData.dex.modFormatted}}</div>
                     </div>
                     <div class="slot-column" data-ability="con">
-                        <div class="slot-label">{{localize "ORIGINATE.Ability.Con"}}</div>
                         <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
                             {{#if roll.hasSelection}}{{abilityData.con.value}}{{else}}?{{/if}}
                         </div>
-                        <div class="slot-mod {{abilityData.con.modClass}}">{{abilityData.con.modFormatted}}</div>
                     </div>
                     <div class="slot-column" data-ability="int">
-                        <div class="slot-label">{{localize "ORIGINATE.Ability.Int"}}</div>
                         <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
                             {{#if roll.hasSelection}}{{abilityData.int.value}}{{else}}?{{/if}}
                         </div>
-                        <div class="slot-mod {{abilityData.int.modClass}}">{{abilityData.int.modFormatted}}</div>
                     </div>
                     <div class="slot-column" data-ability="wis">
-                        <div class="slot-label">{{localize "ORIGINATE.Ability.Wis"}}</div>
                         <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
                             {{#if roll.hasSelection}}{{abilityData.wis.value}}{{else}}?{{/if}}
                         </div>
-                        <div class="slot-mod {{abilityData.wis.modClass}}">{{abilityData.wis.modFormatted}}</div>
                     </div>
                     <div class="slot-column" data-ability="cha">
-                        <div class="slot-label">{{localize "ORIGINATE.Ability.Cha"}}</div>
                         <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
                             {{#if roll.hasSelection}}{{abilityData.cha.value}}{{else}}?{{/if}}
                         </div>
-                        <div class="slot-mod {{abilityData.cha.modClass}}">{{abilityData.cha.modFormatted}}</div>
                     </div>
                 </div>
 
@@ -212,7 +193,7 @@
                 </div>
                 <div class="assignment-targets">
                     {{#each abilityData}}
-                    <div class="assignment-target {{#if this.isAssigned}}assigned{{/if}} {{#if this.isPrimary}}primary-ability{{/if}}" data-ability="{{@key}}">
+                    <div class="assignment-target {{#if this.isAssigned}}assigned{{/if}}" data-ability="{{@key}}">
                         <div class="target-value">{{#if this.isAssigned}}{{this.value}}{{else}}-{{/if}}</div>
                         <div class="target-label">{{localize (concat "ORIGINATE.Ability.Abbr." (capitalize @key))}}</div>
                     </div>
@@ -848,17 +829,6 @@
             </button>
         </div>
         {{/unless}}
-
-        <!-- 杩斿洖鎸夐挳 (鍚庢倲鑽? - 鐖嚭鍏斿瓙娲炵殑鍞竴璺緞 -->
-        {{#if canNavigateUp}}
-        <button type="button" class="cinematic-back-btn" data-action="navigateUp">
-            <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
-        </button>
-        {{else if canCreationTimelineBack}}
-        <button type="button" class="cinematic-back-btn" data-action="prevStep">
-            <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
-        </button>
-        {{/if}}
 
         <!-- 
             瀛愯亴鐗规畩甯冨眬 (閫夌鐜板満)
