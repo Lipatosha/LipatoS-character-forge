@@ -651,6 +651,9 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
         const overlay = this.element.querySelector('.originate-progression-wizard');
         if (overlay) overlay.remove();
 
+        // Для мультикласса ключ закреплённого броска зависит от выбранного класса.
+        this._restoreLockedHitPointRoll();
+
         // 继续正常的升级流程
         await this._loadLevelFeatures();
     }
