@@ -166,6 +166,7 @@ export class DataManager {
     }
 
     _getFallbackOptionName() {
+        if (game.i18n.lang?.startsWith('ru')) return 'Безымянный объект';
         return game.i18n.lang?.startsWith('zh') ? '未命名条目' : 'Unnamed Item';
     }
 
@@ -1278,42 +1279,9 @@ export class DataManager {
             }
         }
 
-        // 也搜索未在 sourcePacks 配置中的合集包
-        for (const pack of game.packs) {
-            if (this._indexCache.has(pack.collection)) continue;
-            if (pack.documentName !== 'Item') continue;
-
-            try {
-                const index = await pack.getIndex({ fields: ['name', 'type', 'img', 'system.type.value', 'system.type.subtype', 'system.prerequisites.level', 'system.prerequisites.repeatable', 'system.repeatable', 'system.level', 'system.school'] });
-                for (const entry of index) {
-                    if (itemType && entry.type !== itemType) continue;
-                    if (itemType === 'feat' && !filterTypeValue && !filterSubtype && !isPlayerFeat(entry)) continue;
-                    if (entry.type === 'spell' && !matchesSpellSchool(entry, restriction || {})) continue;
-                    if (filterTypeValue && entry.system?.type?.value !== filterTypeValue) continue;
-                    if (filterSubtype && entry.system?.type?.subtype !== filterSubtype) continue;
-
-                    // 等级限制过滤
-                    const prereqLevel = getRequiredLevel(entry);
-                    if (prereqLevel && prereqLevel > characterLevel) continue;
-
-                    const uuid = `Compendium.${pack.collection}.Item.${entry._id}`;
-                    if (seenUuids.has(uuid)) continue;
-                    seenUuids.add(uuid);
-
-                    results.push(await this._normalizeOptionDisplay({
-                        uuid,
-                        name: entry.name,
-                        img: entry.img,
-                        type: entry.type,
-                        system: entry.system,
-                        repeatable: !!(entry.system?.repeatable || entry.system?.prerequisites?.repeatable)
-                    }));
-                }
-            } catch (e) {
-                
-            }
-        }
-
+        // Character Forge работает только с индексами Laaru.
+        // Старый fallback по всем Item-компендиумам мира намеренно удалён:
+        // он мог повторно индексировать большие библиотеки и давать заметную нагрузку.
        
         results.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
