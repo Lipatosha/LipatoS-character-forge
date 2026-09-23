@@ -25,8 +25,73 @@ export const AbilitiesMixin = (Base) => class extends Base {
         catch { return 8; }
     }
 
+    _getAbilityAbbreviation(ability) {
+        const key = String(ability || '').trim().toLowerCase();
+        const suffix = key ? key.charAt(0).toUpperCase() + key.slice(1) : '';
+        const localized = suffix ? game.i18n.localize(`ORIGINATE.Ability.Abbr.${suffix}`) : '';
+        return localized && !localized.startsWith('ORIGINATE.') ? localized : key.toUpperCase();
+    }
+
+    _getPersistedGrantedRollState() {
+        if (!this.creationGrantId || !this.actor) return null;
+        const stored = this.actor.getFlag?.('character-forge', 'abilityRollLock');
+        if (!stored || stored.grantId !== this.creationGrantId) return null;
+        return foundry.utils.deepClone(stored);
+    }
+
+    async _persistGrantedRollState() {
+        if (!this.creationGrantId || !this.actor || !this._rollState) return;
+
+        const payload = {
+            grantId: this.creationGrantId,
+            history: foundry.utils.deepClone(this._rollState.history || []),
+            selectedIndex: this._rollState.selectedIndex ?? -1,
+            attemptsUsed: this._rollState.attemptsUsed ?? 0,
+            isRolling: false,
+            isAssigning: !!this._rollState.isAssigning,
+            assignedValues: foundry.utils.deepClone(this._rollState.assignedValues || null),
+            selectedAssignmentValueIndex: this._rollState.selectedAssignmentValueIndex ?? -1,
+            assignmentSource: this._rollState.assignmentSource || null,
+            assignmentSignature: this._rollState.assignmentSignature || null,
+            assignmentComplete: !!this._rollState.assignmentComplete,
+            contextAbilities: foundry.utils.deepClone(this.context?.abilities || null)
+        };
+
+        try {
+            await this.actor.setFlag('character-forge', 'abilityRollLock', payload);
+        } catch (error) {
+            console.warn('Character Forge | Не удалось сохранить закреплённый бросок характеристик:', error);
+        }
+    }
+
     _ensureAbilityGenerationState(abilityMode) {
         if (this._rollState?.abilityMode === abilityMode) return this._rollState;
+
+        if (abilityMode === 'roll') {
+            const persisted = this._getPersistedGrantedRollState();
+            if (persisted) {
+                this._rollState = {
+                    abilityMode,
+                    history: Array.isArray(persisted.history) ? persisted.history : [],
+                    selectedIndex: Number.isInteger(persisted.selectedIndex) ? persisted.selectedIndex : -1,
+                    attemptsUsed: Number(persisted.attemptsUsed) || 0,
+                    isRolling: false,
+                    isAssigning: !!persisted.isAssigning,
+                    assignedValues: persisted.assignedValues || null,
+                    selectedAssignmentValueIndex: Number.isInteger(persisted.selectedAssignmentValueIndex)
+                        ? persisted.selectedAssignmentValueIndex
+                        : -1,
+                    assignmentSource: persisted.assignmentSource || null,
+                    assignmentSignature: persisted.assignmentSignature || null,
+                    assignmentComplete: !!persisted.assignmentComplete
+                };
+
+                if (persisted.contextAbilities && this.context) {
+                    this.context.abilities = foundry.utils.deepClone(persisted.contextAbilities);
+                }
+                return this._rollState;
+            }
+        }
 
         // 旧字段名继续保留给创角时间线快照使用，里面现在也会装标准数组的分配状态。
         this._rollState = {
@@ -68,8 +133,12 @@ export const AbilitiesMixin = (Base) => class extends Base {
                 int: 'fa-brain', wis: 'fa-eye', cha: 'fa-comments'
             };
             const abilityAbbrs = {
-                str: 'STR', dex: 'DEX', con: 'CON',
-                int: 'INT', wis: 'WIS', cha: 'CHA'
+                str: this._getAbilityAbbreviation('str'),
+                dex: this._getAbilityAbbreviation('dex'),
+                con: this._getAbilityAbbreviation('con'),
+                int: this._getAbilityAbbreviation('int'),
+                wis: this._getAbilityAbbreviation('wis'),
+                cha: this._getAbilityAbbreviation('cha')
             };
 
             // 分离固定加成和点数分配
@@ -274,7 +343,9 @@ export const AbilitiesMixin = (Base) => class extends Base {
                 formula: rollFormula,
                 mode: rollMode,
                 totalAttempts: rollAttempts,
-                attemptsRemaining: rollAttempts - this._rollState.attemptsUsed,
+                attemptsRemaining: (this.creationGrantId && this._rollState.history.length > 0)
+                    ? 0
+                    : Math.max(0, rollAttempts - this._rollState.attemptsUsed),
                 history: this._rollState.history,
                 selectedIndex: this._rollState.selectedIndex,
                 isRolling: this._rollState.isRolling,
@@ -405,6 +476,14 @@ export const AbilitiesMixin = (Base) => class extends Base {
         if (this._rollState.isRolling) return;
 
         const rollAttempts = game.settings.get('character-forge', 'rollAttempts') || 1;
+
+        // Игрок, получивший одноразовый допуск от ГМа, бросает характеристики только один раз.
+        // Результат хранится на заготовке Actor и переживает закрытие/повторное открытие мастера.
+        if (this.creationGrantId && this._rollState.history.length > 0) {
+            ui.notifications.warn(game.i18n.localize('ORIGINATE.UI.Abilities.Roll.Locked'));
+            return;
+        }
+
         if (this._rollState.attemptsUsed >= rollAttempts) {
             ui.notifications.warn(game.i18n.localize('ORIGINATE.UI.Abilities.Roll.NoRolls'));
             return;
@@ -430,11 +509,11 @@ export const AbilitiesMixin = (Base) => class extends Base {
 
         // 动画计时器
         return new Promise(resolve => {
-            const animationInterval = setInterval(() => {
+            const animationInterval = setInterval(async () => {
                 currentStep++;
                 if (currentStep >= steps) {
                     clearInterval(animationInterval);
-                    this._finishRolling(results);
+                    await this._finishRolling(results);
                     resolve();
                 } else {
                     // 更新随机显示的数字
@@ -454,7 +533,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
         });
     }
 
-    _finishRolling(results) {
+    async _finishRolling(results) {
         this._rollState.isRolling = false;
 
         const historyEntry = {
@@ -464,7 +543,10 @@ export const AbilitiesMixin = (Base) => class extends Base {
             details: results.map(r => r.details)
         };
         this._rollState.history.push(historyEntry);
-        this._rollState.attemptsUsed++;
+        const configuredAttempts = game.settings.get('character-forge', 'rollAttempts') || 1;
+        this._rollState.attemptsUsed = this.creationGrantId
+            ? configuredAttempts
+            : this._rollState.attemptsUsed + 1;
 
         const rollMode = game.settings.get('character-forge', 'rollMode') || 'free';
 
@@ -477,6 +559,8 @@ export const AbilitiesMixin = (Base) => class extends Base {
             this._rollState.selectedIndex = this._rollState.history.length - 1;
             this._renderPreservingScroll();
         }
+
+        await this._persistGrantedRollState();
     }
 
     /**
@@ -499,6 +583,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
             // 仅仅是选中，不初始化分配数据，直到点击 "Start Allocation" 按钮
         }
         this._renderPreservingScroll();
+        void this._persistGrantedRollState();
     }
 
     _beginAbilityAssignment(values, source, { render = true } = {}) {
@@ -513,6 +598,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
             assigned: { str: null, dex: null, con: null, int: null, wis: null, cha: null }
         };
         if (render) this._renderPreservingScroll();
+        if (source === 'roll') void this._persistGrantedRollState();
     }
 
     /**
@@ -557,6 +643,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
                 this.context.abilities[ability] = this._getBaseAbilityScore(); // 重置为默认
                 this._rollState.assignmentComplete = false;
                 this._renderPreservingScroll();
+                void this._persistGrantedRollState();
             }
             return;
         }
@@ -589,6 +676,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
         this._rollState.assignmentComplete = allAssigned;
 
         this._renderPreservingScroll();
+        void this._persistGrantedRollState();
     }
 
     /**
@@ -611,6 +699,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
                 this.context.abilities[key] = entry.values[index];
             });
             this._rollState.assignmentComplete = true;
+            await this._persistGrantedRollState();
             // Go to next step
             await this._onNextStep(event, target);
         } else {
@@ -627,6 +716,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
         this._rollState.assignedValues = null;
         this._rollState.assignmentComplete = false;
         this._renderPreservingScroll();
+        await this._persistGrantedRollState();
     }
 
     /**
