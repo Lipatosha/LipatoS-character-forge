@@ -55,7 +55,7 @@ export const DetailsMixin = (Base) => class extends Base {
 
         context.canContinueName = !!String(this.context.details?.name || '').trim();
         context.canContinueAlignment = !!String(this.context.details?.alignment || '').trim();
-        context.canContinuePortrait = !!String(this.context.details?.portrait || '').trim();
+        context.canContinuePortrait = true;
 
         return context;
     }
@@ -123,10 +123,9 @@ export const DetailsMixin = (Base) => class extends Base {
             complete = !!String(this.context.details?.name || '').trim();
         } else if (this.currentStep === 'alignment') {
             complete = !!String(this.context.details?.alignment || '').trim();
-        } else if (this.currentStep === 'portrait') {
-            complete = !!String(this.context.details?.portrait || '').trim();
         }
 
+        // Портрет — необязательный шаг: игрок может оставить стандартное изображение и продолжить.
         button.disabled = !complete;
     }
 
