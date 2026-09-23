@@ -7,6 +7,14 @@ import { isSpellChoiceEvent } from './shared/advancement-choice-rules.js';
 import { hasOriginateActorMarkers, resolveItemSourceUuid } from './shared/resolution-core.js';
 import { registerTheme as registerOriginateTheme } from './theme-registry.js';
 import { acquireForgeStyles, forceUnloadForgeStyles } from './runtime-style.js';
+import {
+    applyCreationGrantSelection,
+    getGrantableUsers,
+    getUserCreationGrant,
+    installCreationGrantSocket,
+    requestGrantedActor,
+    refreshActorDirectory
+} from './creation-grants.js';
 
 // 调试开关 - 默认关闭
 // 除非你想看我在控制台里碎碎念，否则别打开这个。
@@ -336,6 +344,7 @@ Hooks.once('init', () => {
 // 游戏就绪时预加载数据源索引
 // 就像在客人来之前先把地扫干净一样
 Hooks.once('ready', () => {
+    installCreationGrantSocket();
     window.OriginateLog('Originate | 游戏就绪，正在预加载数据源索引... 稍安勿躁。');
     legacySettingsMigrationPromise = migrateLegacyOriginateSettings();
 
@@ -456,53 +465,249 @@ Hooks.once('ready', () => {
 
 // 既然你们非要个显眼的按钮，那就给你们一个
 // 把它塞进角色目录的头部，希望不会把原本的布局挤爆
-Hooks.on('renderActorDirectory', (app, html, data) => {
-    // 只有拥有“创建角色”权限的用户（无论是 GM 还是被授权的玩家）才能看到这个按钮。
-    // 如果你没看到，说明你的“造物主执照”还没办下来
-    if (!game.user.can("ACTOR_CREATE")) return;
+async function _openCharacterForgeForActor(actor, { grantId = null, grantUserId = null } = {}) {
+    if (!actor) return;
 
-    const $html = html instanceof HTMLElement ? $(html) : html;
+    try { await legacySettingsMigrationPromise; } catch { /* migration errors logged elsewhere */ }
 
-    // 捏一个按钮出来。加个闪电图标，显得很厉害的样子。
-    const button = $(`<button class="create-originate-actor"><i class="fas fa-bolt"></i> ${game.i18n.localize("ORIGINATE.Button.Create")}</button>`);
+    const laaruModule = game.modules.get('laaru-dnd5-hw');
+    if (!laaruModule?.active) {
+        ui.notifications.error('Character Forge: включите модуль Laaru (laaru-dnd5-hw).');
+        return;
+    }
 
-    button.on('click', async (event) => {
-        event.preventDefault();
-        try { await legacySettingsMigrationPromise; } catch { /* already logged */ }
+    await FontLoader.loadFonts();
 
-        // Character Forge uses only the installed Laaru compendiums.
-        const laaruModule = game.modules.get('laaru-dnd5-hw');
-        if (!laaruModule?.active) {
-            ui.notifications.error('Character Forge: включите модуль Laaru (laaru-dnd5-hw).');
-            return;
+    try {
+        currentOriginateApp = new OriginateApp(actor, {
+            dataManager: globalDataManager,
+            creationGrantId: grantId,
+            creationGrantUserId: grantUserId
+        });
+        await acquireForgeStyles(currentOriginateApp);
+        currentOriginateApp.render(true);
+    } catch (error) {
+        console.error("Character Forge | Не удалось открыть создание персонажа:", error);
+        ui.notifications.error(game.i18n.localize("ORIGINATE.Error.InitFailed"));
+    }
+}
+
+function _closeCreationGrantPopover() {
+    document.querySelectorAll('.character-forge-grant-popover').forEach(el => el.remove());
+}
+
+function _openCreationGrantPopover(anchorButton) {
+    _closeCreationGrantPopover();
+
+    const users = getGrantableUsers();
+    const popover = document.createElement('div');
+    popover.className = 'character-forge-grant-popover';
+    Object.assign(popover.style, {
+        position: 'absolute',
+        zIndex: '1000',
+        right: '0',
+        top: 'calc(100% + 4px)',
+        minWidth: '250px',
+        maxWidth: '340px',
+        padding: '10px',
+        border: '1px solid var(--color-border-light-2, #777)',
+        borderRadius: '6px',
+        background: 'var(--color-bg, #181818)',
+        boxShadow: '0 6px 18px rgba(0,0,0,.45)'
+    });
+
+    const title = document.createElement('div');
+    title.textContent = game.i18n.localize('ORIGINATE.CreationGrant.Title');
+    Object.assign(title.style, { fontWeight: '700', marginBottom: '8px' });
+    popover.appendChild(title);
+
+    const list = document.createElement('div');
+    Object.assign(list.style, {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        maxHeight: '280px',
+        overflowY: 'auto'
+    });
+
+    if (!users.length) {
+        const empty = document.createElement('div');
+        empty.textContent = game.i18n.localize('ORIGINATE.CreationGrant.NoPlayers');
+        empty.style.opacity = '.75';
+        list.appendChild(empty);
+    } else {
+        for (const user of users) {
+            const row = document.createElement('label');
+            Object.assign(row.style, {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '4px 2px'
+            });
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = user.id;
+            checkbox.checked = !!getUserCreationGrant(user);
+
+            const name = document.createElement('span');
+            name.textContent = user.name;
+            name.style.flex = '1';
+
+            const status = document.createElement('span');
+            status.textContent = user.active
+                ? game.i18n.localize('ORIGINATE.CreationGrant.Online')
+                : game.i18n.localize('ORIGINATE.CreationGrant.Offline');
+            status.style.opacity = '.6';
+            status.style.fontSize = '.85em';
+
+            row.append(checkbox, name, status);
+            list.appendChild(row);
         }
+    }
 
-        // Визуальные ресурсы загружаются только при явном запуске Forge.
-        await FontLoader.loadFonts();
+    popover.appendChild(list);
 
-        // 既然你诚心诚意地点击了，那我就大发慈悲地给你创建一个新角色
-        // 顺便把默认的角色卡按回去，别让它弹出来碍眼，我们要上主菜了
-        const actor = await Actor.create({
-            name: game.i18n.localize("ORIGINATE.NewCharacter"),
-            type: "character"
-        }, { renderSheet: false });
+    const confirm = document.createElement('button');
+    confirm.type = 'button';
+    confirm.innerHTML = `<i class="fas fa-check"></i> ${game.i18n.localize('ORIGINATE.CreationGrant.Confirm')}`;
+    Object.assign(confirm.style, { width: '100%', marginTop: '10px' });
+    confirm.disabled = !users.length;
 
-        if (actor) {
-            try {
-                // 启动！Originate 引擎点火！
-                currentOriginateApp = new OriginateApp(actor);
-                await acquireForgeStyles(currentOriginateApp);
-                currentOriginateApp.render(true);
-            } catch (e) {
-                console.error("Originate | 角色创建器初始化失败... 哎，我就知道会出事:", e);
-                ui.notifications.error(game.i18n.localize("ORIGINATE.Error.InitFailed"));
-            }
+    confirm.addEventListener('click', async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        confirm.disabled = true;
+        const selected = Array.from(popover.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(input => input.value);
+        try {
+            await applyCreationGrantSelection(selected);
+            ui.notifications.info(game.i18n.localize('ORIGINATE.CreationGrant.Saved'));
+            _closeCreationGrantPopover();
+        } catch (error) {
+            console.error('Character Forge | Не удалось изменить разрешения игроков:', error);
+            ui.notifications.error(error?.message || String(error));
+            confirm.disabled = false;
         }
     });
 
-    // 把它塞进去。动作轻点，别弄坏了其他的按钮。
-    $html.find('.directory-header .header-actions').append(button);
+    popover.appendChild(confirm);
+
+    const parent = anchorButton.parentElement;
+    if (parent) {
+        parent.style.position = 'relative';
+        parent.appendChild(popover);
+    }
+
+    setTimeout(() => {
+        const closeOnOutside = event => {
+            if (popover.contains(event.target) || anchorButton.contains(event.target)) return;
+            _closeCreationGrantPopover();
+            document.removeEventListener('pointerdown', closeOnOutside, true);
+        };
+        document.addEventListener('pointerdown', closeOnOutside, true);
+    }, 0);
+}
+
+Hooks.on('renderActorDirectory', (_app, html) => {
+    const isGm = game.user.isGM;
+    const grant = isGm ? null : getUserCreationGrant(game.user);
+
+    // ГМ всегда видит создание персонажа. Игрок — только при активном одноразовом допуске.
+    if (!isGm && !grant) return;
+
+    const root = html instanceof HTMLElement ? html : html?.[0];
+    if (!root) return;
+
+    const headerActions = root.querySelector('.directory-header .header-actions');
+    if (!headerActions) return;
+
+    root.querySelectorAll('.character-forge-create-row').forEach(el => el.remove());
+
+    const row = document.createElement('div');
+    row.className = 'character-forge-create-row';
+    Object.assign(row.style, {
+        display: 'flex',
+        width: '100%',
+        gap: '4px',
+        position: 'relative'
+    });
+
+    const createButton = document.createElement('button');
+    createButton.type = 'button';
+    createButton.className = 'create-originate-actor';
+    createButton.style.flex = '1';
+    createButton.innerHTML = `<i class="fas fa-bolt"></i> ${game.i18n.localize('ORIGINATE.Button.Create')}`;
+
+    createButton.addEventListener('click', async event => {
+        event.preventDefault();
+        createButton.disabled = true;
+
+        try {
+            let actor;
+            let creationGrantId = null;
+            let creationGrantUserId = null;
+
+            if (game.user.isGM) {
+                actor = await Actor.create({
+                    name: game.i18n.localize("ORIGINATE.NewCharacter"),
+                    type: "character"
+                }, { renderSheet: false });
+            } else {
+                const activeGrant = getUserCreationGrant(game.user);
+                if (!activeGrant) {
+                    ui.notifications.warn(game.i18n.localize('ORIGINATE.CreationGrant.NoPermission'));
+                    refreshActorDirectory();
+                    return;
+                }
+
+                actor = await requestGrantedActor();
+                creationGrantId = activeGrant.id;
+                creationGrantUserId = game.user.id;
+            }
+
+            if (actor) {
+                await _openCharacterForgeForActor(actor, {
+                    grantId: creationGrantId,
+                    grantUserId: creationGrantUserId
+                });
+            }
+        } catch (error) {
+            console.error('Character Forge | Ошибка запуска создания персонажа:', error);
+            ui.notifications.error(error?.message || String(error));
+        } finally {
+            createButton.disabled = false;
+        }
+    });
+
+    row.appendChild(createButton);
+
+    if (isGm) {
+        const grantButton = document.createElement('button');
+        grantButton.type = 'button';
+        grantButton.className = 'character-forge-grant-button';
+        grantButton.title = game.i18n.localize('ORIGINATE.CreationGrant.Manage');
+        grantButton.setAttribute('aria-label', game.i18n.localize('ORIGINATE.CreationGrant.Manage'));
+        grantButton.innerHTML = '<i class="fas fa-plus"></i>';
+        Object.assign(grantButton.style, {
+            flex: '0 0 36px',
+            width: '36px',
+            padding: '0'
+        });
+        grantButton.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const existing = row.querySelector('.character-forge-grant-popover');
+            if (existing) _closeCreationGrantPopover();
+            else _openCreationGrantPopover(grantButton);
+        });
+        row.appendChild(grantButton);
+    }
+
+    headerActions.appendChild(row);
 });
+
 
 // 监听应用关闭以清理引用
 // 就像派对结束后的打扫卫生
