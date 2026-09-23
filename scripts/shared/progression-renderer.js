@@ -663,30 +663,34 @@ export function bindTooltips(container, dataManager) {
         }
     };
 
-    tooltip.addEventListener('pointerover', (event) => {
-        const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
-        if (!link || !tooltip.contains(link)) return;
-        if (event.relatedTarget && link.contains(event.relatedTarget)) return;
-        link.removeAttribute('data-tooltip');
-        event.stopPropagation();
-        void showNestedTooltip(link);
-    }, true);
+    if (tooltip.dataset.characterForgeTooltipLinkListenersBound !== 'true') {
+        tooltip.dataset.characterForgeTooltipLinkListenersBound = 'true';
 
-    tooltip.addEventListener('pointerout', (event) => {
-        const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
-        if (!link || !tooltip.contains(link)) return;
-        if (event.relatedTarget && link.contains(event.relatedTarget)) return;
-        hideNestedTooltip();
-    }, true);
+        tooltip.addEventListener('pointerover', (event) => {
+            const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
+            if (!link || !tooltip.contains(link)) return;
+            if (event.relatedTarget && link.contains(event.relatedTarget)) return;
+            link.removeAttribute('data-tooltip');
+            event.stopPropagation();
+            void showNestedTooltip(link);
+        }, true);
 
-    tooltip.addEventListener('click', (event) => {
-        const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
-        if (!link || !tooltip.contains(link) || !isPinned()) return;
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation?.();
-        void openLinkedDocument(link);
-    }, true);
+        tooltip.addEventListener('pointerout', (event) => {
+            const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
+            if (!link || !tooltip.contains(link)) return;
+            if (event.relatedTarget && link.contains(event.relatedTarget)) return;
+            hideNestedTooltip();
+        }, true);
+
+        tooltip.addEventListener('click', (event) => {
+            const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
+            if (!link || !tooltip.contains(link) || !isPinned()) return;
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
+            void openLinkedDocument(link);
+        }, true);
+    }
 
     const showTooltip = async (el) => {
         cancelHide();
