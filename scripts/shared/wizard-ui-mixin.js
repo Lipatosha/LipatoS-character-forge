@@ -460,15 +460,40 @@ export class WizardUIMixin {
             `;
             }
 
-            case 'features':
+            case 'features': {
+                const features = await Promise.all((step.items || []).map(async feature => {
+                    let description = feature.description || feature.system?.description?.value || '';
+                    let uuid = feature.uuid || feature._sourceUuid || '';
+                    let img = feature.img || 'icons/svg/item-bag.svg';
+                    let name = feature.name || '';
+
+                    if ((!description || !uuid) && uuid) {
+                        try {
+                            const doc = this.dataManager?.getDocument
+                                ? await this.dataManager.getDocument(uuid)
+                                : await fromUuid(uuid);
+                            if (doc) {
+                                description ||= doc.system?.description?.value || '';
+                                img ||= doc.img;
+                                name ||= doc.name;
+                            }
+                        } catch {
+                            // Карточка всё равно останется доступной по имеющимся данным.
+                        }
+                    }
+
+                    return { ...feature, uuid, img, name, description };
+                }));
+
                 return `
                 <div class="progression-feature-group page-wrapper">
                     <div class="options-container features-granted-list">
-                        ${step.items.map(f => `
+                        ${features.map(f => `
                             <div class="option-card progression-feature-item" data-uuid="${f.uuid || ''}">
                                 <img src="${f.img || 'icons/svg/item-bag.svg'}" class="feature-icon">
                                 <div class="feature-info">
                                     <div class="feature-name">${f.name}</div>
+                                    ${f.description ? `<div class="feature-desc progression-feature-desc">${this._cleanDescription(f.description)}</div>` : ''}
                                 </div>
                             </div>
                         `).join('')}
@@ -476,6 +501,7 @@ export class WizardUIMixin {
                     <div class="selection-hint">${game.i18n.localize('ORIGINATE.UI.Progression.AutoAddHint')}</div>
                 </div>
             `;
+            }
 
             case 'asi_feat_choice':
                 return await this._renderASIFeatChoice(step, level);
@@ -1303,8 +1329,8 @@ export class WizardUIMixin {
 
             resultsContainer.innerHTML = this._generateSpellCards(currentSpells);
 
-            // 绑定悬停 tooltip
-            this._bindSpellCardTooltips(resultsContainer, null, () => currentSpells);
+            // Подсказки заклинаний загружают полное описание по UUID.
+            this._bindTooltips(resultsContainer);
 
             // 绑定点击（跳过已拥有的）
             resultsContainer.querySelectorAll('.spell-card').forEach(card => {
@@ -2154,6 +2180,7 @@ export class WizardUIMixin {
                 currentSpells = results;
                 resultsList.innerHTML = this._generateSpellCards(results);
                 bindCardEvents();
+                this._bindTooltips(resultsList);
                 syncSelectedState();
             } catch (e) {
                 console.error("Originate | [LevelUp] Spell search error:", e);
@@ -2172,143 +2199,7 @@ export class WizardUIMixin {
 
                 card.addEventListener('click', () => addSelection(card.dataset.uuid));
 
-                // 悬停预览
-                card.addEventListener('pointerenter', async (ev) => {
-                    const uuid = card.dataset.uuid;
-                    const spell = currentSpells.find(s => s.uuid === uuid);
-
-                    if (!spell.description) {
-                        try {
-                            const doc = await fromUuid(uuid);
-                            if (doc) spell.description = doc.system.description?.value || '';
-                        } catch (e) {
-                            console.warn(`Originate | Failed to load spell for tooltip: ${uuid}`, e);
-                        }
-                    }
-
-                    if (spell?.description) {
-                        let descText;
-                        try {
-                            descText = await TextEditor.enrichHTML(spell.description, { async: true });
-                        } catch (e) {
-                            descText = this._processHtmlDescription(spell.description);
-                        }
-
-                        let tooltip = document.querySelector('.originate-spell-tooltip');
-                        if (!tooltip) {
-                            tooltip = document.createElement('div');
-                            tooltip.className = 'originate-spell-tooltip';
-                            Object.assign(tooltip.style, {
-                                position: 'fixed',
-                                zIndex: '100000',
-                                maxWidth: '450px',
-                                minWidth: '250px',
-                                width: 'auto',
-                                overflowY: 'auto',
-                                background: 'linear-gradient(135deg, rgba(20,18,15,0.97), rgba(35,30,25,0.97))',
-                                border: '1px solid rgba(200,163,95,0.4)',
-                                borderRadius: '6px',
-                                padding: '12px 14px',
-                                color: '#e8dcc8',
-                                boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-                                backdropFilter: 'blur(8px)',
-                                pointerEvents: 'auto',
-                                fontSize: '0.85rem',
-                                lineHeight: '1.6'
-                            });
-                            // 鼠标离开 tooltip 时隐藏
-                            tooltip.addEventListener('mouseleave', () => {
-                                tooltip.style.display = 'none';
-                            });
-                            // 只在 tooltip 内容有溢出时才拦截滚轮
-                            tooltip.addEventListener('wheel', (e) => {
-                                const hasOverflow = tooltip.scrollHeight > tooltip.clientHeight;
-                                if (!hasOverflow) return;
-                                const atTop = tooltip.scrollTop <= 0 && e.deltaY < 0;
-                                const atBottom = (tooltip.scrollTop + tooltip.clientHeight >= tooltip.scrollHeight - 1) && e.deltaY > 0;
-                                if (atTop || atBottom) return;
-                                e.preventDefault();
-                                e.stopPropagation();
-                                tooltip.scrollTop += e.deltaY;
-                            }, { passive: false });
-                            document.body.appendChild(tooltip);
-                        }
-
-                        tooltip.innerHTML = `
-                        <div style="font-weight:bold; color:#c8a35f; font-size:1rem; margin-bottom:0.4rem; border-bottom:1px solid rgba(200,163,95,0.3); padding-bottom:0.3rem;">${spell.name}</div>
-                        <div style="color:rgba(200,163,95,0.7); font-size:0.75rem; margin-bottom:0.6rem; font-style:italic;">${CONFIG.DND5E.spellLevels[spell.level] || ''} • ${CONFIG.DND5E.spellSchools[spell.school]?.label || ''}</div>
-                        <div style="word-wrap:break-word;">${descText}</div>
-                    `;
-
-                        // 先不设 maxHeight，让其自然高度
-                        tooltip.style.maxHeight = 'none';
-                        tooltip.style.display = 'block';
-                        tooltip.scrollTop = 0;
-
-                        const rect = card.getBoundingClientRect();
-                        const tooltipRect = tooltip.getBoundingClientRect();
-
-                        let left = rect.right + 12;
-                        let top = rect.top;
-
-                        if (left + tooltipRect.width > window.innerWidth - 10) {
-                            left = rect.left - tooltipRect.width - 12;
-                        }
-                        if (left < 10) {
-                            left = Math.max(10, (window.innerWidth - tooltipRect.width) / 2);
-                        }
-
-                        // 计算可用高度
-                        const availableDown = window.innerHeight - top - 10;
-                        const availableUp = top - 10;
-
-                        if (tooltipRect.height > availableDown) {
-                            if (tooltipRect.height <= availableUp) {
-                                top = top - tooltipRect.height;
-                            } else {
-                                if (availableDown >= availableUp) {
-                                    tooltip.style.maxHeight = `${availableDown}px`;
-                                } else {
-                                    top = 10;
-                                    tooltip.style.maxHeight = `${availableUp}px`;
-                                }
-                            }
-                        }
-                        if (top < 10) top = 10;
-
-                        tooltip.style.left = `${left}px`;
-                        tooltip.style.top = `${top}px`;
-                    }
-                });
-
-                // 卡片上的滚轮：只在 tooltip 有溢出内容时转发
-                card.addEventListener('wheel', (e) => {
-                    const tooltip = document.querySelector('.originate-spell-tooltip');
-                    if (tooltip && tooltip.style.display === 'block') {
-                        const hasOverflow = tooltip.scrollHeight > tooltip.clientHeight;
-                        if (hasOverflow) {
-                            const atTop = tooltip.scrollTop <= 0 && e.deltaY < 0;
-                            const atBottom = (tooltip.scrollTop + tooltip.clientHeight >= tooltip.scrollHeight - 1) && e.deltaY > 0;
-                            if (!atTop && !atBottom) {
-                                e.preventDefault();
-                                tooltip.scrollTop += e.deltaY;
-                            }
-                        }
-                    }
-                }, { passive: false });
-
-                card.addEventListener('pointerleave', (e) => {
-                    const tooltip = document.querySelector('.originate-spell-tooltip');
-                    if (tooltip) {
-                        // 检查鼠标是否移入了 tooltip
-                        const tooltipRect = tooltip.getBoundingClientRect();
-                        if (e.clientX >= tooltipRect.left && e.clientX <= tooltipRect.right &&
-                            e.clientY >= tooltipRect.top && e.clientY <= tooltipRect.bottom) {
-                            return; // 鼠标移入了 tooltip，不隐藏
-                        }
-                        tooltip.style.display = 'none';
-                    }
-                });
+                // Описание заклинания обрабатывается общим tooltip-механизмом по data-uuid.
             });
         };
 
