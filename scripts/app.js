@@ -19,6 +19,84 @@ import {
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
+const CHARACTER_FORGE_DRAFT_FLAG = 'wizardState';
+
+function encodeDraftValue(value, seen = new WeakSet()) {
+    if (value === undefined) return null;
+    if (value === null || typeof value !== 'object') return value;
+
+    if (value instanceof Date) {
+        return { __characterForgeType: 'Date', value: value.toISOString() };
+    }
+
+    if (value instanceof Set) {
+        return {
+            __characterForgeType: 'Set',
+            value: Array.from(value, entry => encodeDraftValue(entry, seen))
+        };
+    }
+
+    if (value instanceof Map) {
+        return {
+            __characterForgeType: 'Map',
+            value: Array.from(value.entries(), ([key, entry]) => [
+                encodeDraftValue(key, seen),
+                encodeDraftValue(entry, seen)
+            ])
+        };
+    }
+
+    if (typeof value.toObject === 'function') {
+        try {
+            return encodeDraftValue(value.toObject(), seen);
+        } catch {
+            return null;
+        }
+    }
+
+    if (seen.has(value)) return null;
+    seen.add(value);
+
+    if (Array.isArray(value)) {
+        const result = value.map(entry => encodeDraftValue(entry, seen));
+        seen.delete(value);
+        return result;
+    }
+
+    const result = {};
+    for (const [key, entry] of Object.entries(value)) {
+        if (typeof entry === 'function' || entry === undefined) continue;
+        result[key] = encodeDraftValue(entry, seen);
+    }
+    seen.delete(value);
+    return result;
+}
+
+function decodeDraftValue(value) {
+    if (value === null || typeof value !== 'object') return value;
+
+    if (value.__characterForgeType === 'Date') {
+        return new Date(value.value);
+    }
+
+    if (value.__characterForgeType === 'Set') {
+        return new Set((value.value || []).map(decodeDraftValue));
+    }
+
+    if (value.__characterForgeType === 'Map') {
+        return new Map((value.value || []).map(([key, entry]) => [
+            decodeDraftValue(key),
+            decodeDraftValue(entry)
+        ]));
+    }
+
+    if (Array.isArray(value)) return value.map(decodeDraftValue);
+
+    return Object.fromEntries(
+        Object.entries(value).map(([key, entry]) => [key, decodeDraftValue(entry)])
+    );
+}
+
 // 这里组合的是创角应用。ProgressionMixin 负责创角内的目标等级展开；
 // 现有角色升级使用独立的 LevelUpApp，不在这条 mixin 链里。
 const OriginateAppMixin = (Base) =>
@@ -127,6 +205,136 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         // new bound function on every render, leaking one window listener per wizard step.
         this._resizeHandler = this._onResize.bind(this);
         this._resizeBound = false;
+
+        this._draftSaveTimer = null;
+        this._skipPersistDraft = false;
+        this._resumeWizardContext = null;
+        this._resumeWizardStep = 0;
+        this._resumeWizardScheduled = false;
+
+        this._restorePersistedDraftState();
+    }
+
+    _shouldPersistDraftState() {
+        if (!this.actor || this._skipPersistDraft) return false;
+        return !!(
+            this.creationGrantId
+            || this.actor.getFlag?.('character-forge', 'creationPending')
+        );
+    }
+
+    _restorePersistedDraftState() {
+        const raw = this.actor?.getFlag?.('character-forge', CHARACTER_FORGE_DRAFT_FLAG);
+        if (!raw?.checkpoint) return false;
+
+        try {
+            const stored = decodeDraftValue(raw);
+
+            this.characterLevel = Number(stored.characterLevel) || 1;
+            this.isMulticlass = !!stored.isMulticlass;
+            this.classLevels = stored.classLevels && typeof stored.classLevels === 'object'
+                ? stored.classLevels
+                : {};
+            this.primaryClass = stored.primaryClass ?? null;
+
+            if (this._creationTimeline && stored.timeline) {
+                this._creationTimeline.phase = ['inactive', 'active', 'frozen'].includes(stored.timeline.phase)
+                    ? stored.timeline.phase
+                    : 'inactive';
+                this._creationTimeline.history = Array.isArray(stored.timeline.history)
+                    ? stored.timeline.history
+                    : [];
+                this._creationTimeline.busy = false;
+            }
+
+            // render:false восстанавливает текущую страницу, context, blueprint,
+            // броски и остальные выборы без промежуточного рендера welcome.
+            void this._restoreCreationCheckpoint(stored.checkpoint, { render: false });
+
+            if (stored.checkpoint?.screen?.kind === 'wizard' && stored.checkpoint?.draft?.wizardContext) {
+                this._resumeWizardContext = stored.checkpoint.draft.wizardContext;
+                this._resumeWizardStep = stored.checkpoint.screen.wizardStep ?? 0;
+            }
+
+            return true;
+        } catch (error) {
+            console.warn('Character Forge | Не удалось восстановить сохранённое создание персонажа:', error);
+            return false;
+        }
+    }
+
+    async _persistDraftState() {
+        if (!this._shouldPersistDraftState()) return false;
+
+        try {
+            this._syncCurrentCreationPageDraft?.();
+            const checkpoint = this._captureCreationCheckpoint?.();
+            if (!checkpoint) return false;
+
+            const payload = encodeDraftValue({
+                version: 1,
+                savedAt: Date.now(),
+                characterLevel: this.characterLevel,
+                isMulticlass: this.isMulticlass,
+                classLevels: this.classLevels,
+                primaryClass: this.primaryClass,
+                timeline: {
+                    phase: this._creationTimeline?.phase || 'inactive',
+                    history: this._creationTimeline?.history || []
+                },
+                checkpoint
+            });
+
+            await this.actor.setFlag('character-forge', CHARACTER_FORGE_DRAFT_FLAG, payload);
+            return true;
+        } catch (error) {
+            console.warn('Character Forge | Не удалось сохранить прогресс создания персонажа:', error);
+            return false;
+        }
+    }
+
+    _scheduleDraftAutosave() {
+        if (!this._shouldPersistDraftState()) return;
+        clearTimeout(this._draftSaveTimer);
+        this._draftSaveTimer = setTimeout(() => {
+            this._draftSaveTimer = null;
+            void this._persistDraftState();
+        }, 300);
+    }
+
+    _resumePersistedWizardIfNeeded() {
+        if (!this._resumeWizardContext || this._resumeWizardScheduled) return;
+        this._resumeWizardScheduled = true;
+
+        requestAnimationFrame(async () => {
+            try {
+                const context = foundry.utils.deepClone(this._resumeWizardContext);
+                this._resumeWizardContext = null;
+                if (context?._wizardState) context._wizardState.currentStep = this._resumeWizardStep;
+                await this._renderFullSubInterface?.(context);
+            } catch (error) {
+                console.warn('Character Forge | Не удалось восстановить внутренний экран выбора:', error);
+            } finally {
+                this._resumeWizardScheduled = false;
+            }
+        });
+    }
+
+    async _clearPersistedDraftState({ clearRollLock = false } = {}) {
+        clearTimeout(this._draftSaveTimer);
+        this._draftSaveTimer = null;
+        this._skipPersistDraft = true;
+
+        try {
+            if (this.actor?.getFlag?.('character-forge', CHARACTER_FORGE_DRAFT_FLAG)) {
+                await this.actor.unsetFlag('character-forge', CHARACTER_FORGE_DRAFT_FLAG);
+            }
+            if (clearRollLock && this.actor?.getFlag?.('character-forge', 'abilityRollLock')) {
+                await this.actor.unsetFlag('character-forge', 'abilityRollLock');
+            }
+        } catch (error) {
+            console.warn('Character Forge | Не удалось очистить сохранённый черновик:', error);
+        }
     }
 
     static DEFAULT_OPTIONS = {
@@ -260,6 +468,10 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
             }, { passive: false });
         }
 
+        // Сохраняем прогресс игрока с одноразовым разрешением после каждого
+        // устойчивого рендера. Это также защищает от закрытия вкладки без вызова close().
+        this._scheduleDraftAutosave();
+
         // 如果是欢迎界面，不需要做额外绑定
         if (this.currentStep === 'welcome') return;
 
@@ -318,6 +530,8 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
                 this._onOpenGridSelector?.call(this, null, null, { skipAnimation: true });
             });
         }
+
+        this._resumePersistedWizardIfNeeded();
     }
 
     /**
@@ -398,6 +612,13 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
 
     /** @override */
     async close(options) {
+        clearTimeout(this._draftSaveTimer);
+        this._draftSaveTimer = null;
+
+        if (this._shouldPersistDraftState()) {
+            await this._persistDraftState();
+        }
+
         // Before the Foundry application DOM is detached, explicitly stop every looping
         // cinematic video. Detached HTMLVideoElements can otherwise keep decoding frames
         // until garbage collection, which is especially noticeable when the actor sheet
