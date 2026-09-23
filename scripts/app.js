@@ -444,6 +444,13 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
             this._resizeBound = false;
         }
 
+        // Освобождаем тяжёлое состояние мастера сразу, а не ждём сборщик мусора.
+        // На внешний вид это никак не влияет: приложение к этому моменту уже закрыто.
+        this._subInterface = null;
+        this._gridSelectorKeepOpen = false;
+        this._progressionState = null;
+        this._state = null;
+
         return result;
     }
 
