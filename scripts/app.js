@@ -395,6 +395,32 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
 
     /** @override */
     async close(options) {
+        // Before the Foundry application DOM is detached, explicitly stop every looping
+        // cinematic video. Detached HTMLVideoElements can otherwise keep decoding frames
+        // until garbage collection, which is especially noticeable when the actor sheet
+        // opens immediately after character creation.
+        const root = this.element instanceof HTMLElement ? this.element : this.element?.[0];
+        const videos = new Set([
+            ...(root?.querySelectorAll?.('video') || []),
+            this._persistedDetailsVideo
+        ].filter(Boolean));
+
+        for (const video of videos) {
+            try {
+                video.pause?.();
+                video.removeAttribute?.('autoplay');
+                video.removeAttribute?.('loop');
+                video.removeAttribute?.('src');
+                video.querySelectorAll?.('source').forEach(source => source.removeAttribute('src'));
+                video.load?.();
+            } catch (error) {
+                console.debug('Character Forge | Не удалось полностью освободить видео при закрытии', error);
+            }
+        }
+
+        this._persistedDetailsVideo = null;
+        this._lastDetailsVideoSrc = null;
+
         const result = await super.close(options);
         document.body.classList.remove("originate-active");
 
@@ -406,8 +432,7 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         });
 
         // 清理残留 tooltip
-        const tooltip = document.querySelector('.originate-spell-tooltip');
-        if (tooltip) tooltip.remove();
+        document.querySelectorAll('.originate-spell-tooltip').forEach(tooltip => tooltip.remove());
 
         if (typeof this._restoreExternalPickerLayer === 'function') {
             this._restoreExternalPickerLayer();
