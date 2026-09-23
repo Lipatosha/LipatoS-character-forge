@@ -53,6 +53,10 @@ export const DetailsMixin = (Base) => class extends Base {
         context.isPortraitStep = this.currentStep === 'portrait';
         context.isBiographyStep = this.currentStep === 'biography';
 
+        context.canContinueName = !!String(this.context.details?.name || '').trim();
+        context.canContinueAlignment = !!String(this.context.details?.alignment || '').trim();
+        context.canContinuePortrait = !!String(this.context.details?.portrait || '').trim();
+
         return context;
     }
 
@@ -60,9 +64,11 @@ export const DetailsMixin = (Base) => class extends Base {
      * 绑定详情页面的事件监听器
      */
     _bindDetailsEvents() {
-        // 通用输入框更新
+        // 通用输入框更新. Для обязательных полей состояние «Далее»
+        // должно меняться сразу при вводе, а не только после потери фокуса.
         this.element.querySelectorAll('.detail-input').forEach(input => {
             input.addEventListener('change', (e) => this._onUpdateDetail(e));
+            input.addEventListener('input', (e) => this._onUpdateDetail(e));
         });
 
         this.element.querySelectorAll('.portrait-path-input').forEach(input => {
@@ -104,7 +110,24 @@ export const DetailsMixin = (Base) => class extends Base {
             if (field === 'portrait') {
                 this._syncPortraitPreview(value);
             }
+            this._updateDetailStepNavigationState();
         }
+    }
+
+    _updateDetailStepNavigationState() {
+        const button = this.element?.querySelector?.('.step-footer .nav-btn.next-btn');
+        if (!button) return;
+
+        let complete = true;
+        if (this.currentStep === 'name') {
+            complete = !!String(this.context.details?.name || '').trim();
+        } else if (this.currentStep === 'alignment') {
+            complete = !!String(this.context.details?.alignment || '').trim();
+        } else if (this.currentStep === 'portrait') {
+            complete = !!String(this.context.details?.portrait || '').trim();
+        }
+
+        button.disabled = !complete;
     }
 
     _getPortraitPreviewPath() {
@@ -120,6 +143,7 @@ export const DetailsMixin = (Base) => class extends Base {
         if (input) input.value = normalizedPath;
 
         this._syncPortraitPreview(normalizedPath);
+        this._updateDetailStepNavigationState();
     }
 
     _syncPortraitPreview(path = '') {
@@ -248,6 +272,7 @@ export const DetailsMixin = (Base) => class extends Base {
         this.element.querySelectorAll('.alignment-btn').forEach(b => {
             b.classList.toggle('selected', b.dataset.key === alignment);
         });
+        this._updateDetailStepNavigationState();
     }
 
     /**
@@ -273,9 +298,6 @@ export const DetailsMixin = (Base) => class extends Base {
                 this.context.details.biography = bioTextarea.value;
             }
         }
-
-        // Adrian: 不再强制验证姓名，用户可以暂时留空
-        // 如果需要提醒但不阻止，可以用 ui.notifications.info
 
         await super._onNextStep(event);
     }
