@@ -11928,3 +11928,41 @@ body.originate-active .character-forge-item-sheet-front {
     border: none !important;
     outline: none !important;
 }
+
+
+/* Character Forge: nav icon hover cleanup */
+/* Круговой ореол и подъём всей ячейки обрезали иконку внутри нижней ленты.
+   Подсвечиваем только саму квадратную иконку и оставляем геометрию ячейки на месте. */
+.view-selection-root .nav-item {
+    border-radius: 0 !important;
+}
+
+.view-selection-root .nav-item::before {
+    content: none !important;
+    display: none !important;
+}
+
+.view-selection-root .nav-item:hover,
+.view-selection-root .nav-item:active,
+.view-selection-root .nav-item.selected {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.view-selection-root .nav-item:hover .nav-icon-wrapper,
+.view-selection-root .nav-item.selected .nav-icon-wrapper {
+    position: relative;
+    z-index: 3;
+    transform: scale(1.08);
+}
+
+.view-selection-root .nav-item:hover .nav-icon-wrapper {
+    border-color: transparent;
+    box-shadow: none;
+}
+
+/* У выбранного варианта остаётся квадратная рамка, но без круглого свечения вокруг. */
+.view-selection-root .nav-item.selected .nav-icon-wrapper {
+    box-shadow: none !important;
+}
