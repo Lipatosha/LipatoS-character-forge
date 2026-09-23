@@ -4,9 +4,11 @@ const GRANT_FLAG = "creationGrant";
 const ACTOR_GRANT_FLAG = "creationGrantId";
 const ACTOR_PENDING_FLAG = "creationPending";
 const ACTOR_USER_FLAG = "creationUserId";
+const LEVEL_UP_GRANT_FLAG = "levelUpGrant";
 
 const pendingActorRequests = new Map();
 const locallyConsumedGrantIds = new Set();
+const locallyConsumedLevelUpGrantIds = new Set();
 let socketInstalled = false;
 
 function nowIso() {
@@ -46,6 +48,133 @@ export function getGrantableUsers() {
             if (!!a.active !== !!b.active) return a.active ? -1 : 1;
             return String(a.name || "").localeCompare(String(b.name || ""), game.i18n.lang || "ru");
         });
+}
+
+export function getActorLevelUpGrant(actor) {
+    if (!actor || actor.type !== "character") return null;
+    const grant = actor.getFlag?.(MODULE_ID, LEVEL_UP_GRANT_FLAG) || null;
+    if (!grant?.active || !grant.id) return null;
+    if (locallyConsumedLevelUpGrantIds.has(grant.id)) return null;
+    return grant;
+}
+
+export function hasActorLevelUpGrant(actor) {
+    return !!getActorLevelUpGrant(actor);
+}
+
+export function getGrantableLevelUpActors() {
+    return Array.from(game.actors || [])
+        .filter(actor => actor.type === "character")
+        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), game.i18n.lang || "ru"));
+}
+
+function refreshLevelUpGrantUi(actor = null) {
+    refreshActorDirectory();
+
+    const candidates = actor ? [actor] : getGrantableLevelUpActors();
+    for (const candidate of candidates) {
+        if (!candidate?.isOwner) continue;
+        const sheet = candidate.sheet;
+        const element = sheet?.element instanceof HTMLElement ? sheet.element : sheet?.element?.[0];
+        if (sheet?.rendered || element?.isConnected) {
+            try {
+                sheet.render(false);
+            } catch (error) {
+                console.debug("Character Forge | Не удалось обновить лист после изменения разрешения уровня", error);
+            }
+        }
+    }
+}
+
+async function setActorLevelUpGrant(actor, active) {
+    if (!game.user.isGM || !actor || actor.type !== "character") return null;
+
+    const current = actor.getFlag?.(MODULE_ID, LEVEL_UP_GRANT_FLAG) || null;
+    if (active) {
+        if (current?.active && current.id) return current;
+
+        const currentLevel = Number(actor.system?.details?.level)
+            || Array.from(actor.items || [])
+                .filter(item => item.type === "class")
+                .reduce((sum, item) => sum + (Number(item.system?.levels) || 0), 0)
+            || 1;
+
+        const grant = {
+            id: randomId(),
+            active: true,
+            grantedAt: nowIso(),
+            grantedBy: game.user.id,
+            targetLevel: currentLevel + 1
+        };
+        await actor.setFlag(MODULE_ID, LEVEL_UP_GRANT_FLAG, grant);
+        return grant;
+    }
+
+    if (current) await actor.unsetFlag(MODULE_ID, LEVEL_UP_GRANT_FLAG);
+    return null;
+}
+
+export async function applyLevelUpGrantSelection(selectedActorIds = []) {
+    if (!game.user.isGM) return;
+
+    const selected = new Set(selectedActorIds);
+    for (const actor of getGrantableLevelUpActors()) {
+        await setActorLevelUpGrant(actor, selected.has(actor.id));
+    }
+
+    game.socket?.emit?.(SOCKET_NAME, { type: "refresh-levelup-grants" });
+    refreshLevelUpGrantUi();
+}
+
+async function consumeLevelUpGrantOnGm({ actorId, grantId, userId }) {
+    if (!game.user.isGM) return;
+
+    const actor = actorId ? game.actors.get(actorId) : null;
+    const user = userId ? game.users.get(userId) : null;
+    if (!actor || actor.type !== "character" || !user) return;
+
+    const grant = actor.getFlag?.(MODULE_ID, LEVEL_UP_GRANT_FLAG);
+    if (!grant?.active || grant.id !== grantId) return;
+
+    const ownsActor = game.user.isGM || actor.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER);
+    if (!ownsActor) return;
+
+    await actor.unsetFlag(MODULE_ID, LEVEL_UP_GRANT_FLAG);
+    game.socket?.emit?.(SOCKET_NAME, {
+        type: "levelup-grant-consumed",
+        actorId: actor.id,
+        grantId
+    });
+    refreshLevelUpGrantUi(actor);
+}
+
+export async function consumeActorLevelUpGrant(actor) {
+    const grant = getActorLevelUpGrant(actor);
+    if (!grant) return;
+
+    locallyConsumedLevelUpGrantIds.add(grant.id);
+    refreshLevelUpGrantUi(actor);
+
+    if (game.user.isGM) {
+        await actor.unsetFlag(MODULE_ID, LEVEL_UP_GRANT_FLAG);
+        game.socket?.emit?.(SOCKET_NAME, {
+            type: "levelup-grant-consumed",
+            actorId: actor.id,
+            grantId: grant.id
+        });
+        return;
+    }
+
+    const gm = primaryActiveGm();
+    if (!gm) return;
+
+    game.socket.emit(SOCKET_NAME, {
+        type: "consume-levelup-grant",
+        gmId: gm.id,
+        userId: game.user.id,
+        actorId: actor.id,
+        grantId: grant.id
+    });
 }
 
 export function refreshActorDirectory() {
@@ -246,6 +375,17 @@ export function installCreationGrantSocket() {
             return;
         }
 
+        if (payload.type === "refresh-levelup-grants") {
+            refreshLevelUpGrantUi();
+            return;
+        }
+
+        if (payload.type === "levelup-grant-consumed") {
+            if (payload.grantId) locallyConsumedLevelUpGrantIds.add(payload.grantId);
+            refreshLevelUpGrantUi(payload.actorId ? game.actors.get(payload.actorId) : null);
+            return;
+        }
+
         if (payload.type === "actor-ready" && payload.userId === game.user.id) {
             const pending = pendingActorRequests.get(payload.requestId);
             if (!pending) return;
@@ -286,11 +426,21 @@ export function installCreationGrantSocket() {
 
         if (payload.type === "consume-grant") {
             await consumeGrantOnGm(payload);
+            return;
+        }
+
+        if (payload.type === "consume-levelup-grant") {
+            await consumeLevelUpGrantOnGm(payload);
         }
     });
 
     Hooks.on("updateUser", (user, changes) => {
         const flagPath = changes?.flags?.[MODULE_ID];
         if (flagPath !== undefined || user.id === game.user.id) refreshActorDirectory();
+    });
+
+    Hooks.on("updateActor", (actor, changes) => {
+        const moduleFlags = changes?.flags?.[MODULE_ID];
+        if (moduleFlags !== undefined) refreshLevelUpGrantUi(actor);
     });
 }
