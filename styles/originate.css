@@ -12006,3 +12006,59 @@ body.originate-active .character-forge-item-sheet-front {
 .asi-bonus-layout .asi-card .ability-icon {
     display: none !important;
 }
+
+
+/* Character Forge 1.2.3: tooltip readability and stable roll spinner */
+/* В подсказки часто попадает HTML из D&D5e с собственным светлым фоном и тёмным текстом.
+   Внутри Character Forge всегда приводим такой контент к тёмной теме. */
+.character-forge-item-tooltip .cf-item-tooltip-body,
+.originate-spell-tooltip .originate-tooltip-content,
+.originate-nested-tooltip .originate-nested-tooltip-body {
+    color: #e8dcc8 !important;
+    background: transparent !important;
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-body *,
+.originate-spell-tooltip .originate-tooltip-content *,
+.originate-nested-tooltip .originate-nested-tooltip-body * {
+    color: inherit !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* Ссылки оставляем золотыми после принудительной нормализации текста. */
+.character-forge-item-tooltip .cf-item-tooltip-body .cf-tooltip-link,
+.originate-spell-tooltip .originate-tooltip-content .cf-tooltip-link,
+.originate-nested-tooltip .originate-nested-tooltip-body .content-link,
+.originate-nested-tooltip .originate-nested-tooltip-body .cf-tooltip-link {
+    color: var(--originate-accent, #c8a35f) !important;
+}
+
+/* Ячейка больше не прыгает вверх-вниз во время броска.
+   Вращается только Font Awesome spinner внутри неё. */
+.slot-value.rolling {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+/* Экран бонусов характеристик не должен подсвечивать основную характеристику класса заранее. */
+.asi-bonus-layout .asi-card.primary-ability {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+}
+
+.asi-bonus-layout .asi-card.primary-ability::after {
+    content: none !important;
+    display: none !important;
+}
+
+/* Текст описаний особенностей, включая «Защиту без брони», всегда читаемый на тёмном фоне. */
+.originate-spell-tooltip p,
+.originate-spell-tooltip li,
+.originate-spell-tooltip span:not(.cf-tooltip-link),
+.character-forge-item-tooltip p,
+.character-forge-item-tooltip li,
+.character-forge-item-tooltip span:not(.cf-tooltip-link) {
+    color: #e8dcc8 !important;
+}
