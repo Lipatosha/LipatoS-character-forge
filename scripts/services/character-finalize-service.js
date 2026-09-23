@@ -167,16 +167,91 @@ export async function createCharacterFromFinalizeInput(input = {}, options = {})
     actor = game.actors.get(actor.id) || actor;
     manager.actor = actor;
 
+    // Владения, которые не были обработаны native-планом, нужны на листе сразу.
+    // Это маленькое точечное обновление и оно остаётся в критическом пути.
+    const missingTraitChanges = filterMissingCharacterTraits(
+        actor,
+        resolutionResult.remainingTraitChanges || [],
+        manager
+    );
+    await applyRemainingCharacterTraits(actor, missingTraitChanges, manager);
+    actor = game.actors.get(actor.id) || actor;
+    manager.actor = actor;
+
+    // Быстрый режим используется интерфейсом Character Forge: после записи основных
+    // данных не держим пользователя на финальном экране ради служебного ремонта
+    // advancement.value/origin и ModifyItem. Эти операции запускаются после первого
+    // рендера листа, когда браузер получит idle-время.
+    if (options.deferRepairs === true) {
+        const actorId = actor.id;
+
+        const deferredFinalize = async () => {
+            let liveActor = game.actors.get(actorId);
+            if (!liveActor) {
+                return {
+                    actor: null,
+                    itemModifications: { status: 'skipped', reason: 'actor-not-found' },
+                    finalizeRepairs: null,
+                    warnings
+                };
+            }
+
+            const deferredManager = new LevelUpManager(liveActor, dataManager);
+            const repairState = await runCharacterFinalizeRepairs(
+                liveActor,
+                deferredManager,
+                input,
+                warnings
+            );
+
+            liveActor = repairState.actor || game.actors.get(actorId) || liveActor;
+            deferredManager.actor = liveActor;
+
+            const itemModifications = await deferredManager.applyModifyItemAdvancementsFromInput(
+                input,
+                { initialItemIds }
+            );
+            if (itemModifications.status === 'failed') {
+                warnings.push({
+                    ...itemModifications,
+                    phase: itemModifications.stage,
+                    stage: 'modify-item'
+                });
+            }
+
+            return {
+                actor: game.actors.get(actorId) || liveActor,
+                itemModifications,
+                finalizeRepairs: repairState.repairResult,
+                warnings
+            };
+        };
+
+        return {
+            actor,
+            resolutionResult: {
+                ...resolutionResult,
+                itemModifications: { status: 'deferred' },
+                remainingTraitChanges: missingTraitChanges,
+                finalizeRepairs: { status: 'deferred' }
+            },
+            warnings,
+            deferredFinalize
+        };
+    }
+
     const repairState = await runCharacterFinalizeRepairs(actor, manager, input, warnings);
     actor = repairState.actor;
     manager.actor = actor;
 
-    const missingTraitChanges = filterMissingCharacterTraits(actor, resolutionResult.remainingTraitChanges || [], manager);
-    await applyRemainingCharacterTraits(actor, missingTraitChanges, manager);
-    actor = game.actors.get(actor.id) || actor;
-    manager.actor = actor;
     const itemModifications = await manager.applyModifyItemAdvancementsFromInput(input, { initialItemIds });
-    if (itemModifications.status === 'failed') warnings.push({ ...itemModifications, phase: itemModifications.stage, stage: 'modify-item' });
+    if (itemModifications.status === 'failed') {
+        warnings.push({
+            ...itemModifications,
+            phase: itemModifications.stage,
+            stage: 'modify-item'
+        });
+    }
     actor = game.actors.get(actor.id) || actor;
 
     return {
