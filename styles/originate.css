@@ -11186,3 +11186,113 @@ body.originate-active #ui-notifications .notification.error {
 }
 
 
+
+
+/* ============================================================
+   Character Forge 1.1.7 — фиксированный экран выбора
+   Класс / вид / предыстория используют тот же статический фон,
+   что и экран выбора уровня. Панель подробностей всегда открыта.
+   ============================================================ */
+.view-selection-root.step-class .selection-static-background,
+.view-selection-root.step-race .selection-static-background,
+.view-selection-root.step-background .selection-static-background {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+}
+
+.view-selection-root.step-class .cinematic-background .bg-overlay,
+.view-selection-root.step-race .cinematic-background .bg-overlay,
+.view-selection-root.step-background .cinematic-background .bg-overlay {
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.48) 100%);
+}
+
+.view-selection-root.step-class .left-sidebar-drawer.always-open,
+.view-selection-root.step-race .left-sidebar-drawer.always-open,
+.view-selection-root.step-background .left-sidebar-drawer.always-open {
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+}
+
+.view-selection-root.step-class .left-sidebar-drawer.always-open .drawer-content,
+.view-selection-root.step-race .left-sidebar-drawer.always-open .drawer-content,
+.view-selection-root.step-background .left-sidebar-drawer.always-open .drawer-content {
+    padding-top: 1.25rem;
+}
+
+.view-selection-root.step-class .left-sidebar-drawer.always-open .drawer-title,
+.view-selection-root.step-race .left-sidebar-drawer.always-open .drawer-title,
+.view-selection-root.step-background .left-sidebar-drawer.always-open .drawer-title {
+    margin-top: 1rem;
+}
+
+.view-selection-root .drawer-empty-state {
+    margin-top: 4rem;
+    padding: 1.25rem;
+    color: var(--originate-text-dim, #8e8e8e);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: center;
+    border: 1px dashed rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.22);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Заголовок выбранного класса/вида/предыстории — сверху в центре
+   свободной области справа от постоянной панели подробностей. */
+.view-selection-root.step-class .cinematic-caption,
+.view-selection-root.step-race .cinematic-caption,
+.view-selection-root.step-background .cinematic-caption {
+    top: clamp(72px, 8vh, 110px) !important;
+    bottom: auto !important;
+    left: calc(
+        clamp(360px, 26vw, 440px)
+        + (100vw - clamp(360px, 26vw, 440px)) / 2
+    ) !important;
+    width: min(
+        760px,
+        calc(100vw - clamp(360px, 26vw, 440px) - 120px)
+    ) !important;
+    max-width: none !important;
+    transform: translateX(-50%) !important;
+    text-align: center;
+    z-index: 6;
+}
+
+.view-selection-root.step-class .cinematic-caption .caption-content,
+.view-selection-root.step-race .cinematic-caption .caption-content,
+.view-selection-root.step-background .cinematic-caption .caption-content {
+    padding: 0 1rem;
+}
+
+.view-selection-root.step-class .cinematic-caption .caption-title,
+.view-selection-root.step-race .cinematic-caption .caption-title,
+.view-selection-root.step-background .cinematic-caption .caption-title {
+    font-size: clamp(2.8rem, 3.6vw, 4rem);
+}
+
+.view-selection-root.step-class .cinematic-caption .caption-subtitle,
+.view-selection-root.step-race .cinematic-caption .caption-subtitle,
+.view-selection-root.step-background .cinematic-caption .caption-subtitle {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: clamp(1rem, 1.2vw, 1.25rem);
+}
+
+.view-selection-root.step-class .cinematic-caption .caption-gradient,
+.view-selection-root.step-race .cinematic-caption .caption-gradient,
+.view-selection-root.step-background .cinematic-caption .caption-gradient {
+    top: -55px;
+    bottom: auto;
+    height: 230px;
+}
+
+/* На небольших экранах сохраняем зазор между текстом и левой панелью. */
+@media (max-width: 1100px) {
+    .view-selection-root.step-class .cinematic-caption,
+    .view-selection-root.step-race .cinematic-caption,
+    .view-selection-root.step-background .cinematic-caption {
+        left: calc(clamp(320px, 38vw, 390px) + (100vw - clamp(320px, 38vw, 390px)) / 2) !important;
+        width: calc(100vw - clamp(320px, 38vw, 390px) - 48px) !important;
+    }
+}
