@@ -1,60 +1,24 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "version": "0.1.0",
-  "compatibility": {
-    "minimum": "14",
-    "verified": "14"
-  },
-  "authors": [
-    {
-      "name": "LipatoS"
-    }
-  ],
+  "description": "Lightweight character creation wizard for D&D 5e on Foundry VTT.",
+  "version": "1.0.0",
+  "authors": [{"name": "LipatoS"}],
+  "compatibility": {"minimum": "14", "verified": "14"},
   "relationships": {
-    "systems": [
-      {
-        "id": "dnd5e",
-        "type": "system",
-        "compatibility": {
-          "minimum": "6.0.0",
-          "verified": "6.0.5"
-        }
-      }
-    ]
+    "systems": [{
+      "id": "dnd5e",
+      "type": "system",
+      "compatibility": {"minimum": "6.0.0", "verified": "6.0.5"}
+    }]
   },
-  "esmodules": [
-    "scripts/main.js"
-  ],
-  "styles": [
-    "styles/originate.css"
-  ],
+  "esmodules": ["scripts/main.js"],
+  "styles": ["styles/character-forge.css"],
   "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
-    },
-    {
-      "lang": "zh",
-      "name": "Chinese",
-      "path": "lang/zh.json"
-    },
-    {
-      "lang": "cn",
-      "name": "Chinese (Simplified)",
-      "path": "lang/zh.json"
-    },
-    {
-      "lang": "zh-cn",
-      "name": "Chinese (Simplified)",
-      "path": "lang/zh.json"
-    },
-    {
-      "lang": "zh-Hans",
-      "name": "Chinese (Simplified)",
-      "path": "lang/zh.json"
-    }
+    {"lang": "en", "name": "English", "path": "lang/en.json"},
+    {"lang": "ru", "name": "Русский", "path": "lang/ru.json"}
   ],
-  "description": "Optimized visual character creation and level-up wizard for D&D 5e on Foundry VTT 14."
+  "url": "https://github.com/Lipatosha/LipatoS-character-forge",
+  "manifest": "https://github.com/Lipatosha/LipatoS-character-forge/releases/latest/download/module.json",
+  "download": "https://github.com/Lipatosha/LipatoS-character-forge/releases/latest/download/character-forge.zip"
 }

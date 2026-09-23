@@ -1,30 +1,24 @@
 # Character Forge
 
-Private optimized Foundry VTT character creation and level-up module.
+Lightweight character creation wizard for Foundry VTT 14 + D&D 5e 6.0.x.
 
-## Target
+This repository contains an independent public implementation. It does not contain source code, templates, artwork, fonts, sounds, or other assets from Originate / Origin Studios.
 
-- Foundry VTT 14
-- D&D 5e 6.0.x (manifest target: 6.0.5)
-- Module id: `character-forge`
+## Install in Foundry
 
-## Performance work in 0.1.0
+Use this Manifest URL:
 
-- A single shared `DataManager` is reused by character creation and level-up flows.
-- Compendium indexing has an in-flight guard and bounded parallel loading.
-- Item type/UUID indexes and option caches avoid rescanning every pack on each step.
-- Full document loads are bounded and parallelized where safe.
-- Description enrichment is lazy instead of running for every list entry.
-- Spell search uses the pre-built spell bucket rather than every indexed item.
-- Spell-list journal loading has an in-flight guard and bounded parallel document reads.
-- The window resize listener leak is fixed.
-- Decorative always-running animations are disabled during the wizard and full-screen blur is reduced.
-- Page transition delay reduced from 300 ms to 120 ms.
-- Missing smoke-test entry point restored.
-- Legacy Originate settings are migrated into the `character-forge` namespace when possible.
+`https://github.com/Lipatosha/LipatoS-character-forge/releases/latest/download/module.json`
 
-## Important
+Foundry reads the latest release manifest and downloads `character-forge.zip` automatically.
 
-Do not enable Originate and Character Forge at the same time. This build keeps selected legacy flags/internal class names for compatibility with characters previously created by Originate.
+## Current features
 
-Static checks pass, but this build still requires an in-Foundry play test before calling it production-stable.
+- Creates a D&D 5e character.
+- Reads classes, races/species, and backgrounds from available Item compendiums.
+- Assigns ability scores.
+- Embeds selected origin/class items into the actor.
+- Caches compendium indexes to avoid repeated heavy scans.
+- Russian and English UI.
+
+Some complex D&D 5e Advancement choices may still need the system's normal advancement UI after creation.
