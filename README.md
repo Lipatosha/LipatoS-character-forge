@@ -1,24 +1,32 @@
-# Character Forge
+# LipatoS — Character Forge
 
-Lightweight character creation wizard for Foundry VTT 14 + D&D 5e 6.0.x.
+Лёгкий мастер создания персонажа для **Foundry VTT 14** и **D&D 5e 6.0.x**.
 
-This repository contains an independent public implementation. It does not contain source code, templates, artwork, fonts, sounds, or other assets from Originate / Origin Studios.
+Модуль создан как отдельная независимая реализация для удобного и быстрого создания персонажей без тяжёлой загрузки интерфейса.
 
-## Install in Foundry
+## Установка в Foundry
 
-Use this Manifest URL:
+В **Add-on Modules → Install Module → Manifest URL** вставьте:
 
 `https://github.com/Lipatosha/LipatoS-character-forge/releases/latest/download/module.json`
 
-Foundry reads the latest release manifest and downloads `character-forge.zip` automatically.
+Foundry автоматически скачает актуальный релиз `character-forge.zip`. Последующие версии можно устанавливать обычной кнопкой обновления модулей в Foundry.
 
-## Current features
+## Возможности
 
-- Creates a D&D 5e character.
-- Reads classes, races/species, and backgrounds from available Item compendiums.
-- Assigns ability scores.
-- Embeds selected origin/class items into the actor.
-- Caches compendium indexes to avoid repeated heavy scans.
-- Russian and English UI.
+- создание нового персонажа D&D 5e;
+- выбор вида/расы из доступных Item-компендиумов;
+- выбор предыстории;
+- выбор класса;
+- назначение характеристик;
+- стандартный массив **15, 14, 13, 12, 10, 8**;
+- автоматическое добавление выбранных предметов персонажу;
+- кэширование индексов компендиумов без повторного тяжёлого сканирования;
+- русский и английский интерфейс.
 
-Some complex D&D 5e Advancement choices may still need the system's normal advancement UI after creation.
+## Совместимость
+
+- **Foundry VTT:** 14
+- **D&D 5e:** 6.0.0+, проверено с **6.0.5**
+
+> Сложные выборы Advancement, которые требуют дополнительных решений D&D 5e, после создания персонажа могут открываться через штатный интерфейс развития системы.
