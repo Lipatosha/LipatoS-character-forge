@@ -155,14 +155,20 @@ export async function consumeActorLevelUpGrant(actor) {
     locallyConsumedLevelUpGrantIds.add(grant.id);
     refreshLevelUpGrantUi(actor);
 
-    if (game.user.isGM) {
-        await actor.unsetFlag(MODULE_ID, LEVEL_UP_GRANT_FLAG);
-        game.socket?.emit?.(SOCKET_NAME, {
-            type: "levelup-grant-consumed",
-            actorId: actor.id,
-            grantId: grant.id
-        });
-        return;
+    // Владелец персонажа обычно может снять флаг сам. Это убирает зависимость
+    // от того, остаётся ли ГМ онлайн к моменту завершения мастера.
+    if (game.user.isGM || actor.isOwner) {
+        try {
+            await actor.unsetFlag(MODULE_ID, LEVEL_UP_GRANT_FLAG);
+            game.socket?.emit?.(SOCKET_NAME, {
+                type: "levelup-grant-consumed",
+                actorId: actor.id,
+                grantId: grant.id
+            });
+            return;
+        } catch (error) {
+            console.debug("Character Forge | Прямое снятие разрешения уровня не удалось, пробуем через ГМа", error);
+        }
     }
 
     const gm = primaryActiveGm();
