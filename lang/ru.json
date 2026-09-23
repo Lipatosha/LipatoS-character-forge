@@ -645,6 +645,7 @@
   "ORIGINATE.UI.Abilities.Roll.History": "История бросков",
   "ORIGINATE.UI.Abilities.Roll.NoRolls": "Нажмите «Бросить», чтобы получить значения характеристик",
   "ORIGINATE.UI.Abilities.Roll.Rolling": "Бросок...",
+  "ORIGINATE.UI.Abilities.Roll.RollError": "Не удалось выполнить бросок. Попробуйте ещё раз.",
   "ORIGINATE.UI.Abilities.Roll.Total": "Сумма",
   "ORIGINATE.UI.Abilities.Assign.Title": "Распределение характеристик",
   "ORIGINATE.UI.Abilities.Assign.Subtitle": "Перетащите или выберите значения для каждой характеристики",
