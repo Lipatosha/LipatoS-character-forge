@@ -7,10 +7,13 @@ on:
       - module.json
       - scripts/**
       - styles/**
+      - templates/**
       - lang/**
+      - assets/**
+      - fonts/**
       - README.md
       - CHANGELOG.md
-      - LICENSE
+      - .github/workflows/release.yml
   workflow_dispatch:
 
 permissions:
@@ -21,6 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          find scripts -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
       - name: Read version
         id: version
@@ -46,7 +54,7 @@ jobs:
         if: steps.existing.outputs.exists != 'true'
         shell: bash
         run: |
-          zip -r character-forge.zip module.json scripts styles lang README.md CHANGELOG.md LICENSE
+          zip -r character-forge.zip module.json scripts styles templates lang assets fonts README.md CHANGELOG.md
 
       - name: Create GitHub Release
         if: steps.existing.outputs.exists != 'true'

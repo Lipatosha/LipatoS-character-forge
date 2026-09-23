@@ -1,22 +1,50 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "description": "Лёгкий мастер создания персонажа для D&D 5e: имя, вид/раса, предыстория, класс и характеристики с загрузкой вариантов из компендиумов.",
-  "version": "1.0.1",
-  "authors": [{"name": "LipatoS"}],
-  "compatibility": {"minimum": "14", "verified": "14"},
-  "relationships": {
-    "systems": [{
-      "id": "dnd5e",
-      "type": "system",
-      "compatibility": {"minimum": "6.0.0", "verified": "6.0.5"}
-    }]
+  "version": "1.1.0",
+  "description": "Оптимизированный мастер создания и развития персонажа D&D 5e с оригинальным кинематографичным интерфейсом. Данные берутся напрямую из русифицированных компендиумов Laaru.",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
   },
-  "esmodules": ["scripts/main.js"],
-  "styles": ["styles/character-forge.css"],
+  "authors": [
+    { "name": "LipatoS" }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.0.0",
+          "verified": "6.0.5"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "laaru-dnd5-hw",
+        "type": "module"
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/originate.css"
+  ],
   "languages": [
-    {"lang": "en", "name": "English", "path": "lang/en.json"},
-    {"lang": "ru", "name": "Русский", "path": "lang/ru.json"}
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "zh",
+      "name": "Chinese",
+      "path": "lang/zh.json"
+    }
   ],
   "url": "https://github.com/Lipatosha/LipatoS-character-forge",
   "manifest": "https://github.com/Lipatosha/LipatoS-character-forge/releases/latest/download/module.json",

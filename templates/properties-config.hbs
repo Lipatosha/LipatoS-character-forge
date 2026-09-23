@@ -1,0 +1,151 @@
+<form class="properties-config" autocomplete="off">
+    <div class="aspects-layout">
+        <div class="aspects-sidebar" style="width: 100%;">
+            <header class="sidebar-header">
+                <h2>{{localize "ORIGINATE.Properties.Title"}}</h2>
+                <p class="notes">{{localize "ORIGINATE.Properties.Hint"}}</p>
+            </header>
+
+            <!-- Ability Score Mode -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.AbilityMode.Name"}}</label>
+                <div class="form-fields">
+                    <input type="hidden" name="abilityMode" value="{{abilityMode}}">
+                    <div class="theme-options-grid four-col">
+                        {{#each abilityModes as |label key|}}
+                        <div class="config-option-btn {{#if (eq key ../abilityMode)}}active{{/if}}"
+                            data-name="abilityMode" data-value="{{key}}">
+                            <span class="option-label">{{localize label}}</span>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.AbilityMode.Hint"}}</p>
+            </div>
+
+            <!-- Ability Step Position -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.AbilityStepPosition.Name"}}</label>
+                <div class="form-fields">
+                    <input type="hidden" name="abilityStepPosition" value="{{abilityStepPosition}}">
+                    <div class="theme-options-grid two-col">
+                        {{#each abilityStepPositions as |label key|}}
+                        <div class="config-option-btn {{#if (eq key ../abilityStepPosition)}}active{{/if}}"
+                            data-name="abilityStepPosition" data-value="{{key}}">
+                            <span class="option-label">{{localize label}}</span>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.AbilityStepPosition.Hint"}}</p>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- Base Ability Score -->
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.BaseAbilityScore.Name"}}</label>
+                <div class="form-fields">
+                    <input type="number" name="baseAbilityScore" value="{{baseAbilityScore}}" step="1" min="1" max="20">
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.BaseAbilityScore.Hint"}}</p>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <h3>{{localize "ORIGINATE.Properties.StandardArraySection"}}</h3>
+
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.StandardArrayScores.Name"}}</label>
+                <div class="form-fields standard-array-score-grid">
+                    {{#each standardArrayInputs}}
+                    <label>
+                        <span>#{{add @index 1}}</span>
+                        <input type="number" name="{{this.field}}" value="{{this.value}}" step="1" min="1" max="30" data-dtype="Number">
+                    </label>
+                    {{/each}}
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.StandardArrayScores.Hint"}}</p>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- Point Buy Settings -->
+            <h3>{{localize "ORIGINATE.Properties.PointBuySection"}}</h3>
+
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.PointBuyTotal.Name"}}</label>
+                <div class="form-fields">
+                    <input type="number" name="pointBuyTotal" value="{{pointBuyTotal}}" step="1" min="15" max="50">
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.PointBuyTotal.Hint"}}</p>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.PointBuyMaxScore.Name"}}</label>
+                <div class="form-fields">
+                    <input type="number" name="pointBuyMaxScore" value="{{pointBuyMaxScore}}" step="1" min="13"
+                        max="18">
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.PointBuyMaxScore.Hint"}}</p>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- Rolling Settings -->
+            <h3>{{localize "ORIGINATE.Properties.rollingSection"}}</h3>
+
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.RollFormula.Name"}}</label>
+                <div class="form-fields">
+                    <input type="text" name="rollFormula" value="{{rollFormula}}">
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.RollFormula.Hint"}}</p>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.RollMode.Name"}}</label>
+                <div class="form-fields">
+                    <input type="hidden" name="rollMode" value="{{rollMode}}">
+                    <div class="theme-options-grid two-col">
+                        {{#each rollModes as |label key|}}
+                        <div class="config-option-btn {{#if (eq key ../rollMode)}}active{{/if}}" data-name="rollMode"
+                            data-value="{{key}}">
+                            <span class="option-label">{{localize label}}</span>
+                        </div>
+                        {{/each}}
+                    </div>
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.RollMode.Hint"}}</p>
+            </div>
+
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.RollAttempts.Name"}}</label>
+                <div class="form-fields">
+                    <input type="number" name="rollAttempts" value="{{rollAttempts}}" step="1" min="1" max="10">
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.RollAttempts.Hint"}}</p>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- ASI Rules -->
+            <h3>{{localize "ORIGINATE.Properties.ASISection"}}</h3>
+
+            <div class="form-group">
+                <label>{{localize "ORIGINATE.Settings.UnrestrictedASI.Name"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="unrestrictedASI" {{#if unrestrictedASI}}checked{{/if}}>
+                </div>
+                <p class="notes">{{localize "ORIGINATE.Settings.UnrestrictedASI.Hint"}}</p>
+            </div>
+
+        </div>
+
+        <footer class="sheet-footer">
+            <button type="submit" name="submit">
+                <i class="fas fa-save"></i> {{localize "SETTINGS.Save"}}
+            </button>
+        </footer>
+    </div>
+</form>

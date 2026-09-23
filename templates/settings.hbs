@@ -1,0 +1,30 @@
+<!-- 
+    设置界面
+    Adrian: 这里的设置项虽然不多，但每一个都很关键。
+    别乱改，除非你知道自己在做什么。
+-->
+<div class="originate-settings">
+    <p class="notes">{{localize "ORIGINATE.UI.Settings.SourcePacks.Hint"}}</p>
+    
+    <form>
+        {{#each categories}}
+        <div class="form-group">
+            <h3>{{this.label}}</h3>
+            <div class="pack-list">
+                {{#each this.packs}}
+                <label class="checkbox">
+                    <input type="checkbox" name="{{../id}}.{{this.id}}" {{checked this.checked}}>
+                    {{this.title}} <span class="package-id">({{this.id}})</span>
+                </label>
+                {{/each}}
+            </div>
+        </div>
+        {{/each}}
+        
+        <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit">
+            <i class="far fa-save"></i> {{localize "ORIGINATE.UI.Config.Save"}}
+        </button>
+        </footer>
+    </form>
+</div>
