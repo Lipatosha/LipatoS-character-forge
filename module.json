@@ -33,9 +33,7 @@
   "esmodules": [
     "scripts/main.js"
   ],
-  "styles": [
-    "styles/originate.css"
-  ],
+  "styles": [],
   "languages": [
     {
       "lang": "ru",
