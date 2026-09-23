@@ -351,7 +351,7 @@
   "ORIGINATE.UI.Finalizing.Hint": "Characters with many items or spells can take a little longer. Please keep this window open.",
   "ORIGINATE.Notification.Complete": "Character creation complete!",
   "ORIGINATE.LevelCount": "Level {level}",
-  "ORIGINATE.UI.Welcome.Title": "Character Creation Wizard",
+  "ORIGINATE.UI.Welcome.Title": "Character Creation",
   "ORIGINATE.UI.Welcome.Start": "Start Adventure",
   "ORIGINATE.UI.Welcome.Exit": "Exit",
   "ORIGINATE.UI.Abilities.Title": "Ability Scores",
