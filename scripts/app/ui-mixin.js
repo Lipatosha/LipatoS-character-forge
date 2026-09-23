@@ -1339,6 +1339,7 @@ export const UIMixin = (Base) => class extends Base {
         // 绑定复选框限制和 ASI 逻辑
         this._bindCheckboxLimits(overlay);
         this._bindASIControls(overlay);
+        this._autoSelectForcedWizardItems(overlay);
 
         // 绑定法术浏览器事件
         this._bindSpellBrowserEventsWizard(overlay, currentStepData, savedStepData?.spells || []);
@@ -1362,6 +1363,34 @@ export const UIMixin = (Base) => class extends Base {
             overlay.addEventListener('click', refreshCompletion);
         }
         this._updateWizardNavigationState(overlay, currentStepData);
+    }
+
+    _autoSelectForcedWizardItems(overlay) {
+        if (!overlay) return false;
+
+        let changed = false;
+        overlay.querySelectorAll('.sub-section[data-type="item-choice"]').forEach(section => {
+            if (section.dataset.pureReplacement === 'true') return;
+
+            const required = Number.parseInt(section.dataset.count || '0', 10);
+            if (!Number.isFinite(required) || required <= 0) return;
+
+            const inputs = Array.from(section.querySelectorAll('input[type="checkbox"][name^="item-choice-"]'))
+                .filter(input => !input.disabled)
+                .filter(input => input.closest('.option-card')?.getAttribute('aria-invalid') !== 'true');
+
+            if (inputs.length !== required) return;
+
+            for (const input of inputs) {
+                if (!input.checked) {
+                    input.checked = true;
+                    changed = true;
+                }
+                input.closest('.option-card')?.classList.add('selected');
+            }
+        });
+
+        return changed;
     }
 
     _renderStartingEquipmentEvent(event, idx) {
