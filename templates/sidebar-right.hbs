@@ -27,7 +27,7 @@
         <div class="ability-preview-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
             {{#each context.abilities}}
             <div class="ability-preview-item">
-                <span style="text-transform: uppercase; font-weight: bold;">{{@key}}:</span> {{this}}
+                <span style="font-weight: bold;">{{localize (concat "ORIGINATE.Ability.Abbr." (capitalize @key))}}:</span> {{this}}
             </div>
             {{/each}}
         </div>
