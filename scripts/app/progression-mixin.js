@@ -3804,36 +3804,8 @@ export const ProgressionMixin = (Base) => {
         }
 
         async _maybeRunInitialEquipmentShop(finalBlueprint) {
-            const shopEntries = normalizeShopEntries(game.settings.get('character-forge', 'initialEquipmentShop') || []);
-            const sellMultiplier = normalizeSellMultiplier(
-                game.settings.get('character-forge', 'initialEquipmentShopSellMultiplier'),
-                INITIAL_EQUIPMENT_SELL_MULTIPLIER
-            );
-            const sellEntries = buildInitialEquipmentSellEntries(finalBlueprint, shopEntries, { sellMultiplier });
-            const purchaseEntries = await this._loadInitialShopPurchaseEntries(shopEntries);
-
-            if (!hasInitialEquipmentShopChoices(sellEntries, purchaseEntries)) return finalBlueprint;
-
-            const result = await this._renderInitialEquipmentShop({
-                finalBlueprint,
-                shopEntries,
-                sellEntries,
-                purchaseEntries
-            });
-
-            if (!result?.applied) return finalBlueprint;
-
-            return applyInitialEquipmentLedger(finalBlueprint, {
-                shopEntries,
-                soldIds: Array.from(result.soldIds),
-                soldEntries: sellEntries.filter(entry => result.soldIds.has(entry.id)),
-                purchaseEntries: Array.from(result.purchases.values()).map(entry => ({
-                    uuid: entry.uuid,
-                    name: entry.name,
-                    purchasePriceGp: entry.purchasePriceGp
-                })),
-                purchasedItems: Array.from(result.purchases.values()).flatMap(entry => entry.itemDataList || [entry.itemData])
-            });
+            // Стартовый магазин удалён из Character Forge.
+            return finalBlueprint;
         }
 
         async _loadInitialShopPurchaseEntries(shopEntries = []) {
@@ -4364,8 +4336,7 @@ export const ProgressionMixin = (Base) => {
                 this._clearFinalizeTooltips();
                 this._renderCharacterFinalizingState();
                 this._restoreDeferredAdvancements();
-                let finalBlueprint = this._buildFinalBlueprint();
-                finalBlueprint = await this._maybeRunInitialEquipmentShop(finalBlueprint);
+                const finalBlueprint = this._buildFinalBlueprint();
                 const resolutionInput = this._buildCharacterFinalizeResolutionInput(finalBlueprint);
 
                 ui.notifications.info(game.i18n.localize('ORIGINATE.Notification.Finalizing'));
