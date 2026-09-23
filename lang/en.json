@@ -958,5 +958,7 @@
   "ORIGINATE.Ability.Abbr.Int": "INT",
   "ORIGINATE.Ability.Abbr.Wis": "WIS",
   "ORIGINATE.Ability.Abbr.Cha": "CHA",
-  "ORIGINATE.UI.Level.Label": "LEVEL"
+  "ORIGINATE.UI.Level.Label": "LEVEL",
+  "ORIGINATE.Button.Loading": "Loading...",
+  "ORIGINATE.UI.Details.NoDescription": "No description available."
 }
