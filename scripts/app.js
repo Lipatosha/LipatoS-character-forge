@@ -10,6 +10,7 @@ import { UIMixin } from './app/ui-mixin.js';
 import { DetailsMixin } from './app/details-mixin.js';
 import { isCharacterCreationDetailStep } from './shared/character-creation-settings.js';
 import { getThemeClassList } from './theme-registry.js';
+import { releaseForgeStyles } from './runtime-style.js';
 import {
     bindButtonSounds,
     CHARACTER_CREATION_SOUND_SELECTORS,
@@ -450,6 +451,10 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         this._gridSelectorKeepOpen = false;
         this._progressionState = null;
         this._state = null;
+
+        // Самое важное для обычных листов Foundry: тяжёлый CSS Character Forge
+        // физически удаляется из document и больше не участвует в style recalculation.
+        releaseForgeStyles(this);
 
         return result;
     }
