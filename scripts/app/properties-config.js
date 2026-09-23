@@ -1,10 +1,16 @@
 import { applyWindowScaling, cleanupWindowScaling } from "../utils/scaling-helper.js";
+import { acquireForgeStyles, releaseForgeStyles } from "../runtime-style.js";
 import {
     normalizeStandardArrayScores,
     parseStandardArrayScores
 } from "../shared/ability-score-methods.js";
 
 export class PropertiesConfigApp extends FormApplication {
+    constructor(options = {}) {
+        super(options);
+        acquireForgeStyles(this).catch(error => console.warn('Character Forge | Не удалось загрузить стили правил:', error));
+    }
+
     static get defaultOptions() {
         return foundry.utils.mergeObject(super.defaultOptions, {
             id: "originate-properties-config",
@@ -77,7 +83,9 @@ export class PropertiesConfigApp extends FormApplication {
     async close(options) {
         cleanupWindowScaling(this._windowScaleObserver);
         this._windowScaleObserver = null;
-        return super.close(options);
+        const result = await super.close(options);
+        releaseForgeStyles(this);
+        return result;
     }
 
     async _updateObject(event, formData) {
