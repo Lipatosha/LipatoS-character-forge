@@ -504,6 +504,9 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         // 确保选择状态正确反映到 UI
         this._updateSelectionState(html);
 
+        // Ссылки на предметы из описаний Laaru: hover-просмотр и открытие поверх Forge.
+        this._bindDrawerContentLinks();
+
         // 重新绑定子界面的事件（如果存在）
         if (this._subInterface) {
             this._bindSubInterfaceEvents(this._subInterface);
@@ -532,6 +535,142 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         }
 
         this._resumePersistedWizardIfNeeded();
+    }
+
+    _removeDrawerItemTooltip() {
+        document.querySelectorAll('.character-forge-item-tooltip').forEach(el => el.remove());
+    }
+
+    async _resolveDrawerLinkedDocument(link) {
+        const uuid = link?.dataset?.uuid
+            || link?.dataset?.documentUuid
+            || link?.dataset?.entityUuid
+            || null;
+        if (!uuid) return null;
+
+        try {
+            return await fromUuid(uuid);
+        } catch (error) {
+            console.debug('Character Forge | Не удалось получить документ по ссылке:', uuid, error);
+            return null;
+        }
+    }
+
+    async _showDrawerItemTooltip(link) {
+        const hoverToken = Symbol('drawer-link-hover');
+        link._characterForgeHoverToken = hoverToken;
+
+        const doc = await this._resolveDrawerLinkedDocument(link);
+        if (!doc || link._characterForgeHoverToken !== hoverToken || !link.matches(':hover')) return;
+
+        this._removeDrawerItemTooltip();
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'character-forge-item-tooltip';
+
+        let description = doc.system?.description?.value
+            ?? doc.system?.description
+            ?? doc.description
+            ?? '';
+
+        if (description && typeof description === 'object') {
+            description = description.value || '';
+        }
+
+        try {
+            const TE = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
+            description = await TE.enrichHTML(String(description || ''), {
+                async: true,
+                relativeTo: doc
+            });
+        } catch {
+            description = String(description || '');
+        }
+
+        const image = doc.img
+            ? `<img src="${doc.img}" alt="">`
+            : '';
+
+        tooltip.innerHTML = `
+            <div class="cf-item-tooltip-header">
+                ${image}
+                <div class="cf-item-tooltip-title">${foundry.utils.escapeHTML(doc.name || link.textContent?.trim() || '')}</div>
+            </div>
+            <div class="cf-item-tooltip-body">${description || game.i18n.localize('ORIGINATE.UI.Details.NoDescription')}</div>
+        `;
+
+        document.body.appendChild(tooltip);
+
+        const rect = link.getBoundingClientRect();
+        const tipRect = tooltip.getBoundingClientRect();
+        const margin = 12;
+
+        let left = rect.right + margin;
+        if (left + tipRect.width > window.innerWidth - margin) {
+            left = Math.max(margin, rect.left - tipRect.width - margin);
+        }
+
+        let top = rect.top;
+        if (top + tipRect.height > window.innerHeight - margin) {
+            top = Math.max(margin, window.innerHeight - tipRect.height - margin);
+        }
+
+        tooltip.style.left = `${Math.round(left)}px`;
+        tooltip.style.top = `${Math.round(top)}px`;
+    }
+
+    async _openDrawerLinkedDocument(link) {
+        const doc = await this._resolveDrawerLinkedDocument(link);
+        if (!doc?.sheet) return false;
+
+        this._removeDrawerItemTooltip();
+
+        try {
+            doc.sheet.render(true);
+            setTimeout(() => {
+                try {
+                    doc.sheet.bringToFront?.();
+                    const element = doc.sheet.element instanceof HTMLElement
+                        ? doc.sheet.element
+                        : doc.sheet.element?.[0];
+                    if (element) {
+                        element.classList.add('character-forge-item-sheet-front');
+                        element.style.setProperty('z-index', '100060', 'important');
+                    }
+                } catch (error) {
+                    console.debug('Character Forge | Не удалось поднять лист предмета поверх мастера:', error);
+                }
+            }, 40);
+            return true;
+        } catch (error) {
+            console.warn('Character Forge | Не удалось открыть предмет из описания:', error);
+            return false;
+        }
+    }
+
+    _bindDrawerContentLinks() {
+        const links = this.element?.querySelectorAll?.('.drawer-body a.content-link[data-uuid], .drawer-body .content-link[data-uuid]') || [];
+
+        for (const link of links) {
+            if (link.dataset.characterForgeBound === 'true') continue;
+            link.dataset.characterForgeBound = 'true';
+
+            link.addEventListener('mouseenter', () => {
+                void this._showDrawerItemTooltip(link);
+            });
+
+            link.addEventListener('mouseleave', () => {
+                link._characterForgeHoverToken = null;
+                this._removeDrawerItemTooltip();
+            });
+
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation?.();
+                void this._openDrawerLinkedDocument(link);
+            });
+        }
     }
 
     /**
@@ -656,7 +795,7 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         });
 
         // 清理残留 tooltip
-        document.querySelectorAll('.originate-spell-tooltip').forEach(tooltip => tooltip.remove());
+        document.querySelectorAll('.originate-spell-tooltip, .character-forge-item-tooltip').forEach(tooltip => tooltip.remove());
 
         if (typeof this._restoreExternalPickerLayer === 'function') {
             this._restoreExternalPickerLayer();
