@@ -312,7 +312,7 @@ body.originate-active #ui-notifications .notification.error {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at center, #2e2e2e 0%, #1a1a1a 40%, #000000 100%);
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
     /* 暗角 (Vignette) 效果 */
     text-align: center;
     position: relative;
