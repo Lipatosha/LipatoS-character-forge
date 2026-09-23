@@ -27,6 +27,10 @@
       {
         "id": "laaru-dnd5-hw",
         "type": "module"
+      },
+      {
+        "id": "dice-so-nice",
+        "type": "module"
       }
     ]
   },
