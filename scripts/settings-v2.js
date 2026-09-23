@@ -663,8 +663,6 @@ export class OriginateConfigApp extends HandlebarsApplicationMixin(ApplicationV2
             }
             return result;
         });
-        const initialShop = await this._prepareInitialShopContext();
-
         const savedSourcePacks = game.settings.get('character-forge', 'sourcePacks') || [];
         const hasChanges = this._pendingSourcePacks !== null &&
             (this._pendingSourcePacks.length !== savedSourcePacks.length ||
@@ -676,7 +674,6 @@ export class OriginateConfigApp extends HandlebarsApplicationMixin(ApplicationV2
             availableModules: availableModules,
             activeTab: this._activeTab,
             sourcePacks: sourcePacks,
-            initialShop,
             hasChanges: hasChanges,
             expandedModules: this._expandedModules || {},
             sourceSearchTerm: this._getSearchTerm('sources')
