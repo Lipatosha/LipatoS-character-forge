@@ -409,7 +409,7 @@
 
             <div class="abilities-grid asi-grid">
                 {{#each asiBonusData}}
-                <div class="ability-card asi-card {{#if this.isLocked}}locked{{/if}} {{#if this.isPrimary}}primary-ability{{/if}}" data-ability="{{@key}}">
+                <div class="ability-card asi-card {{#if this.isLocked}}locked{{/if}}" data-ability="{{@key}}">
                     <div class="ability-name">{{localize (concat "ORIGINATE.Ability." (capitalize @key))}}</div>
                     <div class="ability-abbr">{{this.abilityAbbr}}</div>
                     <div class="ability-current-value">
