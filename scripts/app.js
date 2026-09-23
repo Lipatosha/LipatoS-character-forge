@@ -537,8 +537,11 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         this._resumePersistedWizardIfNeeded();
     }
 
-    _removeDrawerItemTooltip() {
-        document.querySelectorAll('.character-forge-item-tooltip').forEach(el => el.remove());
+    _removeDrawerItemTooltip({ force = false } = {}) {
+        document.querySelectorAll('.character-forge-item-tooltip').forEach(el => {
+            if (!force && el.classList.contains('is-pinned')) return;
+            el.remove();
+        });
     }
 
     async _resolveDrawerLinkedDocument(link) {
@@ -556,17 +559,30 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         }
     }
 
-    async _showDrawerItemTooltip(link) {
+    async _showDrawerItemTooltip(link, { pin = false } = {}) {
+        const uuid = link?.dataset?.uuid || link?.dataset?.documentUuid || link?.dataset?.entityUuid || '';
+        const pinned = document.querySelector('.character-forge-item-tooltip.is-pinned');
+        if (pinned && !pin) return pinned;
+        if (pinned && pin && pinned.dataset.sourceUuid === uuid) {
+            pinned.classList.remove('is-pinned');
+            pinned.dataset.pinned = 'false';
+            pinned.remove();
+            return null;
+        }
+
         const hoverToken = Symbol('drawer-link-hover');
         link._characterForgeHoverToken = hoverToken;
 
         const doc = await this._resolveDrawerLinkedDocument(link);
-        if (!doc || link._characterForgeHoverToken !== hoverToken || !link.matches(':hover')) return;
+        if (!doc) return null;
+        if (!pin && (link._characterForgeHoverToken !== hoverToken || !link.matches(':hover'))) return null;
 
-        this._removeDrawerItemTooltip();
+        this._removeDrawerItemTooltip({ force: true });
 
         const tooltip = document.createElement('div');
-        tooltip.className = 'character-forge-item-tooltip';
+        tooltip.className = `character-forge-item-tooltip${pin ? ' is-pinned' : ''}`;
+        tooltip.dataset.pinned = pin ? 'true' : 'false';
+        tooltip.dataset.sourceUuid = uuid;
 
         let description = doc.system?.description?.value
             ?? doc.system?.description
@@ -589,10 +605,7 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
             description = String(description || '');
         }
 
-        const image = doc.img
-            ? `<img src="${doc.img}" alt="">`
-            : '';
-
+        const image = doc.img ? `<img src="${doc.img}" alt="">` : '';
         const safeName = String(doc.name || link.textContent?.trim() || '')
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
@@ -604,9 +617,46 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
             <div class="cf-item-tooltip-header">
                 ${image}
                 <div class="cf-item-tooltip-title">${safeName}</div>
+                <i class="fas fa-thumbtack cf-item-tooltip-pin" aria-hidden="true"></i>
             </div>
             <div class="cf-item-tooltip-body">${description || game.i18n.localize('ORIGINATE.UI.Details.NoDescription')}</div>
         `;
+
+        tooltip.querySelectorAll('[data-tooltip]').forEach(el => el.removeAttribute('data-tooltip'));
+        tooltip.querySelectorAll('.content-link').forEach(el => {
+            el.removeAttribute('data-tooltip');
+            el.style.pointerEvents = 'auto';
+        });
+
+        let hideTimer = null;
+        const cancelHide = () => {
+            if (hideTimer) clearTimeout(hideTimer);
+            hideTimer = null;
+        };
+        const scheduleHide = () => {
+            cancelHide();
+            if (tooltip.classList.contains('is-pinned')) return;
+            hideTimer = setTimeout(() => {
+                if (tooltip.matches(':hover') || link.matches(':hover')) return;
+                tooltip.remove();
+            }, 180);
+        };
+
+        tooltip.addEventListener('mouseenter', cancelHide);
+        tooltip.addEventListener('mouseleave', scheduleHide);
+        tooltip.addEventListener('auxclick', event => {
+            if (event.button !== 1) return;
+            event.preventDefault();
+            tooltip.classList.toggle('is-pinned');
+            tooltip.dataset.pinned = tooltip.classList.contains('is-pinned') ? 'true' : 'false';
+        });
+        tooltip.addEventListener('click', event => {
+            const nested = event.target?.closest?.('.content-link[data-uuid]');
+            if (!nested) return;
+            event.preventDefault();
+            event.stopPropagation();
+            void this._openDrawerLinkedDocument(nested);
+        }, true);
 
         document.body.appendChild(tooltip);
 
@@ -626,13 +676,14 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
 
         tooltip.style.left = `${Math.round(left)}px`;
         tooltip.style.top = `${Math.round(top)}px`;
+        return tooltip;
     }
 
     async _openDrawerLinkedDocument(link) {
         const doc = await this._resolveDrawerLinkedDocument(link);
         if (!doc?.sheet) return false;
 
-        this._removeDrawerItemTooltip();
+        this._removeDrawerItemTooltip({ force: true });
 
         try {
             const renderResult = doc.sheet.render(true);
@@ -666,20 +717,48 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         if (!root || root.dataset.characterForgeContentLinksBound === 'true') return;
         root.dataset.characterForgeContentLinksBound = 'true';
 
+        root.querySelectorAll('.content-link[data-uuid]').forEach(link => {
+            link.removeAttribute('data-tooltip');
+            link.removeAttribute('data-tooltip-direction');
+        });
+
         root.addEventListener('pointerover', event => {
             const link = event.target?.closest?.('.content-link[data-uuid]');
             if (!link || !root.contains(link)) return;
             if (event.relatedTarget && link.contains(event.relatedTarget)) return;
+
+            // Foundry/D&D5e также пытаются показать собственный preview для content-link.
+            // Гасим его, иначе пользователь получает два окна одновременно.
+            link.removeAttribute('data-tooltip');
+            link.removeAttribute('data-tooltip-direction');
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
+
             void this._showDrawerItemTooltip(link);
-        });
+        }, true);
 
         root.addEventListener('pointerout', event => {
             const link = event.target?.closest?.('.content-link[data-uuid]');
             if (!link || !root.contains(link)) return;
             if (event.relatedTarget && link.contains(event.relatedTarget)) return;
             link._characterForgeHoverToken = null;
-            this._removeDrawerItemTooltip();
-        });
+
+            const tooltip = document.querySelector('.character-forge-item-tooltip');
+            if (!tooltip || tooltip.classList.contains('is-pinned')) return;
+            setTimeout(() => {
+                if (link.matches(':hover') || tooltip.matches(':hover')) return;
+                tooltip.remove();
+            }, 180);
+        }, true);
+
+        root.addEventListener('auxclick', event => {
+            const link = event.target?.closest?.('.content-link[data-uuid]');
+            if (!link || !root.contains(link) || event.button !== 1) return;
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation?.();
+            void this._showDrawerItemTooltip(link, { pin: true });
+        }, true);
 
         root.addEventListener('click', event => {
             const link = event.target?.closest?.('.content-link[data-uuid]');
@@ -770,6 +849,8 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
 
     /** @override */
     async close(options) {
+        this._removeDrawerItemTooltip({ force: true });
+        document.querySelectorAll('.originate-spell-tooltip, .originate-nested-tooltip').forEach(el => el.remove());
         clearTimeout(this._draftSaveTimer);
         this._draftSaveTimer = null;
 
