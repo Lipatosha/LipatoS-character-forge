@@ -1709,9 +1709,14 @@ export class DataManager {
      */
     _extractCoreTraits(item, type) {
         if (type === 'class') {
+            const rawHitDie = String(item.system.hd?.denomination || '').trim();
+            const hitDie = rawHitDie
+                ? (rawHitDie.toLowerCase().startsWith('d') ? rawHitDie : `d${rawHitDie}`)
+                : null;
+
             return {
                 primary: this._getPrimaryAbility(item),
-                hitDie: item.system.hd?.denomination ? `d${item.system.hd.denomination}` : null,
+                hitDie,
                 saves: this._getSavingThrows(item),
                 spellcasting: item.system.spellcasting?.ability || null,
                 spellcastingType: item.system.spellcasting?.progression || null
