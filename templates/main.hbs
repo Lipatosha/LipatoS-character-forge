@@ -76,7 +76,7 @@
                 </button>
                 <div class="level-number-display">
                     <span class="level-digit">{{characterLevel}}</span>
-                    <div class="level-label">LEVEL</div>
+                    <div class="level-label">{{localize "ORIGINATE.UI.Level.Label"}}</div>
                 </div>
                 <button type="button" class="level-arrow next" data-action="changeTotalLevel" data-delta="1">
                     <i class="fas fa-chevron-right"></i>
@@ -214,7 +214,7 @@
                     {{#each abilityData}}
                     <div class="assignment-target {{#if this.isAssigned}}assigned{{/if}} {{#if this.isPrimary}}primary-ability{{/if}}" data-ability="{{@key}}">
                         <div class="target-value">{{#if this.isAssigned}}{{this.value}}{{else}}-{{/if}}</div>
-                        <div class="target-label">{{upper @key}}</div>
+                        <div class="target-label">{{localize (concat "ORIGINATE.Ability.Abbr." (capitalize @key))}}</div>
                     </div>
                     {{/each}}
                 </div>
@@ -228,7 +228,7 @@
                         <i class="fas fa-fist-raised"></i>
                     </div>
                     <div class="ability-name">{{localize "ORIGINATE.Ability.Str"}}</div>
-                    <div class="ability-abbr">STR</div>
+                    <div class="ability-abbr">{{localize "ORIGINATE.Ability.Abbr.Str"}}</div>
                     <div class="ability-value-wrapper">
                         <button type="button" class="ability-btn decrement ability-dec-btn"
                             data-action="decrementAbility" data-ability="str">
@@ -257,7 +257,7 @@
                         <i class="fas fa-running"></i>
                     </div>
                     <div class="ability-name">{{localize "ORIGINATE.Ability.Dex"}}</div>
-                    <div class="ability-abbr">DEX</div>
+                    <div class="ability-abbr">{{localize "ORIGINATE.Ability.Abbr.Dex"}}</div>
                     <div class="ability-value-wrapper">
                         <button type="button" class="ability-btn decrement ability-dec-btn"
                             data-action="decrementAbility" data-ability="dex">
@@ -286,7 +286,7 @@
                         <i class="fas fa-heart"></i>
                     </div>
                     <div class="ability-name">{{localize "ORIGINATE.Ability.Con"}}</div>
-                    <div class="ability-abbr">CON</div>
+                    <div class="ability-abbr">{{localize "ORIGINATE.Ability.Abbr.Con"}}</div>
                     <div class="ability-value-wrapper">
                         <button type="button" class="ability-btn decrement ability-dec-btn"
                             data-action="decrementAbility" data-ability="con">
@@ -315,7 +315,7 @@
                         <i class="fas fa-brain"></i>
                     </div>
                     <div class="ability-name">{{localize "ORIGINATE.Ability.Int"}}</div>
-                    <div class="ability-abbr">INT</div>
+                    <div class="ability-abbr">{{localize "ORIGINATE.Ability.Abbr.Int"}}</div>
                     <div class="ability-value-wrapper">
                         <button type="button" class="ability-btn decrement ability-dec-btn"
                             data-action="decrementAbility" data-ability="int">
@@ -344,7 +344,7 @@
                         <i class="fas fa-eye"></i>
                     </div>
                     <div class="ability-name">{{localize "ORIGINATE.Ability.Wis"}}</div>
-                    <div class="ability-abbr">WIS</div>
+                    <div class="ability-abbr">{{localize "ORIGINATE.Ability.Abbr.Wis"}}</div>
                     <div class="ability-value-wrapper">
                         <button type="button" class="ability-btn decrement ability-dec-btn"
                             data-action="decrementAbility" data-ability="wis">
@@ -373,7 +373,7 @@
                         <i class="fas fa-comments"></i>
                     </div>
                     <div class="ability-name">{{localize "ORIGINATE.Ability.Cha"}}</div>
-                    <div class="ability-abbr">CHA</div>
+                    <div class="ability-abbr">{{localize "ORIGINATE.Ability.Abbr.Cha"}}</div>
                     <div class="ability-value-wrapper">
                         <button type="button" class="ability-btn decrement ability-dec-btn"
                             data-action="decrementAbility" data-ability="cha">
