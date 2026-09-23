@@ -11305,6 +11305,7 @@ body.originate-active #ui-notifications .notification.error {
 .view-selection-root.step-background .left-sidebar-drawer {
     --left-drawer-min-width: clamp(500px, 30vw, 540px);
     --left-drawer-max-width: min(760px, calc(100vw - 110px));
+    --left-drawer-content-width: var(--left-drawer-min-width) !important;
 }
 
 /* Текст сверху смещён с учётом новой ширины панели. */
@@ -11325,15 +11326,17 @@ body.originate-active #ui-notifications .notification.error {
 }
 
 .view-selection-root .drawer-body table {
-    width: max-content;
-    min-width: 100%;
-    max-width: none;
-    table-layout: auto;
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    table-layout: auto !important;
     border-collapse: collapse;
 }
 
 .view-selection-root .drawer-body th,
 .view-selection-root .drawer-body td {
+    width: auto !important;
+    max-width: none !important;
     min-width: 72px;
     white-space: normal;
     overflow-wrap: normal;
