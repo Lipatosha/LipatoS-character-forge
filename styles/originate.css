@@ -11901,3 +11901,30 @@ body.originate-active .character-forge-item-sheet-front {
         gap: 0.5rem;
     }
 }
+
+
+/* Ссылки внутри собственных закрепляемых подсказок больше не являются
+   системными content-link, чтобы D&D5e не рисовал второй preview. */
+.character-forge-item-tooltip .cf-tooltip-link,
+.originate-spell-tooltip .cf-tooltip-link {
+    display: inline;
+    color: var(--originate-accent, #c8a35f);
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.38);
+    border-radius: 2px;
+    padding: 0 0.18em;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.character-forge-item-tooltip .cf-tooltip-link:hover,
+.originate-spell-tooltip .cf-tooltip-link:hover {
+    border-color: var(--originate-accent, #c8a35f);
+    text-shadow: 0 0 7px rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.35);
+}
+
+.view-selection-root.step-class .nav-icon-wrapper {
+    border: none !important;
+    outline: none !important;
+}
