@@ -3292,48 +3292,89 @@ export class LevelUpManager {
         const actorTraitState = this._snapshotTraitState(this.actor);
         const cloneTraitState = this._snapshotTraitState(clone);
         if (JSON.stringify(actorTraitState) !== JSON.stringify(cloneTraitState)) {
-            this._logTraitDebug('准备把 clone 上的熟练状态提交回角色', {
+            this._logTraitDebug('Подготовка изменённых владений из clone', {
                 actor: actorTraitState,
                 clone: cloneTraitState
             });
         }
 
-        const updates = clone.toObject();
-        const items = clone.items?.map?.(item => item.toObject())
-            || updates.items
+        const cloneData = clone.toObject();
+        const cloneItems = clone.items?.map?.(item => item.toObject())
+            || cloneData.items
             || [];
-        delete updates.items;
+        delete cloneData.items;
 
-        const { toCreate, toUpdate, toDelete } = items.reduce((result, itemData) => {
-            if (!this.actor.items.get(itemData._id)) {
-                result.toCreate.push(itemData);
-            } else {
-                result.toUpdate.push(itemData);
-                result.toDelete = result.toDelete.filter(id => id !== itemData._id);
+        // Старый код на каждом native/ModifyItem commit полностью переписывал Actor
+        // и КАЖДЫЙ его Item. Для персонажа с десятками заклинаний это заставляло
+        // dnd5e заново готовить весь набор документов и занимало секунды.
+        // Сравниваем снимки и отправляем только реально изменившиеся документы.
+        const liveActorData = this.actor.toObject();
+        delete liveActorData.items;
+
+        const actorChanges = {};
+        for (const [key, value] of Object.entries(cloneData)) {
+            if (JSON.stringify(liveActorData[key]) !== JSON.stringify(value)) {
+                actorChanges[key] = value;
             }
-            return result;
-        }, {
-            toCreate: [],
-            toUpdate: [],
-            toDelete: this.actor.items.map(item => item.id)
-        });
+        }
 
-        const actorUpdate = await this.actor.update(updates, { isAdvancement: true });
+        const cloneItemIds = new Set();
+        const toCreate = [];
+        const toUpdate = [];
+
+        for (const itemData of cloneItems) {
+            const itemId = itemData._id;
+            if (itemId) cloneItemIds.add(itemId);
+
+            const liveItem = itemId ? this.actor.items.get(itemId) : null;
+            if (!liveItem) {
+                toCreate.push(itemData);
+                continue;
+            }
+
+            // Полную замену сохраняем только для действительно изменившихся Item.
+            // Это сохраняет корректность удалённых вложенных полей, но не трогает
+            // десятки/сотни неизменившихся заклинаний и особенностей.
+            const liveItemData = liveItem.toObject();
+            if (JSON.stringify(liveItemData) !== JSON.stringify(itemData)) {
+                toUpdate.push(itemData);
+            }
+        }
+
+        const toDelete = this.actor.items
+            .filter(item => !cloneItemIds.has(item.id))
+            .map(item => item.id);
+
+        const fastContext = { isAdvancement: true, render: false };
+
+        const actorUpdate = Object.keys(actorChanges).length
+            ? await this.actor.update(actorChanges, fastContext)
+            : null;
         const deletedItems = toDelete.length
-            ? await this.actor.deleteEmbeddedDocuments('Item', toDelete, { isAdvancement: true })
+            ? await this.actor.deleteEmbeddedDocuments('Item', toDelete, fastContext)
             : [];
         const updatedItems = toUpdate.length
             ? await this.actor.updateEmbeddedDocuments('Item', toUpdate, {
+                ...fastContext,
                 diff: false,
-                recursive: false,
-                isAdvancement: true
+                recursive: false
             })
             : [];
         const createdItems = toCreate.length
-            ? await this.actor.createEmbeddedDocuments('Item', toCreate, { keepId: true, isAdvancement: true })
+            ? await this.actor.createEmbeddedDocuments('Item', toCreate, {
+                ...fastContext,
+                keepId: true
+            })
             : [];
 
-        this._resetResolutionCaches();
+        if (actorUpdate || toCreate.length || toUpdate.length || toDelete.length) {
+            this._resetResolutionCaches();
+        }
+
+        window.OriginateLog?.(
+            `Character Forge | fast clone commit: actor=${Object.keys(actorChanges).length ? 1 : 0}, ` +
+            `create=${toCreate.length}, update=${toUpdate.length}, delete=${toDelete.length}`
+        );
 
         return {
             toCreate,
