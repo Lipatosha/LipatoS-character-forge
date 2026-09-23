@@ -109,11 +109,15 @@ export class WizardUIMixin {
 
     _featMatchesActorPrerequisites(feat) {
         const rawItems = feat?.system?.prerequisites?.items ?? feat?.prerequisites?.items;
-        const required = rawItems instanceof Set
-            ? Array.from(rawItems)
-            : Array.isArray(rawItems)
-                ? rawItems
-                : (rawItems ? Array.from(rawItems) : []);
+        let required = [];
+        if (rawItems instanceof Set || Array.isArray(rawItems)) {
+            required = Array.from(rawItems);
+        } else if (rawItems && typeof rawItems?.[Symbol.iterator] === 'function') {
+            required = Array.from(rawItems);
+        } else if (rawItems && typeof rawItems === 'object') {
+            required = Object.values(rawItems);
+        }
+        required = required.map(value => String(value || '').trim()).filter(Boolean);
 
         if (!required.length) return true;
 
@@ -433,6 +437,12 @@ export class WizardUIMixin {
                         <div class="hp-level-badge">LEVEL ${level}</div>
                         <h3>${game.i18n.localize('ORIGINATE.UI.Progression.HPTitle')}</h3>
                         <div class="hp-subtitle">${game.i18n.format('ORIGINATE.UI.Progression.HPSubtitle', { die: hitDie, mod: conMod })}</div>
+                        ${this.levelUpManager ? `
+                        <div class="hp-permanent-roll-warning">
+                            <i class="fas fa-lock"></i>
+                            <span>${game.i18n.localize('ORIGINATE.UI.Progression.HPRollPermanent')}</span>
+                        </div>
+                        ` : ''}
                     </div>
                     <div class="hp-options-wrapper ${rollLocked ? 'hp-options-wrapper--locked' : ''} ${this.levelUpManager ? 'hp-roll-only' : ''}">
                         <div class="hp-option-card ${savedHP?.method === 'average' ? 'selected' : ''}" data-method="average" data-hp="${avgHP}" aria-disabled="${rollLocked}">
@@ -1646,6 +1656,7 @@ export class WizardUIMixin {
                     if (isHitPointRollLocked(currentChoice) || state.hpRollInProgress) return;
 
                     const method = card.dataset.method;
+                    if (this.levelUpManager && method === 'average') return;
                     const hitDie = this.levelUpManager.hitDie;
                     const conMod = this._getConstitutionModifier();
                     const wrapper = overlay.querySelector('.hp-options-wrapper');
@@ -2238,6 +2249,7 @@ export class WizardUIMixin {
             el.innerHTML = `<img src="${spell.img}" class="spell-icon"><div class="spell-name">${spell.name}</div><div class="remove-icon"><i class="fas fa-times"></i></div>`;
             attachSelectedSpellCard(el);
             selectedList.appendChild(el);
+            this._bindTooltips(selectedList);
             updateCount();
             syncSelectedState();
             saveDraft();
