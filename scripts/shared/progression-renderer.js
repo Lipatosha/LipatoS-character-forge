@@ -133,32 +133,139 @@ export function findLanguageLabel(langKey, langObj) {
  * @param {string} key 特质 key，如 "skills:arc" 或 "languages:elvish"
  * @returns {string} 标签
  */
+function localizeConfigEntry(entry, fallback) {
+    const rawLabel = typeof entry === 'string' ? entry : entry?.label;
+    if (!rawLabel) return fallback;
+    try {
+        const localized = game.i18n.localize(rawLabel);
+        return localized && localized !== rawLabel ? localized : rawLabel;
+    } catch {
+        return rawLabel;
+    }
+}
+
+function localizeModuleKey(key, fallback) {
+    try {
+        const localized = game.i18n.localize(key);
+        if (localized && localized !== key) return localized;
+    } catch {
+        // Fall through to the system label/key.
+    }
+    return fallback;
+}
+
+function getAbilityTraitLabel(value) {
+    const abilityKey = String(value || '').trim().toLowerCase().split(':').pop();
+    const suffixes = { str: 'Str', dex: 'Dex', con: 'Con', int: 'Int', wis: 'Wis', cha: 'Cha' };
+    const suffix = suffixes[abilityKey];
+    if (suffix) {
+        return localizeModuleKey(
+            `ORIGINATE.Ability.${suffix}`,
+            localizeConfigEntry(CONFIG.DND5E.abilities?.[abilityKey], abilityKey)
+        );
+    }
+    return localizeConfigEntry(CONFIG.DND5E.abilities?.[abilityKey], abilityKey);
+}
+
+function getDamageTraitLabel(value) {
+    const damageKey = String(value || '').trim().toLowerCase().split(':').pop();
+    const suffix = damageKey ? damageKey.charAt(0).toUpperCase() + damageKey.slice(1) : '';
+    if (suffix) {
+        const ownKey = `ORIGINATE.Damage.${suffix}`;
+        const ownLabel = localizeModuleKey(ownKey, null);
+        if (ownLabel) return ownLabel;
+    }
+    return localizeConfigEntry(CONFIG.DND5E.damageTypes?.[damageKey], damageKey);
+}
+
+function getConditionTraitLabel(value) {
+    const conditionKey = String(value || '').trim().toLowerCase().split(':').pop();
+    return localizeConfigEntry(
+        CONFIG.DND5E.conditionTypes?.[conditionKey] || CONFIG.DND5E.conditions?.[conditionKey],
+        conditionKey
+    );
+}
+
+function getSizeTraitLabel(value) {
+    const sizeKey = String(value || '').trim().toLowerCase().split(':').pop();
+    const aliases = {
+        tiny: 'Tiny',
+        sm: 'Small',
+        small: 'Small',
+        med: 'Medium',
+        medium: 'Medium',
+        lg: 'Large',
+        large: 'Large',
+        huge: 'Huge',
+        grg: 'Gargantuan',
+        gargantuan: 'Gargantuan'
+    };
+    const suffix = aliases[sizeKey];
+    if (suffix) {
+        return localizeModuleKey(
+            `ORIGINATE.Size.${suffix}`,
+            localizeConfigEntry(CONFIG.DND5E.actorSizes?.[sizeKey], sizeKey)
+        );
+    }
+    return localizeConfigEntry(CONFIG.DND5E.actorSizes?.[sizeKey], sizeKey);
+}
+
 export function getTraitLabel(key) {
     if (!key || typeof key !== 'string') return key;
     const parts = key.split(':');
     if (parts.length < 2) return key;
     const type = parts[0];
     const value = parts.slice(1).join(':');
+
     switch (type) {
         case 'skills': {
-            const skillConfig = CONFIG.DND5E.skills?.[value];
-            return typeof skillConfig === 'string' ? skillConfig : (skillConfig?.label || value);
+            const skillKey = value.includes(':') ? value.split(':').pop() : value;
+            return localizeConfigEntry(CONFIG.DND5E.skills?.[skillKey], skillKey);
         }
+        case 'saves':
+        case 'save':
+            return getAbilityTraitLabel(value);
         case 'languages': {
             const langKey = value.includes(':') ? value.split(':').pop() : value;
-            return findLanguageLabel(langKey, CONFIG.DND5E.languages || {}) || langKey;
+            const label = findLanguageLabel(langKey, CONFIG.DND5E.languages || {}) || langKey;
+            return localizeConfigEntry(label, langKey);
         }
-        case 'tool': return getToolLabel(value.includes(':') ? value.split(':').pop() : value) || value;
-        case 'weapon': return getWeaponLabel(value) || value;
-        case 'weaponMastery': return getWeaponLabel(value) || value;
+        case 'tool':
+            return getToolLabel(value.includes(':') ? value.split(':').pop() : value) || value;
+        case 'weapon': {
+            const weaponKey = String(value || '').trim().toLowerCase().split(':').pop();
+            if (weaponKey === 'sim' || weaponKey === 'simple') {
+                return game.i18n.localize('ORIGINATE.Weapon.Simple');
+            }
+            if (weaponKey === 'mar' || weaponKey === 'martial') {
+                return game.i18n.localize('ORIGINATE.Weapon.Martial');
+            }
+            return getWeaponLabel(value) || value;
+        }
+        case 'weaponMastery':
+            return getWeaponLabel(value) || value;
         case 'armor': {
-            if (value === 'lgt' || value === 'light') return game.i18n.localize('ORIGINATE.Armor.Light');
-            if (value === 'med' || value === 'medium') return game.i18n.localize('ORIGINATE.Armor.Medium');
-            if (value === 'hvy' || value === 'heavy') return game.i18n.localize('ORIGINATE.Armor.Heavy');
-            if (value === 'shl' || value === 'shield') return game.i18n.localize('ORIGINATE.Armor.Shield');
-            return value;
+            const armorKey = String(value || '').trim().toLowerCase().split(':').pop();
+            if (armorKey === 'lgt' || armorKey === 'light') return game.i18n.localize('ORIGINATE.Armor.Light');
+            if (armorKey === 'med' || armorKey === 'medium') return game.i18n.localize('ORIGINATE.Armor.Medium');
+            if (armorKey === 'hvy' || armorKey === 'heavy') return game.i18n.localize('ORIGINATE.Armor.Heavy');
+            if (armorKey === 'shl' || armorKey === 'shield') return game.i18n.localize('ORIGINATE.Armor.Shield');
+            return armorKey;
         }
-        default: return value;
+        case 'dr':
+        case 'di':
+        case 'dv':
+        case 'damageResistance':
+        case 'damageImmunity':
+        case 'damageVulnerability':
+            return getDamageTraitLabel(value);
+        case 'ci':
+        case 'conditionImmunity':
+            return getConditionTraitLabel(value);
+        case 'size':
+            return getSizeTraitLabel(value);
+        default:
+            return value.includes(':') ? value.split(':').pop() : value;
     }
 }
 
