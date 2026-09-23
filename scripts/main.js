@@ -6,6 +6,7 @@ import { getAdvancementEntries } from './utils/advancement-utils.js';
 import { isSpellChoiceEvent } from './shared/advancement-choice-rules.js';
 import { hasOriginateActorMarkers, resolveItemSourceUuid } from './shared/resolution-core.js';
 import { registerTheme as registerOriginateTheme } from './theme-registry.js';
+import { acquireForgeStyles, forceUnloadForgeStyles } from './runtime-style.js';
 
 // 调试开关 - 默认关闭
 // 除非你想看我在控制台里碎碎念，否则别打开这个。
@@ -242,6 +243,7 @@ async function migrateLegacyOriginateSettings() {
 }
 
 Hooks.once('init', () => {
+    forceUnloadForgeStyles();
     window.OriginateLog('Originate | 正在初始化角色创建器模块... 希望这次别炸。');
     registerSettings();
 
@@ -489,6 +491,7 @@ Hooks.on('renderActorDirectory', (app, html, data) => {
             try {
                 // 启动！Originate 引擎点火！
                 currentOriginateApp = new OriginateApp(actor);
+                await acquireForgeStyles(currentOriginateApp);
                 currentOriginateApp.render(true);
             } catch (e) {
                 console.error("Originate | 角色创建器初始化失败... 哎，我就知道会出事:", e);
@@ -694,7 +697,9 @@ async function _openOriginateLevelUpApp(actor) {
     if (existing) {
         existing.bringToFront();
     } else {
-        new LevelUpApp(actor).render(true);
+        const app = new LevelUpApp(actor);
+        await acquireForgeStyles(app);
+        app.render(true);
     }
 }
 
