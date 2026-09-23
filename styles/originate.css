@@ -11966,3 +11966,43 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root .nav-item.selected .nav-icon-wrapper {
     box-shadow: none !important;
 }
+
+
+/* Character Forge 1.2.2: dice layer and inline modifiers */
+/* Dice So Nice создаёт #dice-box-canvas с z-index 1000. Character Forge полноэкранный
+   и находится выше, поэтому поднимаем только слой 3D-кубиков поверх мастера. */
+#dice-box-canvas {
+    z-index: 100100 !important;
+}
+
+/* Модификатор теперь находится прямо внутри соответствующей характеристики,
+   без отдельной нижней панели с рамкой. */
+.assignment-target .target-modifier {
+    min-height: 1.2em;
+    margin-top: 0.05rem;
+    font-size: 1rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.assignment-target .target-modifier.positive {
+    color: #4caf50;
+}
+
+.assignment-target .target-modifier.negative {
+    color: #ef5350;
+}
+
+.assignment-target .target-modifier.neutral {
+    color: #a0a0a0;
+}
+
+/* Старая отдельная панель модификаторов больше не используется. */
+.assignment-modifiers-panel {
+    display: none !important;
+}
+
+/* На экране бонусов характеристик иконки над названиями убраны. */
+.asi-bonus-layout .asi-card .ability-icon {
+    display: none !important;
+}
