@@ -632,6 +632,7 @@
     "ORIGINATE.UI.Abilities.Roll.Accept": "使用此结果",
     "ORIGINATE.UI.Abilities.Roll.IncompleteAssignment": "请完成属性点分配。",
     "ORIGINATE.UI.Abilities.Roll.Rolling": "投掷中...",
+  "ORIGINATE.UI.Abilities.Roll.RollError": "掷骰失败，请重试。",
     "ORIGINATE.UI.Abilities.Roll.Total": "总计",
     "ORIGINATE.UI.Abilities.Assign.Title": "分配属性值",
     "ORIGINATE.UI.Abilities.Assign.Subtitle": "拖拽或点击将数值分配给各属性",
