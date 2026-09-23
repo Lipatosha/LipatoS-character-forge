@@ -423,6 +423,11 @@ Hooks.once('ready', () => {
         reloadIndex: async () => {
             await globalDataManager.reloadIndex();
         },
+        openLevelUp: async (actorRef) => {
+            const actor = _resolveActorRef(actorRef);
+            if (!actor) throw new Error('Character Forge: персонаж не найден');
+            return _openOriginateLevelUpApp(actor);
+        },
         createCharacterFromFinalizeInput: async (input = {}, options = {}) => {
             const { createCharacterFromFinalizeInput } = await import('./services/character-finalize-service.js');
             return createCharacterFromFinalizeInput(input, {
@@ -442,20 +447,9 @@ Hooks.once('ready', () => {
         }
     });
 
-    // Warm the compendium index without blocking the ready hook. If Character Forge is opened
-    // before the warm-up finishes, DataManager reuses the same in-flight promise.
-    const scheduleWarmup = globalThis.requestIdleCallback
-        ? (fn) => globalThis.requestIdleCallback(fn, { timeout: 1500 })
-        : (fn) => globalThis.setTimeout(fn, 250);
-    scheduleWarmup(async () => {
-        try { await legacySettingsMigrationPromise; } catch { /* migration errors are logged above */ }
-        globalDataManager.loadSourcePacksIndex().catch(error =>
-            console.error('Character Forge | Background index warm-up failed', error)
-        );
-    });
-
-    // 加载自定义字体
-    FontLoader.loadFonts();
+    // Character Forge работает в ленивом режиме.
+    // Никакой фоновой индексации Laaru и загрузки пользовательских шрифтов,
+    // пока пользователь сам не запускает создание или повышение уровня.
 });
 
 // 既然你们非要个显眼的按钮，那就给你们一个
@@ -480,6 +474,9 @@ Hooks.on('renderActorDirectory', (app, html, data) => {
             ui.notifications.error('Character Forge: включите модуль Laaru (laaru-dnd5-hw).');
             return;
         }
+
+        // Визуальные ресурсы загружаются только при явном запуске Forge.
+        await FontLoader.loadFonts();
 
         // 既然你诚心诚意地点击了，那我就大发慈悲地给你创建一个新角色
         // 顺便把默认的角色卡按回去，别让它弹出来碍眼，我们要上主菜了
@@ -669,46 +666,17 @@ Hooks.on('updateItem', async (item, changes, options, userId) => {
 // 不再拦截原生 AdvancementManager，避免干扰原生升级流程。
 // 
 
-function _getOriginateSheetElement(app, element = null) {
-    if (element instanceof HTMLElement) return element;
-    if (element?.[0] instanceof HTMLElement) return element[0];
-    if (app?.element instanceof jQuery) return app.element[0];
-    if (app?.element instanceof HTMLElement) return app.element;
-    return null;
-}
-
-function _canShowOriginateLevelUpButton(actor) {
-    if (!actor || actor.type !== 'character') return false;
-
-    try {
-        if (!game.settings.get('character-forge', 'useLevelUp')) return false;
-    } catch (e) {
-        return false;
-    }
-
-    return hasOriginateActorMarkers(actor);
-}
-
-function _findOriginateLevelUpAnchor(appElement) {
-    const sheetButtonBar = appElement.querySelector('.dnd5e2.sheet.actor.character .sheet-header > .right .sheet-header-buttons')
-        || appElement.querySelector('.sheet-header .sheet-header-buttons');
-    if (sheetButtonBar) {
-        return {
-            element: sheetButtonBar,
-            placement: 'sheet-buttons'
-        };
-    }
-
-    const headerElement = appElement.querySelector('.window-header');
-    if (!headerElement) return null;
-
-    return {
-        element: headerElement,
-        placement: 'window-header'
-    };
-}
-
 async function _openOriginateLevelUpApp(actor) {
+    if (!actor || actor.type !== 'character') return;
+
+    const laaruModule = game.modules.get('laaru-dnd5-hw');
+    if (!laaruModule?.active) {
+        ui.notifications.error('Character Forge: включите модуль Laaru (laaru-dnd5-hw).');
+        return;
+    }
+
+    await FontLoader.loadFonts();
+
     const { LevelUpApp } = await import('./levelup-app.js');
 
     let existing = Object.values(ui.windows || {}).find(w =>
@@ -730,85 +698,50 @@ async function _openOriginateLevelUpApp(actor) {
     }
 }
 
-function _createOriginateLevelUpButton(actor, placement) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = placement === 'sheet-buttons'
-        ? 'originate-levelup-btn originate-levelup-sheet-action gold-button'
-        : 'originate-levelup-btn originate-levelup-window-action header-control';
-    btn.dataset.tooltip = game.i18n.localize("ORIGINATE.LevelUp.ButtonTooltip") || "Originate Level Up";
-    btn.setAttribute('aria-label', btn.dataset.tooltip);
-    btn.innerHTML = `<i class="fas fa-hat-wizard"></i>`;
+// ВАЖНО: Character Forge больше НЕ подписывается ни на один render*ActorSheet hook.
+// Обычное открытие персонажа не вызывает код Forge вообще.
+//
+// Повышение уровня доступно через контекстное меню персонажа в каталоге Actor.
+// Проверка маркеров выполняется только когда пользователь открывает это меню.
+Hooks.on('getActorDirectoryEntryContext', (_html, options) => {
+    options.push({
+        name: game.i18n.localize('ORIGINATE.LevelUp.ButtonTooltip'),
+        icon: '<i class="fas fa-hat-wizard"></i>',
+        condition: li => {
+            try {
+                if (!game.settings.get('character-forge', 'useLevelUp')) return false;
+            } catch {
+                return false;
+            }
 
-    btn.addEventListener('click', async (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
+            const element = li instanceof HTMLElement ? li : li?.[0];
+            const actorId = element?.dataset?.documentId
+                || element?.dataset?.entryId
+                || element?.dataset?.entityId
+                || li?.data?.('documentId')
+                || li?.data?.('entryId')
+                || li?.data?.('entityId');
+            const actor = actorId ? game.actors.get(actorId) : null;
+            return !!actor && actor.type === 'character' && hasOriginateActorMarkers(actor);
+        },
+        callback: async li => {
+            const element = li instanceof HTMLElement ? li : li?.[0];
+            const actorId = element?.dataset?.documentId
+                || element?.dataset?.entryId
+                || element?.dataset?.entityId
+                || li?.data?.('documentId')
+                || li?.data?.('entryId')
+                || li?.data?.('entityId');
+            const actor = actorId ? game.actors.get(actorId) : null;
+            if (!actor) return;
 
-        try {
-            await _openOriginateLevelUpApp(actor);
-        } catch (e) {
-            console.error("Originate | 打开升级向导失败:", e);
-            ui.notifications.error(game.i18n.localize("ORIGINATE.LevelUp.OpenFailed") || "Failed to open Level Up wizard");
+            try {
+                await _openOriginateLevelUpApp(actor);
+            } catch (error) {
+                console.error('Character Forge | Не удалось открыть повышение уровня:', error);
+                ui.notifications.error(game.i18n.localize('ORIGINATE.LevelUp.OpenFailed'));
+            }
         }
     });
-
-    return btn;
-}
-
-// 角色卡升级按钮注入
-// 优先放进 dnd5e 的 sheet-header-buttons，也就是休息按钮那排；找不到再退回窗口标题栏，兼容旧卡和改卡。
-function _injectOriginateLevelUpButton(app, element = null) {
-    const actor = app?.actor || app?.document;
-    if (!_canShowOriginateLevelUpButton(actor)) return;
-
-    const appElement = _getOriginateSheetElement(app, element);
-    if (!appElement) {
-        window.OriginateLog("Originate | 升级按钮注入: 未找到应用元素");
-        return;
-    }
-
-    if (appElement.querySelector('.originate-levelup-btn')) return;
-
-    const anchor = _findOriginateLevelUpAnchor(appElement);
-    if (!anchor) {
-        window.OriginateLog("Originate | 升级按钮注入: 未找到可用按钮容器");
-        return;
-    }
-
-    const btn = _createOriginateLevelUpButton(actor, anchor.placement);
-    if (anchor.placement === 'sheet-buttons') {
-        anchor.element.appendChild(btn);
-        console.log(`Originate | 已为 ${actor.name} 注入角色卡内升级按钮`);
-        return;
-    }
-
-    const closeBtn = anchor.element.querySelector('.header-control.close')
-        || anchor.element.querySelector('button[data-action="close"]')
-        || anchor.element.querySelector('.close');
-    if (closeBtn) {
-        closeBtn.before(btn);
-    } else {
-        anchor.element.appendChild(btn);
-    }
-
-    console.log(`Originate | 已为 ${actor.name} 注入标题栏升级按钮`);
-}
-
-// ---- Hook 注册 ----
-
-// V1 角色卡 Hook（兼容旧版 ApplicationV1）
-Hooks.on('renderActorSheet', (app) => _injectOriginateLevelUpButton(app));
-
-// V2 角色卡 Hook（Foundry V12+ ApplicationV2）
-// dnd5e 4.x 继承链: ActorSheetV2 → BaseActorSheet → CharacterActorSheet
-// Hook 名格式: render + 类名
-Hooks.on('renderCharacterActorSheet', (app, element, options) => {
-    _injectOriginateLevelUpButton(app, element);
-});
-Hooks.on('renderBaseActorSheet', (app, element, options) => {
-    _injectOriginateLevelUpButton(app, element);
-});
-Hooks.on('renderActorSheetV2', (app, element, options) => {
-    _injectOriginateLevelUpButton(app, element);
 });
 
