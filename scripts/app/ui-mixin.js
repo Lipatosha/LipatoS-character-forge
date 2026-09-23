@@ -1240,8 +1240,8 @@ export const UIMixin = (Base) => class extends Base {
             }
                 
                 ${state.currentStep < totalSteps - 1 ?
-                `<button type="button" class="confirm-btn" data-action="nextWizardStep">${game.i18n.localize('ORIGINATE.UI.Button.Next')} <i class="fas fa-arrow-right"></i></button>` :
-                `<button type="button" class="confirm-btn" data-action="finishSubInterface">${game.i18n.localize('ORIGINATE.UI.Button.Finish')} <i class="fas fa-check"></i></button>`
+                `<button type="button" class="confirm-btn" data-action="nextWizardStep" disabled>${game.i18n.localize('ORIGINATE.UI.Button.Next')} <i class="fas fa-arrow-right"></i></button>` :
+                `<button type="button" class="confirm-btn" data-action="finishSubInterface" disabled>${game.i18n.localize('ORIGINATE.UI.Button.Finish')} <i class="fas fa-check"></i></button>`
             }
             </div>
         `;
@@ -1323,9 +1323,9 @@ export const UIMixin = (Base) => class extends Base {
                     delete finishBtn.dataset.busy;
 
                     if (shouldRestore && finishBtn.isConnected) {
-                        finishBtn.disabled = false;
                         finishBtn.classList.remove('is-loading');
                         finishBtn.innerHTML = idleHtml;
+                        this._updateWizardNavigationState(overlay, currentStepData);
                     }
                 }
             };
@@ -1344,6 +1344,23 @@ export const UIMixin = (Base) => class extends Base {
 
         // 绑定 Tooltip
         this._bindTooltips(overlay);
+
+        overlay._characterForgeWizardStepData = currentStepData;
+        if (!overlay._characterForgeCompletionBound) {
+            overlay._characterForgeCompletionBound = true;
+            const refreshCompletion = () => {
+                requestAnimationFrame(() => {
+                    this._updateWizardNavigationState(
+                        overlay,
+                        overlay._characterForgeWizardStepData
+                    );
+                });
+            };
+            overlay.addEventListener('change', refreshCompletion);
+            overlay.addEventListener('input', refreshCompletion);
+            overlay.addEventListener('click', refreshCompletion);
+        }
+        this._updateWizardNavigationState(overlay, currentStepData);
     }
 
     _renderStartingEquipmentEvent(event, idx) {
@@ -1543,6 +1560,91 @@ export const UIMixin = (Base) => class extends Base {
         return updateTooltipPosition(e, tooltip);
     }
 
+    _isWizardStepComplete(overlay, stepData) {
+        if (!overlay || !stepData) return false;
+
+        if (stepData.type === 'fixed') return true;
+
+        if (stepData.type === 'knowledge_equipment') {
+            return !!overlay.querySelector('input[name="equipment"]:checked');
+        }
+
+        if (stepData.type === 'knowledge_suboption') {
+            return !!overlay.querySelector('input[name="subOption"]:checked');
+        }
+
+        if (stepData.type !== 'choice') return true;
+
+        const event = stepData.event || {};
+        const section = overlay.querySelector(`.sub-section[data-idx="${stepData.idx}"]`);
+
+        if (event.type === 'trait_choice') {
+            if (!section) return false;
+            const required = parseInt(section.dataset.count) || Number(event.count) || 1;
+            return section.querySelectorAll('input:checked').length === required;
+        }
+
+        if (event.type === 'choice') {
+            const spellSection = overlay.querySelector('.spell-browser-section');
+            if (spellSection) {
+                const required = parseInt(spellSection.dataset.count) || Number(event.count) || 1;
+                return spellSection.querySelectorAll('.selected-spells-list .spell-card').length === required;
+            }
+
+            if (!section) return false;
+            const required = parseInt(section.dataset.count) || Number(event.count) || 0;
+            const replacementRadio = section.querySelector('.replacement-section input[type="radio"]:checked');
+            const isReplacing = !!replacementRadio && replacementRadio.value !== 'none';
+            const requiredCount = required + (isReplacing ? 1 : 0);
+            return section.querySelectorAll('input[type="checkbox"]:checked').length === requiredCount;
+        }
+
+        if (event.type === 'equipment') {
+            if (!section) return false;
+            const selection = this._readStartingEquipmentSelection(section);
+            const result = resolveStartingEquipmentSelection(event, selection);
+            return result.missing.length === 0;
+        }
+
+        if (event.type === 'asi' && event.points > 0) {
+            const remaining = Number.parseInt(
+                overlay.querySelector('.asi-section .asi-points-remaining')?.textContent || '0',
+                10
+            );
+            return remaining === 0;
+        }
+
+        const choiceArea = overlay.querySelector('.wizard-choice-container');
+        if (!choiceArea) return true;
+
+        const radios = Array.from(choiceArea.querySelectorAll('input[type="radio"]:not(:disabled)'));
+        if (radios.length) {
+            const groups = new Map();
+            for (const radio of radios) {
+                const name = radio.name || '__default';
+                if (!groups.has(name)) groups.set(name, []);
+                groups.get(name).push(radio);
+            }
+            for (const group of groups.values()) {
+                if (!group.some(radio => radio.checked)) return false;
+            }
+        }
+
+        return true;
+    }
+
+    _updateWizardNavigationState(overlay, stepData) {
+        if (!overlay || !stepData) return;
+        const complete = this._isWizardStepComplete(overlay, stepData);
+        const button = overlay.querySelector(
+            '[data-action="nextWizardStep"], [data-action="finishSubInterface"]'
+        );
+        if (button && button.dataset.busy !== '1') {
+            button.disabled = !complete;
+            button.classList.toggle('is-incomplete', !complete);
+        }
+    }
+
     /**
      * 验证向导步骤的选择
      * 
@@ -1555,6 +1657,12 @@ export const UIMixin = (Base) => class extends Base {
      * @returns {Promise<boolean>} 是否可以继续
      */
     async _validateWizardStep(overlay, stepData) {
+        if (!this._isWizardStepComplete(overlay, stepData)) {
+            ui.notifications.warn(game.i18n.localize('ORIGINATE.UI.Navigation.IncompleteStep'));
+            this._updateWizardNavigationState(overlay, stepData);
+            return false;
+        }
+
         const restriction = getSpellRestriction(stepData.event || stepData);
         const selected = Array.from(overlay.querySelectorAll('.selected-spells-list .spell-card, .item-choices-list input:checked'))
             .map(element => element.dataset.uuid || element.value).filter(Boolean);
