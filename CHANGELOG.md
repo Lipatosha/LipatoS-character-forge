@@ -1,9 +1,15 @@
-# Changelog
+# История изменений
+
+## 1.0.1
+
+- Описание модуля и README переведены на русский язык.
+- Приведено оформление к общему стилю репозиториев LipatoS.
+- Добавлена версия в центральный каталог LipatoS.
 
 ## 1.0.0
 
-- New independent Character Forge implementation.
-- Character basics, class, species/race, background, and ability score workflow.
-- Compendium index cache with bounded parallel loading.
-- Russian and English localization.
-- GitHub Releases based Foundry installation and updates.
+- Первая независимая версия Character Forge.
+- Создание персонажа с выбором класса, вида/расы, предыстории и характеристик.
+- Кэширование индексов компендиумов с ограниченной параллельной загрузкой.
+- Русская и английская локализация.
+- Установка и обновления через GitHub Releases.
