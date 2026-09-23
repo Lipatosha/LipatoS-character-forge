@@ -1132,6 +1132,20 @@ function _canShowGrantedLevelUpControl(application) {
     return actor;
 }
 
+Hooks.on('getHeaderControlsCharacterActorSheet', (application, controls) => {
+    const actor = _canShowGrantedLevelUpControl(application);
+    if (!actor || !Array.isArray(controls)) return;
+    if (controls.some(control => control?.action === 'character-forge-level-up')) return;
+
+    controls.unshift({
+        action: 'character-forge-level-up',
+        icon: 'fa-solid fa-arrow-up',
+        label: game.i18n.localize('ORIGINATE.LevelUpGrant.ButtonTooltip'),
+        visible: true,
+        onClick: () => void _openOriginateLevelUpApp(actor)
+    });
+});
+
 Hooks.on('getHeaderControlsApplicationV2', (application, controls) => {
     const actor = _canShowGrantedLevelUpControl(application);
     if (!actor || !Array.isArray(controls)) return;
@@ -1171,6 +1185,51 @@ Hooks.on('getActorSheetHeaderButtons', (application, buttons) => {
         icon: 'fas fa-arrow-up',
         onclick: () => void _openOriginateLevelUpApp(actor)
     });
+});
+
+function _injectGrantedLevelUpSheetButton(application) {
+    const actor = _canShowGrantedLevelUpControl(application);
+    if (!actor) return;
+
+    const root = application?.element instanceof HTMLElement
+        ? application.element
+        : application?.element?.[0];
+    if (!root || root.querySelector('.character-forge-levelup-sheet-button')) return;
+
+    let buttons = root.querySelector('.sheet-header .sheet-header-buttons');
+    if (!buttons) {
+        const host = root.querySelector('.sheet-header > .right > div');
+        if (!host) return;
+        buttons = document.createElement('div');
+        buttons.className = 'sheet-header-buttons character-forge-levelup-buttons';
+        host.prepend(buttons);
+    }
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'character-forge-levelup-sheet-button gold-button';
+    button.setAttribute('data-tooltip', '');
+    button.setAttribute('aria-label', game.i18n.localize('ORIGINATE.LevelUpGrant.ButtonTooltip'));
+    button.title = game.i18n.localize('ORIGINATE.LevelUpGrant.ButtonTooltip');
+    button.innerHTML = '<i class="fas fa-arrow-up"></i>';
+    button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        void _openOriginateLevelUpApp(actor);
+    });
+    buttons.appendChild(button);
+}
+
+// D&D5e 6.x использует CharacterActorSheet на ApplicationV2.
+// Кнопку рисуем прямо рядом с кнопками отдыха, чтобы она была видна без меню «⋮».
+Hooks.on('renderCharacterActorSheet', application => {
+    _injectGrantedLevelUpSheetButton(application);
+});
+
+// Резерв для сборок Foundry, где система не вызывает именованный render-hook.
+Hooks.on('renderApplicationV2', application => {
+    if (application?.constructor?.name !== 'CharacterActorSheet') return;
+    _injectGrantedLevelUpSheetButton(application);
 });
 
 Hooks.on('getActorDirectoryEntryContext', (_html, options) => {
