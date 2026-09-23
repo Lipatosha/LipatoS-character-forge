@@ -1225,7 +1225,7 @@ export const UIMixin = (Base) => class extends Base {
         // 渲染外壳
         overlay.innerHTML = `
             <div class="sub-interface-header">
-                <h2>${context.option.name} - ${currentStepData.title}</h2>
+                <h2>${context.option.displayName || context.option.name} - ${currentStepData.title}</h2>
                 <div class="step-indicator">${game.i18n.format('ORIGINATE.UI.Step.Indicator', { current: state.currentStep + 1, total: totalSteps })}</div>
             </div>
             
