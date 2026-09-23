@@ -11244,10 +11244,7 @@ body.originate-active #ui-notifications .notification.error {
 .view-selection-root.step-background .cinematic-caption {
     top: clamp(72px, 8vh, 110px) !important;
     bottom: auto !important;
-    left: calc(
-        clamp(360px, 26vw, 440px)
-        + (100vw - clamp(360px, 26vw, 440px)) / 2
-    ) !important;
+    left: calc(50% + clamp(180px, 13vw, 220px)) !important;
     width: min(
         760px,
         calc(100vw - clamp(360px, 26vw, 440px) - 120px)
@@ -11292,7 +11289,7 @@ body.originate-active #ui-notifications .notification.error {
     .view-selection-root.step-class .cinematic-caption,
     .view-selection-root.step-race .cinematic-caption,
     .view-selection-root.step-background .cinematic-caption {
-        left: calc(clamp(320px, 38vw, 390px) + (100vw - clamp(320px, 38vw, 390px)) / 2) !important;
+        left: calc(50% + clamp(160px, 19vw, 195px)) !important;
         width: calc(100vw - clamp(320px, 38vw, 390px) - 48px) !important;
     }
 }
