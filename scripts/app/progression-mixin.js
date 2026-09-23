@@ -3527,9 +3527,17 @@ export const ProgressionMixin = (Base) => {
             const fixedBonuses = {};
 
             for (const asi of deferredASIs.filter(a => a.type === 'fixed')) {
-                if (!asi.fixed) continue;
-                for (const [ab, val] of Object.entries(asi.fixed)) {
-                    fixedBonuses[ab] = (fixedBonuses[ab] || 0) + val;
+                if (asi.ability && Number.isFinite(Number(asi.value))) {
+                    fixedBonuses[asi.ability] = (fixedBonuses[asi.ability] || 0) + Number(asi.value);
+                    continue;
+                }
+
+                // Совместимость со старыми черновиками, где фиксированные бонусы могли храниться объектом fixed.
+                if (asi.fixed && typeof asi.fixed === 'object') {
+                    for (const [ab, val] of Object.entries(asi.fixed)) {
+                        const numericValue = Number(val) || 0;
+                        fixedBonuses[ab] = (fixedBonuses[ab] || 0) + numericValue;
+                    }
                 }
             }
 
@@ -3552,14 +3560,19 @@ export const ProgressionMixin = (Base) => {
             const classConfig = configData.classs?.[classId];
             let hitDie = null;
 
+            const normalizeHitDie = value => {
+                const match = String(value ?? '').match(/d?(\d+)/i);
+                return match ? parseInt(match[1]) : null;
+            };
+
             if (classConfig?.hitDie) {
-                hitDie = classConfig.hitDie;
-                window.OriginateLog(`Originate | 从配置获取生命骰: d${hitDie}`);
+                hitDie = normalizeHitDie(classConfig.hitDie);
+                if (hitDie) window.OriginateLog(`Originate | 从配置获取生命骰: d${hitDie}`);
             }
 
             if (!hitDie && this.blueprintData.class?.hitDie) {
-                hitDie = this.blueprintData.class.hitDie;
-                window.OriginateLog(`Originate | 从 blueprintData 获取生命骰: d${hitDie}`);
+                hitDie = normalizeHitDie(this.blueprintData.class.hitDie);
+                if (hitDie) window.OriginateLog(`Originate | 从 blueprintData 获取生命骰: d${hitDie}`);
             }
 
             if (!hitDie) {
