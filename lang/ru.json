@@ -985,5 +985,9 @@
   "ORIGINATE.LevelUpGrant.NoOwner": "Персонаж ГМ",
   "ORIGINATE.LevelUpGrant.ButtonTooltip": "Повысить уровень",
   "ORIGINATE.LevelUpGrant.NoPermission": "ГМ ещё не выдал этому персонажу повышение уровня.",
-  "ORIGINATE.LevelUpGrant.NotOwner": "У вас нет прав владельца на этого персонажа."
+  "ORIGINATE.LevelUpGrant.NotOwner": "У вас нет прав владельца на этого персонажа.",
+  "ORIGINATE.FeatCatalog.PreviewTitle": "Описание черты",
+  "ORIGINATE.FeatCatalog.PreviewHint": "Наведите на черту или выберите её, чтобы увидеть полное описание.",
+  "ORIGINATE.UI.Progression.SubclassPreviewHint": "Наведите на подкласс или выберите его, чтобы увидеть полное описание.",
+  "ORIGINATE.UI.Progression.HPRollPermanent": "Первый бросок закрепляется за этим уровнем навсегда. Отмена повышения уровня не позволит перебросить кость."
 }
