@@ -47,6 +47,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
             history: foundry.utils.deepClone(this._rollState.history || []),
             selectedIndex: this._rollState.selectedIndex ?? -1,
             attemptsUsed: this._rollState.attemptsUsed ?? 0,
+            pendingResults: foundry.utils.deepClone(this._rollState.pendingResults || []),
             isRolling: false,
             isAssigning: !!this._rollState.isAssigning,
             assignedValues: foundry.utils.deepClone(this._rollState.assignedValues || null),
@@ -75,6 +76,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
                     history: Array.isArray(persisted.history) ? persisted.history : [],
                     selectedIndex: Number.isInteger(persisted.selectedIndex) ? persisted.selectedIndex : -1,
                     attemptsUsed: Number(persisted.attemptsUsed) || 0,
+                    pendingResults: Array.isArray(persisted.pendingResults) ? persisted.pendingResults : [],
                     isRolling: false,
                     isAssigning: !!persisted.isAssigning,
                     assignedValues: persisted.assignedValues || null,
@@ -99,6 +101,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
             history: [],
             selectedIndex: -1,
             attemptsUsed: 0,
+            pendingResults: [],
             isRolling: false,
             isAssigning: false,
             assignedValues: null,
@@ -361,6 +364,16 @@ export const AbilitiesMixin = (Base) => class extends Base {
             const rollFormula = game.settings.get('character-forge', 'rollFormula') || '4d6kh3';
             const rollAttempts = game.settings.get('character-forge', 'rollAttempts') || 1;
 
+            const pendingResults = Array.isArray(this._rollState.pendingResults)
+                ? this._rollState.pendingResults
+                : [];
+            const selectedEntry = this._rollState.selectedIndex >= 0
+                ? this._rollState.history[this._rollState.selectedIndex]
+                : null;
+            const visibleValues = pendingResults.length > 0
+                ? pendingResults.map(result => result.value)
+                : (selectedEntry?.values || []);
+
             context.roll = {
                 formula: rollFormula,
                 mode: rollMode,
@@ -372,6 +385,13 @@ export const AbilitiesMixin = (Base) => class extends Base {
                 selectedIndex: this._rollState.selectedIndex,
                 isRolling: this._rollState.isRolling,
                 hasSelection: this._rollState.selectedIndex >= 0,
+                rollsRemainingInSet: Math.max(0, 6 - pendingResults.length),
+                slots: Array.from({ length: 6 }, (_, index) => ({
+                    index,
+                    filled: visibleValues[index] !== undefined && visibleValues[index] !== null,
+                    value: visibleValues[index] ?? null,
+                    isRolling: this._rollState.isRolling && index === Math.min(pendingResults.length, 5)
+                })),
 
                 isAssignmentPhase: context.isAbilityAssignmentPhase,
 
@@ -496,69 +516,74 @@ export const AbilitiesMixin = (Base) => class extends Base {
      * 执行掷骰 - 带动画
      */
     async _onRollAbilities() {
-        // Guard: 防止快速点击触发多次并发掷骰，导致 attemptsRemaining 变为 -1
-        if (this._rollState.isRolling) return;
+        // Один клик = одно значение. Полный набор характеристик собирается за шесть бросков.
+        if (!this._rollState || this._rollState.isRolling) return false;
 
         const rollAttempts = game.settings.get('character-forge', 'rollAttempts') || 1;
+        const pendingResults = Array.isArray(this._rollState.pendingResults)
+            ? this._rollState.pendingResults
+            : (this._rollState.pendingResults = []);
 
-        // Игрок, получивший одноразовый допуск от ГМа, бросает характеристики только один раз.
-        // Результат хранится на заготовке Actor и переживает закрытие/повторное открытие мастера.
+        // Игрок, получивший одноразовый допуск от ГМа, получает только один полный набор.
         if (this.creationGrantId && this._rollState.history.length > 0) {
             ui.notifications.warn(game.i18n.localize('ORIGINATE.UI.Abilities.Roll.Locked'));
-            return;
+            return false;
         }
 
-        if (this._rollState.attemptsUsed >= rollAttempts) {
+        if (this._rollState.attemptsUsed >= rollAttempts && pendingResults.length === 0) {
             ui.notifications.warn(game.i18n.localize('ORIGINATE.UI.Abilities.Roll.NoRolls'));
-            return;
+            return false;
         }
+
+        if (pendingResults.length >= 6) return false;
 
         this._rollState.isRolling = true;
-        this.render(); // 触发 UI 更新显示 "Rolling..."
+        this.render();
 
-        // 老虎机动画效果
-        const duration = 800;
-        const intervalTime = 50;
-        const steps = duration / intervalTime;
-        let currentStep = 0;
-
-        // 预先计算结果
-        const formula = game.settings.get('character-forge', 'rollFormula') || '4d6kh3';
-        const results = [];
-        for (let i = 0; i < 6; i++) {
+        try {
+            const formula = game.settings.get('character-forge', 'rollFormula') || '4d6kh3';
             const roll = new Roll(formula);
             await roll.evaluate();
-            results.push({ value: roll.total, formula, details: roll.result });
-        }
 
-        // 动画计时器
-        return new Promise(resolve => {
-            const animationInterval = setInterval(async () => {
-                currentStep++;
-                if (currentStep >= steps) {
-                    clearInterval(animationInterval);
-                    await this._finishRolling(results);
-                    resolve();
-                } else {
-                    // 更新随机显示的数字
-                    this._animateRandomNumbers();
+            // Dice So Nice является обязательной зависимостью модуля.
+            // Guard оставлен, чтобы ошибка стороннего API не потеряла сам результат броска.
+            if (game.dice3d?.showForRoll) {
+                try {
+                    await game.dice3d.showForRoll(roll, game.user, true);
+                } catch (diceError) {
+                    console.warn('Character Forge | Dice So Nice не смог показать бросок:', diceError);
                 }
-            }, intervalTime);
-        });
-    }
+            }
 
-    // UI 动画辅助函数：直接操作 DOM 更新数字
-    _animateRandomNumbers() {
-        const slots = this.element.querySelectorAll('.slot-value');
-        slots.forEach(slot => {
-            // 生成 8-18 之间的随机数用于展示
-            const randomVal = Math.floor(Math.random() * 11) + 8;
-            slot.textContent = randomVal;
-        });
+            pendingResults.push({
+                value: Number(roll.total),
+                formula,
+                details: roll.result
+            });
+
+            this._rollState.isRolling = false;
+            await this._persistGrantedRollState();
+
+            if (pendingResults.length >= 6) {
+                const completedSet = pendingResults.slice(0, 6);
+                await this._finishRolling(completedSet);
+            } else {
+                this._renderPreservingScroll();
+            }
+
+            return true;
+        } catch (error) {
+            this._rollState.isRolling = false;
+            console.error('Character Forge | Ошибка броска характеристик:', error);
+            this._renderPreservingScroll();
+            ui.notifications.error(game.i18n.localize('ORIGINATE.UI.Abilities.Roll.RollError'));
+            return false;
+        }
     }
 
     async _finishRolling(results) {
         this._rollState.isRolling = false;
+        this._rollState.pendingResults = [];
 
         const historyEntry = {
             id: Date.now(),
