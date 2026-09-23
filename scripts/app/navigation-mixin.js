@@ -47,6 +47,13 @@ export const NavigationMixin = (Base) => class extends Base {
                         canProceed = false;
                         warningMessage = game.i18n.localize('ORIGINATE.UI.Abilities.Roll.IncompleteAssignment');
                     }
+                } else if (abilityMode === 'pointbuy') {
+                    const totalPoints = game.settings.get('character-forge', 'pointBuyTotal') || 27;
+                    const remainingPoints = totalPoints - this._calculateUsedPoints();
+                    if (remainingPoints !== 0) {
+                        canProceed = false;
+                        warningMessage = game.i18n.localize('ORIGINATE.UI.Abilities.PointBuy.Remaining');
+                    }
                 }
             }
 
