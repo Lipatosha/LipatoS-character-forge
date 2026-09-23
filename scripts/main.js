@@ -490,6 +490,24 @@ async function _openCharacterForgeForActor(actor, { grantId = null, grantUserId 
         });
         await acquireForgeStyles(currentOriginateApp);
         currentOriginateApp.render(true);
+
+        // Не убираем индикатор загрузки в каталоге, пока полноэкранный Forge
+        // действительно не появился в DOM.
+        await new Promise(resolve => {
+            const startedAt = performance.now();
+            const waitForRender = () => {
+                const element = currentOriginateApp?.element instanceof HTMLElement
+                    ? currentOriginateApp.element
+                    : currentOriginateApp?.element?.[0];
+
+                if (element?.isConnected || (performance.now() - startedAt) > 5000) {
+                    resolve();
+                    return;
+                }
+                requestAnimationFrame(waitForRender);
+            };
+            requestAnimationFrame(waitForRender);
+        });
     } catch (error) {
         console.error("Character Forge | Не удалось открыть создание персонажа:", error);
         ui.notifications.error(game.i18n.localize("ORIGINATE.Error.InitFailed"));
@@ -646,7 +664,13 @@ Hooks.on('renderActorDirectory', (_app, html) => {
 
     createButton.addEventListener('click', async event => {
         event.preventDefault();
+
+        if (createButton.disabled) return;
+
+        const idleHtml = createButton.innerHTML;
         createButton.disabled = true;
+        createButton.classList.add('character-forge-loading');
+        createButton.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${game.i18n.localize('ORIGINATE.Button.Loading')}`;
 
         try {
             let actor;
@@ -682,6 +706,8 @@ Hooks.on('renderActorDirectory', (_app, html) => {
             ui.notifications.error(error?.message || String(error));
         } finally {
             createButton.disabled = false;
+            createButton.classList.remove('character-forge-loading');
+            createButton.innerHTML = idleHtml;
         }
     });
 
