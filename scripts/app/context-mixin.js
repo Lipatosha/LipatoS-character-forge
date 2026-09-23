@@ -49,7 +49,13 @@ export const ContextMixin = (Base) => class extends Base {
             }
 
             // 获取欢迎语，虽然我觉得没人会认真看
-            const welcomeMessage = game.settings.get('character-forge', 'welcomeMessage');
+            const configuredWelcomeMessage = String(
+                game.settings.get('character-forge', 'welcomeMessage') || ''
+            ).trim();
+            const legacyWelcomeMessage = 'Ready to embark on your journey, adventurer?';
+            const welcomeMessage = (!configuredWelcomeMessage || configuredWelcomeMessage === legacyWelcomeMessage)
+                ? game.i18n.localize('ORIGINATE.UI.Welcome.Message')
+                : configuredWelcomeMessage;
             const welcomeMessageFont = game.settings.get('character-forge', 'welcomeMessageFont') || "Cinzel";
 
             // 获取视觉主题
