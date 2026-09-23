@@ -632,6 +632,7 @@
   "ORIGINATE.UI.Abilities.Roll.History": "Roll History",
   "ORIGINATE.UI.Abilities.Roll.NoRolls": "Click Roll to generate ability scores",
   "ORIGINATE.UI.Abilities.Roll.Rolling": "Rolling...",
+  "ORIGINATE.UI.Abilities.Roll.RollError": "Unable to roll the dice. Try again.",
   "ORIGINATE.UI.Abilities.Roll.Total": "Total",
   "ORIGINATE.UI.Abilities.Assign.Title": "Assign Ability Scores",
   "ORIGINATE.UI.Abilities.Assign.Subtitle": "Drag or select values to assign to each ability",
