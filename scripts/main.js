@@ -9,9 +9,13 @@ import { registerTheme as registerOriginateTheme } from './theme-registry.js';
 import { acquireForgeStyles, forceUnloadForgeStyles } from './runtime-style.js';
 import {
     applyCreationGrantSelection,
+    applyLevelUpGrantSelection,
     consumeCurrentCreationGrant,
+    getActorLevelUpGrant,
+    getGrantableLevelUpActors,
     getGrantableUsers,
     getUserCreationGrant,
+    hasActorLevelUpGrant,
     installCreationGrantSocket,
     requestGrantedActor,
     refreshActorDirectory
@@ -632,6 +636,134 @@ function _openCreationGrantPopover(anchorButton) {
     }, 0);
 }
 
+function _closeLevelUpGrantPopover() {
+    document.querySelectorAll('.character-forge-levelup-grant-popover').forEach(el => el.remove());
+}
+
+function _openLevelUpGrantPopover(anchorButton) {
+    _closeLevelUpGrantPopover();
+    _closeCreationGrantPopover();
+
+    const actors = getGrantableLevelUpActors();
+    const popover = document.createElement('div');
+    popover.className = 'character-forge-levelup-grant-popover';
+    Object.assign(popover.style, {
+        position: 'absolute',
+        zIndex: '1000',
+        right: '0',
+        top: 'calc(100% + 4px)',
+        minWidth: '280px',
+        maxWidth: '380px',
+        padding: '10px',
+        border: '1px solid var(--color-border-light-2, #777)',
+        borderRadius: '6px',
+        background: 'var(--color-bg, #181818)',
+        boxShadow: '0 6px 18px rgba(0,0,0,.45)'
+    });
+
+    const title = document.createElement('div');
+    title.textContent = game.i18n.localize('ORIGINATE.LevelUpGrant.Title');
+    Object.assign(title.style, { fontWeight: '700', marginBottom: '8px' });
+    popover.appendChild(title);
+
+    const list = document.createElement('div');
+    Object.assign(list.style, {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        maxHeight: '320px',
+        overflowY: 'auto'
+    });
+
+    if (!actors.length) {
+        const empty = document.createElement('div');
+        empty.textContent = game.i18n.localize('ORIGINATE.LevelUpGrant.NoCharacters');
+        empty.style.opacity = '.75';
+        list.appendChild(empty);
+    } else {
+        for (const actor of actors) {
+            const row = document.createElement('label');
+            Object.assign(row.style, {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                padding: '5px 2px'
+            });
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = actor.id;
+            checkbox.checked = hasActorLevelUpGrant(actor);
+
+            const info = document.createElement('span');
+            info.style.flex = '1';
+
+            const name = document.createElement('div');
+            name.textContent = actor.name;
+
+            const owners = Array.from(game.users || [])
+                .filter(user => actor.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER))
+                .map(user => user.name)
+                .filter(Boolean);
+
+            const owner = document.createElement('div');
+            owner.textContent = owners.length
+                ? game.i18n.format('ORIGINATE.LevelUpGrant.Owner', { owners: owners.join(', ') })
+                : game.i18n.localize('ORIGINATE.LevelUpGrant.NoOwner');
+            Object.assign(owner.style, { opacity: '.6', fontSize: '.82em' });
+
+            info.append(name, owner);
+            row.append(checkbox, info);
+            list.appendChild(row);
+        }
+    }
+
+    popover.appendChild(list);
+
+    const confirm = document.createElement('button');
+    confirm.type = 'button';
+    confirm.innerHTML = `<i class="fas fa-check"></i> ${game.i18n.localize('ORIGINATE.LevelUpGrant.Confirm')}`;
+    Object.assign(confirm.style, { width: '100%', marginTop: '10px' });
+    confirm.disabled = !actors.length;
+
+    confirm.addEventListener('click', async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        confirm.disabled = true;
+
+        const selected = Array.from(popover.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(input => input.value);
+
+        try {
+            await applyLevelUpGrantSelection(selected);
+            ui.notifications.info(game.i18n.localize('ORIGINATE.LevelUpGrant.Saved'));
+            _closeLevelUpGrantPopover();
+        } catch (error) {
+            console.error('Character Forge | Не удалось выдать повышение уровня:', error);
+            ui.notifications.error(error?.message || String(error));
+            confirm.disabled = false;
+        }
+    });
+
+    popover.appendChild(confirm);
+
+    const parent = anchorButton.parentElement;
+    if (parent) {
+        parent.style.position = 'relative';
+        parent.appendChild(popover);
+    }
+
+    setTimeout(() => {
+        const closeOnOutside = event => {
+            if (popover.contains(event.target) || anchorButton.contains(event.target)) return;
+            _closeLevelUpGrantPopover();
+            document.removeEventListener('pointerdown', closeOnOutside, true);
+        };
+        document.addEventListener('pointerdown', closeOnOutside, true);
+    }, 0);
+}
+
 Hooks.on('renderActorDirectory', (_app, html) => {
     const isGm = game.user.isGM;
     const grant = isGm ? null : getUserCreationGrant(game.user);
@@ -714,6 +846,26 @@ Hooks.on('renderActorDirectory', (_app, html) => {
     row.appendChild(createButton);
 
     if (isGm) {
+        const levelGrantButton = document.createElement('button');
+        levelGrantButton.type = 'button';
+        levelGrantButton.className = 'character-forge-levelup-grant-button';
+        levelGrantButton.title = game.i18n.localize('ORIGINATE.LevelUpGrant.Manage');
+        levelGrantButton.setAttribute('aria-label', game.i18n.localize('ORIGINATE.LevelUpGrant.Manage'));
+        levelGrantButton.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        Object.assign(levelGrantButton.style, {
+            flex: '0 0 36px',
+            width: '36px',
+            padding: '0'
+        });
+        levelGrantButton.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const existing = row.querySelector('.character-forge-levelup-grant-popover');
+            if (existing) _closeLevelUpGrantPopover();
+            else _openLevelUpGrantPopover(levelGrantButton);
+        });
+        row.appendChild(levelGrantButton);
+
         const grantButton = document.createElement('button');
         grantButton.type = 'button';
         grantButton.className = 'character-forge-grant-button';
@@ -907,6 +1059,16 @@ Hooks.on('updateItem', async (item, changes, options, userId) => {
 async function _openOriginateLevelUpApp(actor) {
     if (!actor || actor.type !== 'character') return;
 
+    if (!game.user.isGM && !hasActorLevelUpGrant(actor)) {
+        ui.notifications.warn(game.i18n.localize('ORIGINATE.LevelUpGrant.NoPermission'));
+        return;
+    }
+
+    if (!game.user.isGM && !actor.isOwner) {
+        ui.notifications.warn(game.i18n.localize('ORIGINATE.LevelUpGrant.NotOwner'));
+        return;
+    }
+
     const laaruModule = game.modules.get('laaru-dnd5-hw');
     if (!laaruModule?.active) {
         ui.notifications.error('Character Forge: включите модуль Laaru (laaru-dnd5-hw).');
@@ -943,6 +1105,74 @@ async function _openOriginateLevelUpApp(actor) {
 //
 // Повышение уровня доступно через контекстное меню персонажа в каталоге Actor.
 // Проверка маркеров выполняется только когда пользователь открывает это меню.
+function _resolveActorSheetDocument(application) {
+    const candidates = [
+        application?.actor,
+        application?.document,
+        application?.object
+    ];
+    return candidates.find(candidate =>
+        candidate?.documentName === 'Actor' && candidate?.type === 'character'
+    ) || null;
+}
+
+function _canShowGrantedLevelUpControl(application) {
+    const actor = _resolveActorSheetDocument(application);
+    if (!actor || !actor.isOwner || !hasActorLevelUpGrant(actor)) return null;
+
+    const appName = application?.constructor?.name || '';
+    if (['OriginateApp', 'LevelUpApp'].includes(appName)) return null;
+
+    try {
+        if (!game.settings.get('character-forge', 'useLevelUp')) return null;
+    } catch {
+        return null;
+    }
+
+    return actor;
+}
+
+Hooks.on('getHeaderControlsApplicationV2', (application, controls) => {
+    const actor = _canShowGrantedLevelUpControl(application);
+    if (!actor || !Array.isArray(controls)) return;
+    if (controls.some(control => control?.action === 'character-forge-level-up')) return;
+
+    controls.unshift({
+        action: 'character-forge-level-up',
+        icon: 'fa-solid fa-arrow-up',
+        label: game.i18n.localize('ORIGINATE.LevelUpGrant.ButtonTooltip'),
+        visible: true,
+        onClick: () => void _openOriginateLevelUpApp(actor)
+    });
+});
+
+Hooks.on('getApplicationV1HeaderButtons', (application, buttons) => {
+    const actor = _canShowGrantedLevelUpControl(application);
+    if (!actor || !Array.isArray(buttons)) return;
+    if (buttons.some(button => button?.class === 'character-forge-level-up')) return;
+
+    buttons.unshift({
+        label: game.i18n.localize('ORIGINATE.LevelUpGrant.ButtonTooltip'),
+        class: 'character-forge-level-up',
+        icon: 'fas fa-arrow-up',
+        onclick: () => void _openOriginateLevelUpApp(actor)
+    });
+});
+
+// Дополнительный legacy-hook: не мешает v13, но сохраняет кнопку на старых листах dnd5e.
+Hooks.on('getActorSheetHeaderButtons', (application, buttons) => {
+    const actor = _canShowGrantedLevelUpControl(application);
+    if (!actor || !Array.isArray(buttons)) return;
+    if (buttons.some(button => button?.class === 'character-forge-level-up')) return;
+
+    buttons.unshift({
+        label: game.i18n.localize('ORIGINATE.LevelUpGrant.ButtonTooltip'),
+        class: 'character-forge-level-up',
+        icon: 'fas fa-arrow-up',
+        onclick: () => void _openOriginateLevelUpApp(actor)
+    });
+});
+
 Hooks.on('getActorDirectoryEntryContext', (_html, options) => {
     options.push({
         name: game.i18n.localize('ORIGINATE.LevelUp.ButtonTooltip'),
@@ -962,7 +1192,10 @@ Hooks.on('getActorDirectoryEntryContext', (_html, options) => {
                 || li?.data?.('entryId')
                 || li?.data?.('entityId');
             const actor = actorId ? game.actors.get(actorId) : null;
-            return !!actor && actor.type === 'character' && hasOriginateActorMarkers(actor);
+            return !!actor
+                && actor.type === 'character'
+                && hasOriginateActorMarkers(actor)
+                && (game.user.isGM || hasActorLevelUpGrant(actor));
         },
         callback: async li => {
             const element = li instanceof HTMLElement ? li : li?.[0];
