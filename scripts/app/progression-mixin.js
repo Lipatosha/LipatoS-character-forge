@@ -3793,14 +3793,11 @@ export const ProgressionMixin = (Base) => {
             });
 
             this.actor = game.actors.get(result.actor.id) || result.actor;
-            // Actor 已经写完了，角色卡渲染失败不能反过来把整次创角标成失败，
-            // 不然用户重试时会把已经结算过的内容再走一遍。
-            try {
-                await this.actor.sheet?.render(true);
-            } catch (error) {
-                console.warn('Originate | 角色已创建，但角色卡刷新失败:', error);
-            }
 
+            // ВАЖНО: лист персонажа здесь больше не открываем.
+            // Сначала должен полностью закрыться Character Forge и остановиться его
+            // кинематографичный слой. Иначе Foundry одновременно рендерит тяжёлый лист
+            // D&D5e и продолжает декодировать фоновые видео/анимации Forge.
             return {
                 actor: this.actor,
                 resolutionResult: result.resolutionResult,
@@ -4382,13 +4379,33 @@ export const ProgressionMixin = (Base) => {
                     ui.notifications.success(game.i18n.localize('ORIGINATE.Notification.Complete'));
                 }
                 this._clearFinalizeTooltips();
+                const actorToOpen = result.actor || this.actor;
+
                 try {
                     await this.close();
                 } catch (closeError) {
-                    // 数据已经提交成功，这里不能再报“创建失败”。把遮罩撤掉，至少让用户还能手动关窗口。
-                    console.error('Originate | 角色已创建，但创角窗口关闭失败:', closeError);
+                    // Персонаж уже сохранён. Ошибка закрытия Forge не должна повторно
+                    // запускать финализацию.
+                    console.error('Character Forge | Персонаж создан, но окно мастера не удалось закрыть:', closeError);
                     this.element?.querySelector?.('.originate-progression-wizard')?.remove();
                 }
+
+                // Дать браузеру закончить удаление полноэкранного слоя и освободить
+                // видео/GPU-ресурсы, затем открыть лист. Сам визуал Forge не изменяется.
+                const openActorSheet = () => {
+                    try {
+                        actorToOpen?.sheet?.render(true);
+                    } catch (error) {
+                        console.warn('Character Forge | Персонаж создан, но лист не удалось открыть:', error);
+                    }
+                };
+
+                if (globalThis.requestAnimationFrame) {
+                    requestAnimationFrame(() => requestAnimationFrame(openActorSheet));
+                } else {
+                    setTimeout(openActorSheet, 0);
+                }
+
                 return true;
             } catch (error) {
                 console.error("Originate | Character creation failed:", error);
