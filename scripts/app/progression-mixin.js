@@ -4381,6 +4381,10 @@ export const ProgressionMixin = (Base) => {
                 const actorToOpen = result.actor || this.actor;
                 const deferredFinalize = result.deferredFinalize;
 
+                // Персонаж успешно записан: больше не сохраняем черновик при close()
+                // и очищаем сохранённый прогресс/закреплённый бросок.
+                await this._clearPersistedDraftState?.({ clearRollLock: true });
+
                 // Одноразовый допуск игрока расходуется только после успешного создания.
                 // До этого момента кнопку можно закрывать/открывать сколько угодно, а бросок
                 // характеристик остаётся закреплён за тем же grantId.
