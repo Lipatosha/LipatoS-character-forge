@@ -621,7 +621,8 @@ export const UIMixin = (Base) => class extends Base {
                 } else if (event.type === 'size') {
                     // ... Size ...
                     const sizeArray = Array.from(event.size);
-                    const sizeDesc = game.i18n.format('ORIGINATE.UI.Tooltip.Size', { size: sizeArray.join(', ') });
+                    const localizedSizes = sizeArray.map(size => this._getTraitLabel(`size:${size}`));
+                    const sizeDesc = game.i18n.format('ORIGINATE.UI.Tooltip.Size', { size: localizedSizes.join(', ') });
                     featuresHtml += `
                         <div class="wizard-feature-card option-card card-feature" data-originate-tooltip="${sizeDesc}">
                             <div class="feature-icon-placeholder"><i class="fas fa-ruler-vertical"></i></div>
