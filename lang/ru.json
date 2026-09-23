@@ -351,7 +351,7 @@
   "ORIGINATE.UI.Finalizing.Hint": "Для персонажей с большим количеством предметов или заклинаний это может занять немного больше времени. Не закрывайте это окно.",
   "ORIGINATE.Notification.Complete": "Создание персонажа завершено!",
   "ORIGINATE.LevelCount": "Уровень {level}",
-  "ORIGINATE.UI.Welcome.Title": "Мастер создания персонажа",
+  "ORIGINATE.UI.Welcome.Title": "Создание персонажа",
   "ORIGINATE.UI.Welcome.Start": "Начать приключение",
   "ORIGINATE.UI.Welcome.Exit": "Выйти",
   "ORIGINATE.UI.Abilities.Title": "Характеристики",
