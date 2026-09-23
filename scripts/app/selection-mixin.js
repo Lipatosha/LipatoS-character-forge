@@ -43,32 +43,57 @@ function matchesEquipmentCategory(document, entry, config) {
 
 export const SelectionMixin = (Base) => class extends Base {
     async _onConfirmSelection(event, target) {
+        if (this._selectionConfirmInFlight) return false;
+
         window.OriginateLog("Originate | Confirm selection clicked. 终于下定决心了？");
         const type = this.currentStep;
         const id = this.context[type];
 
         if (!id) {
             ui.notifications.warn(game.i18n.localize("ORIGINATE.UI.Selection.PleaseSelect"));
-            return;
+            return false;
         }
 
-        // 获取选项数据
-        const options = await this.dataManager.getOptions(type, this.context, this._currentFolder);
-        let option = options.find(o => o.id === id);
+        const button = target?.closest?.('.cinematic-confirm-btn, .subclass-confirm-btn') || target;
+        const originalHtml = button?.innerHTML;
+        const wasDisabled = !!button?.disabled;
 
-        if (!option) return false;
-
-        // 进入子界面 (Sub-Interface)
-        // 真正的挑战现在才开始
-        if (this._creationTimeline?.active) {
-            return this._runCreationTimelineForward(async () => {
-                await this._renderSubInterface(type, option);
-                return true;
-            });
+        this._selectionConfirmInFlight = true;
+        if (button) {
+            button.disabled = true;
+            button.classList.add('is-loading');
+            button.setAttribute('aria-busy', 'true');
+            const label = button.textContent?.trim() || game.i18n.localize("ORIGINATE.UI.Navigation.Confirm");
+            button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${label}</span>`;
         }
 
-        await this._renderSubInterface(type, option);
-        return true;
+        try {
+            // 获取选项数据
+            const options = await this.dataManager.getOptions(type, this.context, this._currentFolder);
+            const option = options.find(o => o.id === id);
+
+            if (!option) return false;
+
+            // 进入子界面 (Sub-Interface)
+            // 真正的挑战现在才开始
+            if (this._creationTimeline?.active) {
+                return await this._runCreationTimelineForward(async () => {
+                    await this._renderSubInterface(type, option);
+                    return true;
+                });
+            }
+
+            await this._renderSubInterface(type, option);
+            return true;
+        } finally {
+            this._selectionConfirmInFlight = false;
+            if (button?.isConnected) {
+                button.classList.remove('is-loading');
+                button.removeAttribute('aria-busy');
+                if (originalHtml !== undefined) button.innerHTML = originalHtml;
+                button.disabled = wasDisabled;
+            }
+        }
     }
 
     async _renderSubInterface(type, option) {
