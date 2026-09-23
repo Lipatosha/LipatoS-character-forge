@@ -356,65 +356,96 @@ export function updateTooltipPosition(e, tooltip) {
  * @param {Object} dataManager DataManager 实例（用于 getDocument）
  */
 export function bindTooltips(container, dataManager) {
-    // 统一样式
-    let tooltip = document.querySelector('.originate-spell-tooltip');
-    if (!tooltip) {
-        tooltip = document.createElement('div');
-        tooltip.className = 'originate-spell-tooltip';
-        Object.assign(tooltip.style, {
-            position: 'fixed',
-            display: 'none',
-            maxWidth: '450px',
-            minWidth: '250px',
-            width: 'auto',
-            overflowY: 'auto',
-            padding: '12px 14px',
-            background: 'linear-gradient(135deg, rgba(20,18,15,0.97), rgba(35,30,25,0.97))',
-            border: '1px solid rgba(200,163,95,0.4)',
-            borderRadius: '6px',
-            color: '#e8dcc8',
-            fontSize: '0.85rem',
-            lineHeight: '1.6',
-            zIndex: '100000',
-            pointerEvents: 'auto',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(8px)'
-        });
-        tooltip.addEventListener('wheel', (e) => {
-            const hasOverflow = tooltip.scrollHeight > tooltip.clientHeight;
-            if (!hasOverflow) return;
-            const atTop = tooltip.scrollTop <= 0 && e.deltaY < 0;
-            const atBottom = (tooltip.scrollTop + tooltip.clientHeight >= tooltip.scrollHeight - 1) && e.deltaY > 0;
-            if (atTop || atBottom) return;
-            e.preventDefault();
-            e.stopPropagation();
-            tooltip.scrollTop += e.deltaY;
-        }, { passive: false });
-        document.body.appendChild(tooltip);
-    }
+    document.querySelectorAll('.originate-spell-tooltip, .originate-nested-tooltip').forEach(el => el.remove());
 
-    // 防止闪烁
+    const tooltip = document.createElement('div');
+    tooltip.className = 'originate-spell-tooltip';
+    tooltip.dataset.pinned = 'false';
+    Object.assign(tooltip.style, {
+        position: 'fixed',
+        display: 'none',
+        maxWidth: '450px',
+        minWidth: '250px',
+        width: 'auto',
+        overflowY: 'auto',
+        padding: '12px 14px',
+        background: 'linear-gradient(135deg, rgba(20,18,15,0.97), rgba(35,30,25,0.97))',
+        border: '1px solid rgba(200,163,95,0.4)',
+        borderRadius: '6px',
+        color: '#e8dcc8',
+        fontSize: '0.85rem',
+        lineHeight: '1.6',
+        zIndex: '100000',
+        pointerEvents: 'auto',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(8px)'
+    });
+    document.body.appendChild(tooltip);
+
     let hideTimer = null;
     let currentSourceEl = null;
+    let nestedToken = 0;
+
+    const isPinned = () => tooltip.dataset.pinned === 'true';
+
+    const setPinned = (value) => {
+        tooltip.dataset.pinned = value ? 'true' : 'false';
+        tooltip.classList.toggle('is-pinned', !!value);
+        if (value) {
+            if (hideTimer) clearTimeout(hideTimer);
+            hideTimer = null;
+        }
+    };
 
     const cancelHide = () => {
-        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = null;
+    };
+
+    const hideNestedTooltip = () => {
+        nestedToken++;
+        document.querySelectorAll('.originate-nested-tooltip').forEach(el => el.remove());
+    };
+
+    const hideTooltip = ({ force = false } = {}) => {
+        if (!force && isPinned()) return;
+        cancelHide();
+        hideNestedTooltip();
+        tooltip.style.display = 'none';
+        currentSourceEl = null;
+        setPinned(false);
     };
 
     const scheduleHide = () => {
         cancelHide();
+        if (isPinned()) return;
         hideTimer = setTimeout(() => {
-            // 检查鼠标位置
             if (tooltip.matches(':hover')) return;
             if (currentSourceEl?.matches(':hover')) return;
-            tooltip.style.display = 'none';
-            currentSourceEl = null;
-        }, 200);
+            hideTooltip({ force: true });
+        }, 220);
     };
 
-    // tooltip 自身的鼠标事件
+    tooltip.addEventListener('wheel', (e) => {
+        const hasOverflow = tooltip.scrollHeight > tooltip.clientHeight;
+        if (!hasOverflow) return;
+        const atTop = tooltip.scrollTop <= 0 && e.deltaY < 0;
+        const atBottom = (tooltip.scrollTop + tooltip.clientHeight >= tooltip.scrollHeight - 1) && e.deltaY > 0;
+        if (atTop || atBottom) return;
+        e.preventDefault();
+        e.stopPropagation();
+        tooltip.scrollTop += e.deltaY;
+    }, { passive: false });
+
     tooltip.addEventListener('mouseenter', cancelHide);
     tooltip.addEventListener('mouseleave', scheduleHide);
+    tooltip.addEventListener('auxclick', (event) => {
+        if (event.button !== 1) return;
+        event.preventDefault();
+        event.stopPropagation();
+        setPinned(!isPinned());
+        if (!isPinned()) scheduleHide();
+    });
 
     const positionTooltip = (card) => {
         tooltip.style.maxHeight = 'none';
@@ -430,22 +461,124 @@ export function bindTooltips(container, dataManager) {
         if (tooltipRect.height > availableDown) {
             if (tooltipRect.height <= availableUp) top = top - tooltipRect.height;
             else if (availableDown >= availableUp) tooltip.style.maxHeight = `${availableDown}px`;
-            else { top = 10; tooltip.style.maxHeight = `${availableUp}px`; }
+            else {
+                top = 10;
+                tooltip.style.maxHeight = `${availableUp}px`;
+            }
         }
         tooltip.style.left = `${left}px`;
         tooltip.style.top = `${top}px`;
     };
 
+    const showNestedTooltip = async (link) => {
+        if (!isPinned()) return;
+        const uuid = link?.dataset?.uuid;
+        if (!uuid) return;
+
+        const token = ++nestedToken;
+        document.querySelectorAll('.originate-nested-tooltip').forEach(el => el.remove());
+
+        let doc = null;
+        try {
+            doc = dataManager ? await dataManager.getDocument(uuid) : await fromUuid(uuid);
+        } catch {
+            doc = null;
+        }
+        if (!doc || token !== nestedToken || !isPinned() || !link.matches(':hover')) return;
+
+        let description = doc.system?.description?.value
+            ?? doc.text?.content
+            ?? doc.content
+            ?? doc.description
+            ?? '';
+        if (description && typeof description === 'object') description = description.value || '';
+
+        try {
+            const TE = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
+            description = await TE.enrichHTML(String(description || ''), { async: true, relativeTo: doc });
+        } catch {
+            description = String(description || '');
+        }
+
+        if (token !== nestedToken || !isPinned()) return;
+
+        const nested = document.createElement('div');
+        nested.className = 'originate-nested-tooltip';
+        nested.innerHTML = `
+            <div class="originate-nested-tooltip-title">${doc.name || link.textContent?.trim() || ''}</div>
+            <div class="originate-nested-tooltip-body">${description || game.i18n.localize('ORIGINATE.UI.Details.NoDescription')}</div>
+        `;
+        nested.querySelectorAll('[data-tooltip]').forEach(el => el.removeAttribute('data-tooltip'));
+        document.body.appendChild(nested);
+
+        const rect = link.getBoundingClientRect();
+        const nestedRect = nested.getBoundingClientRect();
+        const margin = 10;
+        let left = rect.right + margin;
+        if (left + nestedRect.width > window.innerWidth - margin) {
+            left = Math.max(margin, rect.left - nestedRect.width - margin);
+        }
+        let top = rect.top;
+        if (top + nestedRect.height > window.innerHeight - margin) {
+            top = Math.max(margin, window.innerHeight - nestedRect.height - margin);
+        }
+        nested.style.left = `${Math.round(left)}px`;
+        nested.style.top = `${Math.round(top)}px`;
+    };
+
+    const openLinkedDocument = async (link) => {
+        if (!isPinned()) return;
+        const uuid = link?.dataset?.uuid;
+        if (!uuid) return;
+        try {
+            const doc = dataManager ? await dataManager.getDocument(uuid) : await fromUuid(uuid);
+            if (!doc?.sheet) return;
+            const result = doc.sheet.render(true);
+            if (result?.then instanceof Function) await result;
+            requestAnimationFrame(() => {
+                doc.sheet.bringToFront?.();
+                const element = doc.sheet.element instanceof HTMLElement ? doc.sheet.element : doc.sheet.element?.[0];
+                if (element) element.style.setProperty('z-index', '100060', 'important');
+            });
+        } catch (error) {
+            console.warn('Character Forge | Не удалось открыть ссылку из закреплённой подсказки:', error);
+        }
+    };
+
+    tooltip.addEventListener('pointerover', (event) => {
+        const link = event.target?.closest?.('.content-link[data-uuid]');
+        if (!link || !tooltip.contains(link)) return;
+        if (event.relatedTarget && link.contains(event.relatedTarget)) return;
+        link.removeAttribute('data-tooltip');
+        event.stopPropagation();
+        void showNestedTooltip(link);
+    }, true);
+
+    tooltip.addEventListener('pointerout', (event) => {
+        const link = event.target?.closest?.('.content-link[data-uuid]');
+        if (!link || !tooltip.contains(link)) return;
+        if (event.relatedTarget && link.contains(event.relatedTarget)) return;
+        hideNestedTooltip();
+    }, true);
+
+    tooltip.addEventListener('click', (event) => {
+        const link = event.target?.closest?.('.content-link[data-uuid]');
+        if (!link || !tooltip.contains(link) || !isPinned()) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+        void openLinkedDocument(link);
+    }, true);
+
     const showTooltip = async (el) => {
         cancelHide();
-        currentSourceEl = el;
+        if (isPinned() && currentSourceEl !== el) return;
 
-        // 优先检查缓存
+        currentSourceEl = el;
         let text = el._enrichedTooltip;
         let itemName = el.querySelector('.feature-name, .feature-title, .spell-name')?.textContent || '';
 
         if (!text) {
-            // 如果有 data-originate-tooltip 且不为空，使用它作为纯文本
             const plainTooltip = el.dataset.originateTooltip;
             if (plainTooltip && plainTooltip !== 'undefined' && plainTooltip.trim()) {
                 text = plainTooltip;
@@ -455,7 +588,7 @@ export function bindTooltips(container, dataManager) {
 
         if (!text && el.dataset.uuid) {
             try {
-                tooltip.innerHTML = `<div style="color: #888;"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>`;
+                tooltip.innerHTML = `<div style="color:#888;"><i class="fas fa-spinner fa-spin"></i> ${game.i18n.localize('ORIGINATE.UI.Loading')}</div>`;
                 tooltip.style.display = 'block';
                 positionTooltip(el);
 
@@ -463,13 +596,16 @@ export function bindTooltips(container, dataManager) {
                     ? await dataManager.getDocument(el.dataset.uuid)
                     : await fromUuid(el.dataset.uuid);
 
-            
                 if (currentSourceEl !== el) return;
 
-                if (doc?.system?.description?.value) {
+                const rawDescription = doc?.system?.description?.value
+                    ?? doc?.text?.content
+                    ?? doc?.content
+                    ?? '';
+                if (rawDescription) {
                     itemName = doc.name || itemName;
                     const TE = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
-                    const enriched = await TE.enrichHTML(doc.system.description.value, {
+                    const enriched = await TE.enrichHTML(String(rawDescription), {
                         async: true,
                         relativeTo: doc
                     });
@@ -477,10 +613,12 @@ export function bindTooltips(container, dataManager) {
                     el._tooltipName = itemName;
                     text = enriched;
                 } else {
-                    tooltip.style.display = 'none';
+                    hideTooltip({ force: true });
+                    return;
                 }
-            } catch (err) {
-                tooltip.style.display = 'none';
+            } catch {
+                hideTooltip({ force: true });
+                return;
             }
         }
 
@@ -493,39 +631,62 @@ export function bindTooltips(container, dataManager) {
             }
         }
 
-        // 检查：异步完成后源卡片是否仍然是当前的
         if (currentSourceEl !== el) return;
-
-        if (!text || text === 'undefined' || text.trim() === '') {
-            tooltip.style.display = 'none';
+        if (!text || text === 'undefined' || !String(text).trim()) {
+            hideTooltip({ force: true });
             return;
         }
 
         itemName = el._tooltipName || itemName;
         tooltip.innerHTML = `
-            <div style="font-weight:bold; color:#c8a35f; font-size:1rem; margin-bottom:0.4rem; border-bottom:1px solid rgba(200,163,95,0.3); padding-bottom:0.3rem;">${itemName}</div>
-            <div style="word-wrap:break-word;">${text}</div>
+            <div class="originate-tooltip-header">
+                <div class="originate-tooltip-title">${itemName}</div>
+                <i class="fas fa-thumbtack originate-tooltip-pin-indicator" aria-hidden="true"></i>
+            </div>
+            <div class="originate-tooltip-content">${text}</div>
         `;
-        // 移除 enriched HTML 中的 content-link tooltip，防止出现双tooltip
-        tooltip.querySelectorAll('[data-tooltip]').forEach(el => el.removeAttribute('data-tooltip'));
-        tooltip.querySelectorAll('.content-link').forEach(el => { el.style.pointerEvents = 'none'; });
+
+        tooltip.querySelectorAll('[data-tooltip]').forEach(node => node.removeAttribute('data-tooltip'));
+        tooltip.querySelectorAll('.content-link').forEach(node => {
+            node.removeAttribute('data-tooltip');
+            node.style.pointerEvents = 'auto';
+            node.style.cursor = 'pointer';
+        });
 
         tooltip.style.display = 'block';
         positionTooltip(el);
     };
 
     container.querySelectorAll('[data-originate-tooltip], [data-originate-tooltip-html], [data-uuid]').forEach(el => {
-        // 子职卡片有自己的描述展示方式，不需要单独的悬停tooltip
         if (el.classList.contains('subclass-anchor-unit')) return;
-        // 清除旧的事件监听
+
         el.removeEventListener('pointerenter', el._tooltipEnter);
         el.removeEventListener('pointerleave', el._tooltipLeave);
+        el.removeEventListener('auxclick', el._tooltipAuxClick);
 
-        el._tooltipEnter = () => showTooltip(el);
+        el._tooltipEnter = () => {
+            if (!isPinned()) void showTooltip(el);
+        };
         el._tooltipLeave = () => scheduleHide();
+        el._tooltipAuxClick = async (event) => {
+            if (event.button !== 1) return;
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (isPinned() && currentSourceEl === el) {
+                setPinned(false);
+                scheduleHide();
+                return;
+            }
+
+            if (isPinned()) hideTooltip({ force: true });
+            await showTooltip(el);
+            if (currentSourceEl === el && tooltip.style.display !== 'none') setPinned(true);
+        };
 
         el.addEventListener('pointerenter', el._tooltipEnter);
         el.addEventListener('pointerleave', el._tooltipLeave);
+        el.addEventListener('auxclick', el._tooltipAuxClick);
     });
 }
 
