@@ -11590,3 +11590,314 @@ body.originate-active .character-forge-item-sheet-front {
     border-color: var(--originate-accent) !important;
     text-shadow: 0 0 8px rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .35);
 }
+
+
+/* ============================================================
+   Character Forge 1.2.0 — левая справка, 12 классов и строгий UI
+   ============================================================ */
+
+/* Класс / вид / предыстория: описание слева, выбор справа. */
+.view-selection-root.step-class .left-sidebar-drawer,
+.view-selection-root.step-race .left-sidebar-drawer,
+.view-selection-root.step-background .left-sidebar-drawer {
+    left: 0 !important;
+    right: auto !important;
+    width: 50% !important;
+    min-width: 50% !important;
+    max-width: 50% !important;
+    --left-drawer-min-width: 50% !important;
+    --left-drawer-max-width: 50% !important;
+    --left-drawer-content-width: 50% !important;
+    border-left: 0 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Скролл подробностей находится слева; горизонтального скролла нет. */
+.view-selection-root.step-class .drawer-content,
+.view-selection-root.step-race .drawer-content,
+.view-selection-root.step-background .drawer-content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    direction: rtl;
+}
+
+.view-selection-root.step-class .drawer-content > *,
+.view-selection-root.step-race .drawer-content > *,
+.view-selection-root.step-background .drawer-content > * {
+    direction: ltr;
+}
+
+.view-selection-root.step-class .drawer-body,
+.view-selection-root.step-race .drawer-body,
+.view-selection-root.step-background .drawer-body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+}
+
+.view-selection-root.step-class .drawer-body table,
+.view-selection-root.step-race .drawer-body table,
+.view-selection-root.step-background .drawer-body table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+}
+
+.view-selection-root.step-class .drawer-body th,
+.view-selection-root.step-class .drawer-body td,
+.view-selection-root.step-race .drawer-body th,
+.view-selection-root.step-race .drawer-body td,
+.view-selection-root.step-background .drawer-body th,
+.view-selection-root.step-background .drawer-body td {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    hyphens: auto;
+}
+
+.view-selection-root.step-class .drawer-body .content-link,
+.view-selection-root.step-class .drawer-body .inline-roll,
+.view-selection-root.step-race .drawer-body .content-link,
+.view-selection-root.step-race .drawer-body .inline-roll,
+.view-selection-root.step-background .drawer-body .content-link,
+.view-selection-root.step-background .drawer-body .inline-roll {
+    display: inline !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+/* Правая половина: название, краткая информация, переключатель и подтверждение. */
+.view-selection-root.step-class .cinematic-caption,
+.view-selection-root.step-race .cinematic-caption,
+.view-selection-root.step-background .cinematic-caption {
+    left: 75% !important;
+    width: calc(50% - 70px) !important;
+    max-width: none !important;
+    transform: translateX(-50%) !important;
+}
+
+.view-selection-root.step-class .cinematic-nav,
+.view-selection-root.step-race .cinematic-nav,
+.view-selection-root.step-background .cinematic-nav {
+    left: 75% !important;
+    width: calc(50% - 30px) !important;
+    max-width: calc(50% - 30px) !important;
+    transform: translateX(-50%) !important;
+}
+
+.view-selection-root.step-class .cinematic-actions,
+.view-selection-root.step-race .cinematic-actions,
+.view-selection-root.step-background .cinematic-actions {
+    left: 75% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+}
+
+/* В выборе класса ровно 12 классов помещаются в одну строку. */
+.view-selection-root.step-class .cinematic-nav {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.view-selection-root.step-class .nav-track {
+    display: grid !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: end;
+    gap: 4px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+.view-selection-root.step-class .nav-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: none !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.view-selection-root.step-class .nav-item:hover,
+.view-selection-root.step-class .nav-item:hover .nav-icon-wrapper {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.view-selection-root.step-class .nav-grid-expand-btn {
+    display: none !important;
+}
+
+.view-selection-root.step-class .nav-icon-wrapper {
+    margin-inline: auto;
+}
+
+.view-selection-root.step-class .nav-label {
+    font-size: clamp(0.48rem, 0.55vw, 0.68rem);
+    text-overflow: clip;
+}
+
+/* Модификаторы под распределением характеристик. */
+.assignment-modifiers-panel {
+    width: 100%;
+    max-width: 650px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(72px, 1fr));
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(var(--originate-theme-accent-rgb), 0.18);
+    border-radius: 10px;
+}
+
+.assignment-modifier-card {
+    min-height: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    background: rgba(0, 0, 0, 0.24);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 7px;
+}
+
+.assignment-modifier-label {
+    color: var(--originate-text-dim);
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+}
+
+.assignment-modifier-value {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.assignment-modifier-value.positive {
+    color: #4caf50;
+}
+
+.assignment-modifier-value.negative {
+    color: #ef5350;
+}
+
+.assignment-modifier-value.neutral {
+    color: #a0a0a0;
+}
+
+/* Интерактивные и закрепляемые подсказки. */
+.character-forge-item-tooltip {
+    pointer-events: auto !important;
+}
+
+.character-forge-item-tooltip .cf-item-tooltip-pin,
+.originate-spell-tooltip .originate-tooltip-pin-indicator {
+    margin-left: auto;
+    opacity: 0.22;
+    color: var(--originate-accent, #c8a35f);
+}
+
+.character-forge-item-tooltip.is-pinned,
+.originate-spell-tooltip.is-pinned {
+    border-color: var(--originate-accent, #c8a35f) !important;
+    box-shadow:
+        0 0 0 1px rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.18),
+        0 12px 36px rgba(0, 0, 0, 0.82) !important;
+}
+
+.character-forge-item-tooltip.is-pinned .cf-item-tooltip-pin,
+.originate-spell-tooltip.is-pinned .originate-tooltip-pin-indicator {
+    opacity: 1;
+}
+
+.originate-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid rgba(200, 163, 95, 0.3);
+}
+
+.originate-tooltip-title {
+    color: #c8a35f;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.originate-spell-tooltip .content-link[data-uuid],
+.character-forge-item-tooltip .content-link[data-uuid] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+.originate-nested-tooltip {
+    position: fixed;
+    z-index: 100020;
+    width: min(410px, calc(100vw - 32px));
+    max-height: min(480px, calc(100vh - 32px));
+    overflow: auto;
+    padding: 12px 14px;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.55);
+    border-radius: 7px;
+    background: rgba(8, 8, 10, 0.98);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.82);
+    color: #ddd;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    pointer-events: none;
+}
+
+.originate-nested-tooltip-title {
+    color: var(--originate-accent, #c8a35f);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.45rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.25);
+}
+
+/* Недоступная кнопка «Далее» должна явно выглядеть недоступной. */
+.step-footer .nav-btn:disabled,
+.sub-interface-footer .confirm-btn:disabled {
+    opacity: 0.32 !important;
+    cursor: not-allowed !important;
+    filter: grayscale(0.35);
+    box-shadow: none !important;
+}
+
+@media (max-width: 1200px) {
+    .view-selection-root.step-class .nav-track {
+        gap: 1px !important;
+    }
+
+    .view-selection-root.step-class .nav-icon-wrapper {
+        width: 28px;
+        height: 28px;
+    }
+
+    .view-selection-root.step-class .nav-label {
+        font-size: 0.46rem;
+    }
+
+    .assignment-modifiers-panel {
+        gap: 0.5rem;
+    }
+}
