@@ -125,39 +125,24 @@
             <!-- 鎺烽妯″紡锛氳€佽檸鏈洪鏍?UI -->
             <div class="roll-slot-machine">
                 <div class="slot-display">
-                    <div class="slot-column" data-ability="str">
-                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
-                            {{#if roll.hasSelection}}{{abilityData.str.value}}{{else}}?{{/if}}
+                    {{#each roll.slots}}
+                    <div class="slot-column" data-slot="{{this.index}}">
+                        <div class="slot-value {{#if this.isRolling}}rolling{{/if}}">
+                            {{#if this.filled}}
+                            {{this.value}}
+                            {{else if this.isRolling}}
+                            <i class="fas fa-spinner fa-spin"></i>
+                            {{else}}
+                            ?
+                            {{/if}}
                         </div>
                     </div>
-                    <div class="slot-column" data-ability="dex">
-                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
-                            {{#if roll.hasSelection}}{{abilityData.dex.value}}{{else}}?{{/if}}
-                        </div>
-                    </div>
-                    <div class="slot-column" data-ability="con">
-                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
-                            {{#if roll.hasSelection}}{{abilityData.con.value}}{{else}}?{{/if}}
-                        </div>
-                    </div>
-                    <div class="slot-column" data-ability="int">
-                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
-                            {{#if roll.hasSelection}}{{abilityData.int.value}}{{else}}?{{/if}}
-                        </div>
-                    </div>
-                    <div class="slot-column" data-ability="wis">
-                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
-                            {{#if roll.hasSelection}}{{abilityData.wis.value}}{{else}}?{{/if}}
-                        </div>
-                    </div>
-                    <div class="slot-column" data-ability="cha">
-                        <div class="slot-value {{#if roll.isRolling}}rolling{{/if}}">
-                            {{#if roll.hasSelection}}{{abilityData.cha.value}}{{else}}?{{/if}}
-                        </div>
-                    </div>
+                    {{/each}}
                 </div>
 
-                <button type="button" class="roll-abilities-btn" {{#if (eq roll.attemptsRemaining 0)}}disabled{{/if}}>
+                <button type="button" class="roll-abilities-btn"
+                    {{#if roll.isRolling}}disabled{{/if}}
+                    {{#if (eq roll.attemptsRemaining 0)}}disabled{{/if}}>
                     <i class="fas fa-dice-d20"></i> {{localize "ORIGINATE.UI.Abilities.Roll.RollButton"}}
                 </button>
             </div>
