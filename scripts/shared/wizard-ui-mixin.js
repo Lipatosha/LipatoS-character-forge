@@ -89,14 +89,65 @@ export class WizardUIMixin {
         return !!uuid && !!model?.entries.some(feat => feat.uuid === uuid && !feat.locked);
     }
 
+    _getActorFeatPrerequisiteKeys() {
+        const keys = new Set();
+        const addItem = item => {
+            if (!item) return;
+            const identifier = String(item.system?.identifier || '').trim();
+            if (!identifier) return;
+
+            keys.add(identifier);
+            if (item.type) keys.add(`${item.type}:${identifier}`);
+            const featureType = String(item.system?.type?.value || '').trim();
+            if (featureType) keys.add(`${featureType}:${identifier}`);
+        };
+
+        for (const item of Array.from(this.actor?.items || [])) addItem(item);
+        for (const pending of this._state?.pendingItems || []) addItem(pending?.itemData);
+        return keys;
+    }
+
+    _featMatchesActorPrerequisites(feat) {
+        const rawItems = feat?.system?.prerequisites?.items ?? feat?.prerequisites?.items;
+        const required = rawItems instanceof Set
+            ? Array.from(rawItems)
+            : Array.isArray(rawItems)
+                ? rawItems
+                : (rawItems ? Array.from(rawItems) : []);
+
+        if (!required.length) return true;
+
+        const owned = this._getActorFeatPrerequisiteKeys();
+        return required.some(value => {
+            const key = String(value || '').trim();
+            if (!key) return false;
+            if (owned.has(key)) return true;
+
+            const short = key.includes(':') ? key.split(':').at(-1) : key;
+            return owned.has(short);
+        });
+    }
+
     async _prepareFeatOptions(level, names, uuids) {
         const selectionLevel = this._getFeatSelectionLevel(level);
         const options = await this.dataManager.getOptions('feat', {}, { indexOnly: true });
-        return options.filter(feat => isPlayerFeat(feat) && meetsLevelRequirement(feat, selectionLevel)).map(feat => {
-            const selectedCount = this._getFeatAlreadySelectedCount(feat, names, uuids);
-            const repeatable = this._isRepeatableFeatOption(feat);
-            return toCatalogEntry({ ...normalizePrerequisites(feat), repeatable, selectedCount, isSelected: selectedCount > 0, locked: selectedCount > 0 && !repeatable });
-        });
+        return options
+            .filter(feat =>
+                isPlayerFeat(feat)
+                && meetsLevelRequirement(feat, selectionLevel)
+                && this._featMatchesActorPrerequisites(feat)
+            )
+            .map(feat => {
+                const selectedCount = this._getFeatAlreadySelectedCount(feat, names, uuids);
+                const repeatable = this._isRepeatableFeatOption(feat);
+                return toCatalogEntry({
+                    ...normalizePrerequisites(feat),
+                    repeatable,
+                    selectedCount,
+                    isSelected: selectedCount > 0,
+                    locked: selectedCount > 0 && !repeatable
+                });
+            });
     }
 
     _renderFeatSelection(feats, level, savedChoice, stepId) {
@@ -117,8 +168,73 @@ export class WizardUIMixin {
             }
         });
         this._featBrowsers.set(stepId, model);
-        return renderFeatBrowser(model, stepId);
+        return `
+            <div class="levelup-feat-choice-layout">
+                <section class="levelup-feat-browser-pane">
+                    ${renderFeatBrowser(model, stepId)}
+                </section>
+                <aside class="levelup-feat-preview" data-feat-preview>
+                    <div class="levelup-feat-preview-placeholder">
+                        <i class="fas fa-star"></i>
+                        <h3>${game.i18n.localize('ORIGINATE.FeatCatalog.PreviewTitle')}</h3>
+                        <p>${game.i18n.localize('ORIGINATE.FeatCatalog.PreviewHint')}</p>
+                    </div>
+                </aside>
+            </div>
+        `;
     }
+
+    async _showFeatPreview(root, uuid) {
+        const preview = root?.closest('.levelup-feat-choice-layout')?.querySelector('[data-feat-preview]');
+        if (!preview || !uuid) return;
+
+        const token = String(foundry.utils.randomID?.(8) || Date.now());
+        preview.dataset.previewToken = token;
+        preview.innerHTML = `
+            <div class="levelup-feat-preview-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                ${game.i18n.localize('ORIGINATE.UI.Loading')}
+            </div>
+        `;
+
+        try {
+            const doc = this.dataManager?.getDocument
+                ? await this.dataManager.getDocument(uuid)
+                : await fromUuid(uuid);
+            if (!doc || preview.dataset.previewToken !== token) return;
+
+            const raw = doc.system?.description?.value || '';
+            let description = raw;
+            try {
+                const TE = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+                if (TE?.enrichHTML) {
+                    description = await TE.enrichHTML(String(raw), { async: true, relativeTo: doc });
+                }
+            } catch {
+                description = raw;
+            }
+
+            if (preview.dataset.previewToken !== token) return;
+
+            const requirement = doc.system?.requirements || '';
+            preview.innerHTML = `
+                <div class="levelup-feat-preview-header">
+                    <img src="${escapeCatalogHTML(doc.img || 'icons/svg/item-bag.svg')}" alt="">
+                    <div>
+                        <h3>${escapeCatalogHTML(doc.name || '')}</h3>
+                        ${requirement ? `<div class="levelup-feat-preview-requirement">${escapeCatalogHTML(requirement)}</div>` : ''}
+                    </div>
+                </div>
+                <div class="levelup-feat-preview-body">
+                    ${description || `<p class="levelup-feat-preview-empty">${game.i18n.localize('ORIGINATE.UI.Details.NoDescription')}</p>`}
+                </div>
+            `;
+        } catch (error) {
+            if (preview.dataset.previewToken !== token) return;
+            preview.innerHTML = `<p class="levelup-feat-preview-empty">${game.i18n.localize('ORIGINATE.UI.Details.NoDescription')}</p>`;
+        }
+    }
+
     _getCurrentClassPrimaryAbilityKey() {
         const classItem = this.levelUpManager?.classItem
             || Array.from(this.actor?.items || []).find(item => item?.type === 'class');
@@ -153,6 +269,27 @@ export class WizardUIMixin {
                 onFilters: filters => this._featBrowserFilters.set(key, filters),
                 onRender: list => this._bindTooltips?.(list)
             });
+
+            if (root.dataset.featPreviewBound !== 'true') {
+                root.dataset.featPreviewBound = 'true';
+
+                const showFromEvent = event => {
+                    const card = event.target?.closest?.('.feat-option[data-uuid]');
+                    if (!card || !root.contains(card)) return;
+                    void this._showFeatPreview(root, card.dataset.uuid);
+                };
+
+                root.addEventListener('click', showFromEvent);
+                root.addEventListener('pointerover', event => {
+                    const card = event.target?.closest?.('.feat-option[data-uuid]');
+                    if (!card || !root.contains(card)) return;
+                    if (event.relatedTarget && card.contains(event.relatedTarget)) return;
+                    void this._showFeatPreview(root, card.dataset.uuid);
+                });
+            }
+
+            const selected = root.querySelector('.feat-option input:checked')?.closest('.feat-option');
+            if (selected?.dataset.uuid) void this._showFeatPreview(root, selected.dataset.uuid);
         });
     }
 
