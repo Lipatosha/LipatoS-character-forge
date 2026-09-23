@@ -199,6 +199,15 @@
                     </div>
                     {{/each}}
                 </div>
+
+                <div class="assignment-modifiers-panel">
+                    {{#each assignmentModifiers}}
+                    <div class="assignment-modifier-card" data-ability="{{key}}">
+                        <span class="assignment-modifier-label">{{label}}</span>
+                        <span class="assignment-modifier-value {{modClass}}">{{modFormatted}}</span>
+                    </div>
+                    {{/each}}
+                </div>
             </div>
             {{else}}
             <!-- 鑷敱鍒嗛厤 / 涔扮偣娉曞叡鐢ㄧ殑灞炴€у崱鐗囩綉鏍?-->
@@ -499,7 +508,7 @@
             </div>
 
             <div class="step-footer">
-                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep" {{#unless canContinueName}}disabled{{/unless}}>
                     {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -530,7 +539,7 @@
             </div>
 
             <div class="step-footer">
-                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep" {{#unless canContinueAlignment}}disabled{{/unless}}>
                     {{localize "ORIGINATE.UI.Navigation.Next"}} <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -665,7 +674,7 @@
             </div>
 
             <div class="step-footer">
-                <button type="button" class="nav-btn next-btn" data-action="nextStep">
+                <button type="button" class="nav-btn next-btn" data-action="nextStep" {{#unless canContinuePortrait}}disabled{{/unless}}>
                     {{#if isLastStep}}
                     {{localize "ORIGINATE.UI.Navigation.Finish"}} <i class="fas fa-check"></i>
                     {{else}}
@@ -739,10 +748,7 @@
             <div class="caption-gradient"></div>
             <div class="caption-content">
                 {{#if selectedOption}}
-                <h1 class="caption-title">{{localize selectedOption.name}}</h1>
-                {{#if selectedOption.tagline}}
-                <div class="caption-subtitle">{{localize selectedOption.tagline}}</div>
-                {{/if}}
+                <h1 class="caption-title">{{#if selectedOption.displayName}}{{selectedOption.displayName}}{{else}}{{localize selectedOption.name}}{{/if}}</h1>
 
                 {{#if selectedOption.coreTraits}}
                 <div class="caption-traits">
@@ -755,6 +761,10 @@
                         {{selectedOption.coreTraits.hitDie}}</div>
                     {{/if}}
                 </div>
+                {{/if}}
+
+                {{#if selectedOption.tagline}}
+                <div class="caption-subtitle">{{localize selectedOption.tagline}}</div>
                 {{/if}}
                 {{else}}
                 <!-- 
@@ -789,7 +799,7 @@
             {{/if}}
             <div class="drawer-content">
                 {{#if selectedOption}}
-                <h2 class="drawer-title">{{localize selectedOption.name}}</h2>
+                <h2 class="drawer-title">{{#if selectedOption.displayName}}{{selectedOption.displayName}}{{else}}{{localize selectedOption.name}}{{/if}}</h2>
                 <div class="drawer-body">
                     {{{selectedOption.description}}}
                 </div>
@@ -809,14 +819,16 @@
                     <div class="nav-icon-wrapper">
                         {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
                     </div>
-                    <div class="nav-label">{{localize this.name}}</div>
+                    <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
                 </div>
                 {{/each}}
             </div>
+            {{#unless (eq currentStep "class")}}
             <button type="button" class="nav-grid-expand-btn" data-action="openGridSelector"
                 data-tooltip="{{localize 'ORIGINATE.UI.GridSelector.Expand'}}">
                 <i class="fas fa-th"></i>
             </button>
+            {{/unless}}
         </div>
         {{/unless}}
 
