@@ -3789,19 +3789,17 @@ export const ProgressionMixin = (Base) => {
         async _applyCharacterFinalizeResolution(resolutionInput) {
             const result = await createCharacterFromFinalizeInput(resolutionInput, {
                 actor: this.actor,
-                dataManager: this.dataManager
+                dataManager: this.dataManager,
+                deferRepairs: true
             });
 
             this.actor = game.actors.get(result.actor.id) || result.actor;
 
-            // ВАЖНО: лист персонажа здесь больше не открываем.
-            // Сначала должен полностью закрыться Character Forge и остановиться его
-            // кинематографичный слой. Иначе Foundry одновременно рендерит тяжёлый лист
-            // D&D5e и продолжает декодировать фоновые видео/анимации Forge.
             return {
                 actor: this.actor,
                 resolutionResult: result.resolutionResult,
-                warnings: result.warnings || []
+                warnings: result.warnings || [],
+                deferredFinalize: result.deferredFinalize || null
             };
         }
 
@@ -4378,32 +4376,63 @@ export const ProgressionMixin = (Base) => {
                 } else {
                     ui.notifications.success(game.i18n.localize('ORIGINATE.Notification.Complete'));
                 }
+
                 this._clearFinalizeTooltips();
                 const actorToOpen = result.actor || this.actor;
+                const deferredFinalize = result.deferredFinalize;
 
                 try {
-                    await this.close();
+                    // Финальный экран не анимируем: персонаж уже создан, здесь важнее
+                    // как можно быстрее освободить полноэкранный Forge перед листом.
+                    await this.close({ animate: false });
                 } catch (closeError) {
-                    // Персонаж уже сохранён. Ошибка закрытия Forge не должна повторно
-                    // запускать финализацию.
                     console.error('Character Forge | Персонаж создан, но окно мастера не удалось закрыть:', closeError);
                     this.element?.querySelector?.('.originate-progression-wizard')?.remove();
                 }
 
-                // Дать браузеру закончить удаление полноэкранного слоя и освободить
-                // видео/GPU-ресурсы, затем открыть лист. Сам визуал Forge не изменяется.
-                const openActorSheet = () => {
-                    try {
-                        actorToOpen?.sheet?.render(true);
-                    } catch (error) {
-                        console.warn('Character Forge | Персонаж создан, но лист не удалось открыть:', error);
-                    }
-                };
+                // Без двойного requestAnimationFrame: видео уже остановлены в close(),
+                // поэтому сразу запускаем рендер листа в этом же цикле событий.
+                let sheetRenderResult = null;
+                try {
+                    sheetRenderResult = actorToOpen?.sheet?.render(true);
+                } catch (error) {
+                    console.warn('Character Forge | Персонаж создан, но лист не удалось открыть:', error);
+                }
 
-                if (globalThis.requestAnimationFrame) {
-                    requestAnimationFrame(() => requestAnimationFrame(openActorSheet));
-                } else {
-                    setTimeout(openActorSheet, 0);
+                // Служебные repair/ModifyItem запускаются только после первого рендера
+                // и только когда браузер даст idle-время. Они больше не задерживают
+                // появление листа персонажа.
+                if (typeof deferredFinalize === 'function') {
+                    const runDeferredFinalize = async () => {
+                        try {
+                            const deferredResult = await deferredFinalize();
+                            if (deferredResult?.itemModifications?.status === 'failed') {
+                                ui.notifications.warn(
+                                    game.i18n.localize('ORIGINATE.Notification.ItemModificationsIncomplete'),
+                                    { permanent: true }
+                                );
+                            }
+                        } catch (error) {
+                            console.warn('Character Forge | Отложенный ремонт персонажа завершился с ошибкой:', error);
+                        }
+                    };
+
+                    const scheduleDeferred = () => {
+                        if (globalThis.requestIdleCallback) {
+                            globalThis.requestIdleCallback(
+                                () => runDeferredFinalize(),
+                                { timeout: 1000 }
+                            );
+                        } else {
+                            setTimeout(runDeferredFinalize, 150);
+                        }
+                    };
+
+                    if (sheetRenderResult?.then instanceof Function) {
+                        Promise.resolve(sheetRenderResult).finally(scheduleDeferred);
+                    } else {
+                        setTimeout(scheduleDeferred, 0);
+                    }
                 }
 
                 return true;
