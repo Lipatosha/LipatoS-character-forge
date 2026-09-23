@@ -44,6 +44,8 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
     constructor(actor, options = {}) {
         super(options);
         this.actor = actor;
+        this.creationGrantId = options.creationGrantId || actor?.getFlag?.('character-forge', 'creationGrantId') || null;
+        this.creationGrantUserId = options.creationGrantUserId || actor?.getFlag?.('character-forge', 'creationUserId') || null;
         this.dataManager = options.dataManager
             || game.modules.get('character-forge')?.api?.dataManager
             || new DataManager();
