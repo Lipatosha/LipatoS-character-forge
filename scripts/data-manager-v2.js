@@ -149,8 +149,15 @@ export class DataManager {
     _cleanName(name) {
         if (!name) return name;
         const text = String(name).trim();
-        const russianPart = text.split(/\s*\/\s*/u)[0]?.trim();
-        return russianPart || text;
+        const russianPart = text.split(/\s*\/\s*/u)[0]?.trim() || text;
+
+        // Книжные метки в конце названия нужны в базе, но не в интерфейсе:
+        // «Археолог (TOA)» -> «Археолог», «Что-то (EGW)» -> «Что-то».
+        // Удаляем только кодоподобные суффиксы в верхнем регистре, чтобы не трогать
+        // содержательные скобки в настоящем названии.
+        return russianPart
+            .replace(/\s*\(([A-Z0-9][A-Z0-9&+.'’\- ]{1,24})\)\s*$/u, '')
+            .trim();
     }
 
     _getLocalizedAbilityLabel(ability) {
