@@ -68,8 +68,10 @@ export const NavigationMixin = (Base) => class extends Base {
                 canProceed = false;
                 warningMessage = game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep");
             } else {
-                const optionalDetailSteps = DETAIL_STEPS.filter(step => !['name', 'alignment', 'portrait'].includes(step));
-                const nonSelectionSteps = [...optionalDetailSteps, 'asiBonus'];
+                // Все detail-шаги хранят значение внутри context.details, а не context[step].
+                // Поэтому после отдельной проверки обязательных name/alignment/portrait их нельзя
+                // повторно прогонять через проверку выбора карточки.
+                const nonSelectionSteps = [...DETAIL_STEPS, 'asiBonus'];
                 if (!nonSelectionSteps.includes(this.currentStep) && !this.context[this.currentStep]) {
                     canProceed = false;
                     warningMessage = game.i18n.localize("ORIGINATE.UI.Navigation.IncompleteStep");
