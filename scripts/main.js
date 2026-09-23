@@ -9,6 +9,7 @@ import { registerTheme as registerOriginateTheme } from './theme-registry.js';
 import { acquireForgeStyles, forceUnloadForgeStyles } from './runtime-style.js';
 import {
     applyCreationGrantSelection,
+    consumeCurrentCreationGrant,
     getGrantableUsers,
     getUserCreationGrant,
     installCreationGrantSocket,
@@ -438,6 +439,9 @@ Hooks.once('ready', () => {
             const actor = _resolveActorRef(actorRef);
             if (!actor) throw new Error('Character Forge: персонаж не найден');
             return _openOriginateLevelUpApp(actor);
+        },
+        consumeCreationGrant: async ({ grantId, actorId } = {}) => {
+            return consumeCurrentCreationGrant({ grantId, actorId });
         },
         createCharacterFromFinalizeInput: async (input = {}, options = {}) => {
             const { createCharacterFromFinalizeInput } = await import('./services/character-finalize-service.js');
