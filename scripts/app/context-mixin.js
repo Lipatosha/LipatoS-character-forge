@@ -5,6 +5,39 @@ import {
     isCharacterCreationDetailStep
 } from '../shared/character-creation-settings.js';
 
+const CHARACTER_FORGE_CLASS_ORDER = [
+    'bard',
+    'barbarian',
+    'fighter',
+    'wizard',
+    'druid',
+    'cleric',
+    'artificer',
+    'monk',
+    'paladin',
+    'rogue',
+    'ranger',
+    'sorcerer'
+];
+
+const CHARACTER_FORGE_CLASS_RANK = new Map(
+    CHARACTER_FORGE_CLASS_ORDER.map((id, index) => [id, index])
+);
+
+function normalizeClassIdentifier(option = {}) {
+    return String(
+        option.identifier
+        || option.system?.identifier
+        || ''
+    ).trim().toLowerCase();
+}
+
+function stripBookSuffix(name) {
+    return String(name || '')
+        .replace(/\s*\(([A-Z0-9][A-Z0-9&+.'’\- ]{1,24})\)\s*$/u, '')
+        .trim();
+}
+
 export const ContextMixin = (Base) => class extends Base {
     async _prepareContext(options) {
         try {
@@ -86,6 +119,31 @@ export const ContextMixin = (Base) => class extends Base {
                 currentOptions = await this.dataManager.getOptions(this.currentStep, this.context);
                 // 应用 PHB 图片增强
                 currentOptions = enhanceOptionsWithPHBImages(currentOptions, this.currentStep);
+
+                // Character Forge показывает только выбранные Мастером 12 базовых классов.
+                // Порядок фиксирован и совпадает с нижней полосой выбора.
+                if (this.currentStep === 'class') {
+                    const seen = new Set();
+                    currentOptions = currentOptions
+                        .filter(option => {
+                            const identifier = normalizeClassIdentifier(option);
+                            if (!CHARACTER_FORGE_CLASS_RANK.has(identifier) || seen.has(identifier)) return false;
+                            seen.add(identifier);
+                            return true;
+                        })
+                        .sort((a, b) => (
+                            CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(a))
+                            - CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(b))
+                        ));
+                }
+
+                // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
+                if (this.currentStep === 'background') {
+                    currentOptions = currentOptions.map(option => ({
+                        ...option,
+                        displayName: stripBookSuffix(option.name)
+                    }));
+                }
 
                 // 批量检测视频格式
                 currentOptions.forEach(opt => {
