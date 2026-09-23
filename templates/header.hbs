@@ -1,12 +1,20 @@
-<!-- 
-    顶部导航栏
-    Adrian: 告诉用户"你还有多久才能捏完人"。
-    虽然我知道你们捏人通常要花半小时以上，但有个进度条总能给人一种"快完了"的错觉。
--->
 <div class="originate-header">
+    <div class="originate-header-back-slot">
+        {{#if canNavigateUp}}
+        <button type="button" class="originate-btn originate-header-back-btn" data-action="navigateUp">
+            <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
+        </button>
+        {{else if canCreationTimelineBack}}
+        <button type="button" class="originate-btn originate-header-back-btn" data-action="prevStep">
+            <i class="fas fa-arrow-left"></i> {{localize "ORIGINATE.UI.Navigation.Back"}}
+        </button>
+        {{/if}}
+    </div>
+
     <div class="originate-title">
         <h2>{{localize "ORIGINATE.UI.Welcome.Title"}}</h2>
     </div>
+
     <div class="originate-controls">
         <button type="button" class="originate-btn originate-btn-secondary" data-action="close">
             <i class="fas fa-times"></i> {{localize "ORIGINATE.UI.Welcome.Exit"}}
