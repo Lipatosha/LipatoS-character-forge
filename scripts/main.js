@@ -702,9 +702,13 @@ function _openLevelUpGrantPopover(anchorButton) {
             const name = document.createElement('div');
             name.textContent = actor.name;
 
-            const owners = Array.from(game.users || [])
-                .filter(user => actor.testUserPermission?.(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER))
-                .map(user => user.name)
+            const ownership = actor.ownership || {};
+            const owners = Object.entries(ownership)
+                .filter(([userId, level]) =>
+                    userId !== 'default'
+                    && Number(level) >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER
+                )
+                .map(([userId]) => game.users.get(userId)?.name)
                 .filter(Boolean);
 
             const owner = document.createElement('div');
@@ -1188,13 +1192,18 @@ Hooks.on('getActorSheetHeaderButtons', (application, buttons) => {
 });
 
 function _injectGrantedLevelUpSheetButton(application) {
-    const actor = _canShowGrantedLevelUpControl(application);
-    if (!actor) return;
-
     const root = application?.element instanceof HTMLElement
         ? application.element
         : application?.element?.[0];
-    if (!root || root.querySelector('.character-forge-levelup-sheet-button')) return;
+    if (!root) return;
+
+    const actor = _canShowGrantedLevelUpControl(application);
+    const existingButton = root.querySelector('.character-forge-levelup-sheet-button');
+    if (!actor) {
+        existingButton?.remove();
+        return;
+    }
+    if (existingButton) return;
 
     let buttons = root.querySelector('.sheet-header .sheet-header-buttons');
     if (!buttons) {
