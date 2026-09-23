@@ -546,7 +546,7 @@ export function bindTooltips(container, dataManager) {
     };
 
     tooltip.addEventListener('pointerover', (event) => {
-        const link = event.target?.closest?.('.content-link[data-uuid]');
+        const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
         if (!link || !tooltip.contains(link)) return;
         if (event.relatedTarget && link.contains(event.relatedTarget)) return;
         link.removeAttribute('data-tooltip');
@@ -555,14 +555,14 @@ export function bindTooltips(container, dataManager) {
     }, true);
 
     tooltip.addEventListener('pointerout', (event) => {
-        const link = event.target?.closest?.('.content-link[data-uuid]');
+        const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
         if (!link || !tooltip.contains(link)) return;
         if (event.relatedTarget && link.contains(event.relatedTarget)) return;
         hideNestedTooltip();
     }, true);
 
     tooltip.addEventListener('click', (event) => {
-        const link = event.target?.closest?.('.content-link[data-uuid]');
+        const link = event.target?.closest?.('.cf-tooltip-link[data-uuid], .content-link[data-uuid]');
         if (!link || !tooltip.contains(link) || !isPinned()) return;
         event.preventDefault();
         event.stopPropagation();
@@ -649,6 +649,9 @@ export function bindTooltips(container, dataManager) {
         tooltip.querySelectorAll('[data-tooltip]').forEach(node => node.removeAttribute('data-tooltip'));
         tooltip.querySelectorAll('.content-link').forEach(node => {
             node.removeAttribute('data-tooltip');
+            node.removeAttribute('data-tooltip-direction');
+            node.classList.remove('content-link');
+            node.classList.add('cf-tooltip-link');
             node.style.pointerEvents = 'auto';
             node.style.cursor = 'pointer';
         });
