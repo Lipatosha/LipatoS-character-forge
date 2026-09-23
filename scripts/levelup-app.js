@@ -7,6 +7,7 @@
  */
 
 import { DataManager } from './data-manager-v2.js';
+import { consumeActorLevelUpGrant } from './creation-grants.js';
 import { releaseForgeStyles } from './runtime-style.js';
 import { SpellRules } from './spell-rules.js';
 import { usesSpellBrowser } from './shared/advancement-choice-rules.js';
@@ -2673,6 +2674,14 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
             } else {
                 ui.notifications.info(game.i18n.format("ORIGINATE.LevelUp.Complete", { name: this.actor.name, level: state.targetLevel }));
             }
+
+            // Разрешение ГМа одноразовое: один выданный уровень = одно завершённое повышение.
+            try {
+                await consumeActorLevelUpGrant(this.actor);
+            } catch (grantError) {
+                console.warn('Character Forge | Не удалось снять разрешение на повышение уровня:', grantError);
+            }
+
             await this.close();
 
             // 升级完成后自动打开角色卡
