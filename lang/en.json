@@ -972,5 +972,9 @@
   "ORIGINATE.LevelUpGrant.NoOwner": "GM character",
   "ORIGINATE.LevelUpGrant.ButtonTooltip": "Level Up",
   "ORIGINATE.LevelUpGrant.NoPermission": "The GM has not granted this character a level up yet.",
-  "ORIGINATE.LevelUpGrant.NotOwner": "You do not own this character."
+  "ORIGINATE.LevelUpGrant.NotOwner": "You do not own this character.",
+  "ORIGINATE.FeatCatalog.PreviewTitle": "Feat Description",
+  "ORIGINATE.FeatCatalog.PreviewHint": "Hover over a feat or select it to see its full description.",
+  "ORIGINATE.UI.Progression.SubclassPreviewHint": "Hover over a subclass or select it to see its full description.",
+  "ORIGINATE.UI.Progression.HPRollPermanent": "The first roll is permanently locked to this level. Cancelling the level up does not allow a reroll."
 }
