@@ -370,7 +370,7 @@ export const AbilitiesMixin = (Base) => class extends Base {
             const selectedEntry = this._rollState.selectedIndex >= 0
                 ? this._rollState.history[this._rollState.selectedIndex]
                 : null;
-            const visibleValues = pendingResults.length > 0
+            const visibleValues = (pendingResults.length > 0 || this._rollState.isRolling)
                 ? pendingResults.map(result => result.value)
                 : (selectedEntry?.values || []);
 
