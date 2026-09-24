@@ -893,7 +893,7 @@ function getSubclassOptionKey(option = {}) {
  * @param {string|null} config.selectedUuid 已选子职 UUID
  * @returns {string} 卡片区域 HTML（不含 header/footer）
  */
-export function renderSubclassCards(options, { selectedUuid = null } = {}) {
+export function renderSubclassCards(options, { selectedUuid = null, grid = false } = {}) {
     if (!options || options.length === 0) {
         return `<p class="subclass-nav-empty">${game.i18n.localize('ORIGINATE.UI.Progression.NoSubclassAvailable')}</p>`;
     }
@@ -904,7 +904,7 @@ export function renderSubclassCards(options, { selectedUuid = null } = {}) {
             && (selectedKey === String(opt.uuid || '') || selectedKey === String(opt.id || ''));
         return `
             <button type="button"
-                class="nav-item subclass-progression-nav-item${isSelected ? ' selected' : ''}"
+                class="nav-item subclass-progression-nav-item${grid ? ' subclass-grid-item' : ''}${isSelected ? ' selected' : ''}"
                 data-id="${escapeSubclassText(opt.id)}"
                 data-subclass-uuid="${escapeSubclassText(opt.uuid)}"
                 aria-pressed="${isSelected}"
@@ -920,8 +920,8 @@ export function renderSubclassCards(options, { selectedUuid = null } = {}) {
 }
 
 /**
- * Подкласс использует ту же визуальную систему, что и основной класс:
- * постоянная левая панель описания и маленькие варианты справа внизу.
+ * Повышение: подкласс использует 60/40-компоновку.
+ * Слева только полное описание; справа название и центрированная нижняя лента.
  */
 export function renderSubclassSelectionPanel(options, { selectedUuid = null } = {}) {
     const selectedKey = String(selectedUuid || '');
@@ -933,33 +933,49 @@ export function renderSubclassSelectionPanel(options, { selectedUuid = null } = 
     ) || null;
 
     const initial = selected || options?.[0] || null;
-    const detailContent = initial
-        ? `
-            <h2 class="drawer-title subclass-detail-title">${escapeSubclassText(initial.name)}</h2>
-            <div class="drawer-body subclass-detail-body">${initial.description || ''}</div>
-        `
-        : `
-            <div class="drawer-empty-state subclass-detail-placeholder">
-                ${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}
-            </div>
-        `;
+    const initialTitle = initial?.name || game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass');
+    const initialDescription = initial?.description || '';
 
     return `
         <div class="view-selection-root step-class subclass-progression-selection" id="progression-subclass-content">
             <aside class="left-sidebar-drawer always-open subclass-progression-drawer">
                 <div class="drawer-content" data-subclass-detail-content>
-                    ${detailContent}
+                    <div class="drawer-body subclass-detail-body">
+                        ${initialDescription}
+                    </div>
                 </div>
             </aside>
 
-            <div class="subclass-progression-stage" aria-hidden="true"></div>
+            <section class="subclass-progression-stage">
+                <h2 class="subclass-stage-title" data-subclass-stage-title>
+                    ${escapeSubclassText(initialTitle)}
+                </h2>
 
-            <nav class="cinematic-nav subclass-progression-nav"
-                aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}">
-                <div class="nav-track">
-                    ${renderSubclassCards(options, { selectedUuid })}
+                <nav class="cinematic-nav subclass-progression-nav"
+                    aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}">
+                    <div class="nav-track" data-subclass-track>
+                        ${renderSubclassCards(options, { selectedUuid })}
+                    </div>
+                    <button type="button" class="nav-grid-expand-btn subclass-expand-btn"
+                        data-subclass-expand hidden
+                        data-tooltip="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.GridSelector.Expand'))}">
+                        <i class="fas fa-th"></i>
+                    </button>
+                </nav>
+
+                <div class="subclass-expanded-grid" data-subclass-grid hidden>
+                    <div class="subclass-expanded-grid-header">
+                        <h3>${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}</h3>
+                        <button type="button" class="subclass-grid-close" data-subclass-grid-close
+                            aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Button.Close'))}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="subclass-expanded-grid-items">
+                        ${renderSubclassCards(options, { selectedUuid, grid: true })}
+                    </div>
                 </div>
-            </nav>
+            </section>
         </div>
     `;
 }
@@ -967,6 +983,11 @@ export function renderSubclassSelectionPanel(options, { selectedUuid = null } = 
 export function bindSubclassSelectionPanel(root, options, { selectedUuid = null, onSelect = null } = {}) {
     const panel = root?.querySelector?.('#progression-subclass-content');
     const content = panel?.querySelector?.('[data-subclass-detail-content]');
+    const stageTitle = panel?.querySelector?.('[data-subclass-stage-title]');
+    const track = panel?.querySelector?.('[data-subclass-track]');
+    const expandButton = panel?.querySelector?.('[data-subclass-expand]');
+    const grid = panel?.querySelector?.('[data-subclass-grid]');
+    const closeGrid = panel?.querySelector?.('[data-subclass-grid-close]');
     if (!panel || !content) return null;
 
     const optionByKey = new Map();
@@ -980,9 +1001,9 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
     const showDetails = option => {
         if (!option) return;
         content.innerHTML = `
-            <h2 class="drawer-title subclass-detail-title">${escapeSubclassText(option.name)}</h2>
             <div class="drawer-body subclass-detail-body">${option.description || ''}</div>
         `;
+        if (stageTitle) stageTitle.textContent = option.name || '';
         content.scrollTop = 0;
     };
 
@@ -992,18 +1013,20 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         if (!option) return null;
 
         for (const otherCard of cards) {
-            const selected = otherCard === card;
+            const selected = (
+                otherCard.dataset.subclassUuid === card.dataset.subclassUuid
+                || (!card.dataset.subclassUuid && otherCard.dataset.id === card.dataset.id)
+            );
             otherCard.classList.toggle('selected', selected);
             otherCard.setAttribute('aria-pressed', String(selected));
         }
 
         showDetails(option);
+        if (grid) grid.hidden = true;
         if (notify && typeof onSelect === 'function') onSelect(option, card);
         return option;
     };
 
-    // Наведение ничего не меняет в описании: как у выбора класса,
-    // возле маленькой иконки остаётся только название. Подробности меняются по клику.
     for (const card of cards) {
         card.addEventListener('click', () => selectCard(card));
         card.addEventListener('keydown', event => {
@@ -1013,7 +1036,25 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         });
     }
 
-    const selectedKey = String(selectedUuid || '');
+    expandButton?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (grid) grid.hidden = false;
+    });
+    closeGrid?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (grid) grid.hidden = true;
+    });
+
+    const updateOverflowButton = () => {
+        if (!track || !expandButton) return;
+        const hasOverflow = track.scrollWidth > track.clientWidth + 4;
+        expandButton.hidden = !hasOverflow;
+    };
+    requestAnimationFrame(updateOverflowButton);
+    window.addEventListener('resize', updateOverflowButton, { passive: true, once: true });
+
     const selectedCard = cards.find(card =>
         card.classList.contains('selected')
         || (!!selectedKey && (
@@ -1023,5 +1064,5 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
     );
     if (selectedCard) selectCard(selectedCard, { notify: false });
 
-    return { selectCard, showDetails };
+    return { selectCard, showDetails, updateOverflowButton };
 }
