@@ -13467,3 +13467,69 @@ body.originate-active .character-forge-item-sheet-front {
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
 }
+
+
+/* Character Forge 1.2.14 — более широкая и центрированная сетка заклинаний. */
+.originate-progression-wizard:has(.spell-browser-section) .sub-interface-header {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+    align-items: center !important;
+}
+
+.originate-progression-wizard:has(.spell-browser-section) .sub-interface-header h2,
+.originate-progression-wizard:has(.spell-browser-section) .sub-interface-header .step-indicator {
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+}
+
+.originate-progression-wizard #progression-step-content:has(.spell-browser-section),
+.originate-progression-wizard .sub-interface-content:has(.spell-browser-section) {
+    box-sizing: border-box !important;
+    width: calc(100vw - 48px) !important;
+    max-width: 1720px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+    justify-content: stretch !important;
+    align-items: stretch !important;
+}
+
+.originate-progression-wizard .spell-browser-section.page-wrapper {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.originate-progression-wizard .spell-results-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    justify-content: center !important;
+}
+
+.originate-progression-wizard .spell-results-list .spell-card {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.originate-progression-wizard:has(.spell-browser-section) .sub-interface-footer {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    justify-content: space-between !important;
+}
+
+.originate-progression-wizard:has(.spell-browser-section) .sub-interface-footer .back-btn {
+    margin-right: auto !important;
+}
+
+.originate-progression-wizard:has(.spell-browser-section) .sub-interface-footer .confirm-btn {
+    margin-left: auto !important;
+}
