@@ -1426,10 +1426,22 @@ export class DataManager {
         const hasGrants = grantList.length > 0;
 
         if (hasGrants) {
+            const resistancePrefixes = new Set([
+                'dr', 'di', 'dv', 'ci',
+                'damageResistance', 'damageImmunity', 'damageVulnerability',
+                'conditionImmunity'
+            ]);
+            const isResistanceGrant = grantList.length > 0 && grantList.every(grant => {
+                const prefix = String(grant || '').split(':')[0];
+                return resistancePrefixes.has(prefix);
+            });
+
             results.push({
                 id: adv._id, // 【修复】保留原始 Advancement ID，用于链接
                 type: 'trait_grant',
-                title: getAdvancementName(adv) || game.i18n.localize("ORIGINATE.Advancement.Traits"),
+                title: isResistanceGrant
+                    ? game.i18n.localize("ORIGINATE.Advancement.Resistances")
+                    : (getAdvancementName(adv) || game.i18n.localize("ORIGINATE.Advancement.Traits")),
                 grants: new Set(grantList),
                 mode: mode,
                 classRestriction: classRestriction,
