@@ -759,7 +759,6 @@ export class WizardUIMixin {
             <!-- 专长界面 -->
             <div class="feat-content" style="display: ${showFeat ? 'block' : 'none'}; width: 100%;">
                 <div class="feat-panel">
-                    <div class="feat-panel-back">${!savedChoice?.uuid ? `<button type="button" class="back-to-selection-btn"><i class="fas fa-arrow-left"></i> ${game.i18n.localize('ORIGINATE.ASI.BackToSelection')}</button>` : ''}</div>
                     ${this._renderFeatSelection(eligibleFeats, level, savedChoice, step.id)}
                 </div>
             </div>
