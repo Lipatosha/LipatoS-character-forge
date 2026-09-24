@@ -13145,3 +13145,202 @@ body.originate-active .character-forge-item-sheet-front {
 .originate-progression-wizard .progression-feature-item {
     align-items: center !important;
 }
+
+
+/* Character Forge 1.2.9 — 60/40 subclass, sticky feat preview, clean feat HTML */
+
+/* --- Подкласс: 60% описание / 40% выбор --- */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer {
+    width: 60% !important;
+    min-width: 60% !important;
+    max-width: 60% !important;
+    --left-drawer-min-width: 60% !important;
+    --left-drawer-max-width: 60% !important;
+    --left-drawer-content-width: 60% !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-content {
+    padding-top: 2rem !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-detail-body {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.originate-progression-wizard .subclass-progression-stage {
+    inset: 0 0 0 60% !important;
+    position: absolute !important;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Название выбранного подкласса находится в правом блоке. */
+.originate-progression-wizard .subclass-stage-title {
+    position: absolute;
+    top: 4rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    z-index: 3;
+    margin: 0;
+    color: var(--originate-accent);
+    font-family: "Cinzel", serif;
+    font-size: clamp(1.65rem, 2vw, 2.4rem);
+    line-height: 1.15;
+    text-align: center;
+    text-shadow: 0 2px 8px rgba(0,0,0,.8);
+}
+
+/* Лента иконок центрируется строго внутри правых 40%. */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav {
+    left: 80% !important;
+    right: auto !important;
+    bottom: 30px !important;
+    width: calc(40% - 36px) !important;
+    max-width: calc(40% - 36px) !important;
+    transform: translateX(-50%) !important;
+    justify-content: center !important;
+    gap: 0.45rem;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav .nav-track {
+    flex: 0 1 auto !important;
+    width: auto !important;
+    max-width: calc(100% - 46px) !important;
+    justify-content: center !important;
+}
+
+.originate-progression-wizard .subclass-expand-btn {
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    height: 38px !important;
+    margin: 0 !important;
+    border-radius: 50% !important;
+}
+
+/* Раскрытие всех подклассов по принципу сетки выбора расы. */
+.originate-progression-wizard .subclass-expanded-grid[hidden] {
+    display: none !important;
+}
+
+.originate-progression-wizard .subclass-expanded-grid {
+    position: absolute;
+    inset: 8.5rem 1.5rem 7.5rem;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 1rem;
+    border: 1px solid var(--originate-border);
+    border-radius: 10px;
+    background: rgba(8,8,10,.97);
+    box-shadow: 0 16px 40px rgba(0,0,0,.65);
+    backdrop-filter: blur(10px);
+}
+
+.originate-progression-wizard .subclass-expanded-grid-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200,163,95), .25);
+}
+
+.originate-progression-wizard .subclass-expanded-grid-header h3 {
+    margin: 0;
+    color: var(--originate-accent);
+    font-family: "Cinzel", serif;
+}
+
+.originate-progression-wizard .subclass-grid-close {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+}
+
+.originate-progression-wizard .subclass-expanded-grid-items {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    align-content: start;
+    gap: 0.75rem;
+}
+
+.originate-progression-wizard .subclass-expanded-grid .subclass-grid-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 82px !important;
+    padding: 0.4rem !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    border-radius: 6px !important;
+    background: rgba(255,255,255,.025) !important;
+}
+
+.originate-progression-wizard .subclass-expanded-grid .subclass-grid-item:hover {
+    border-color: rgba(var(--originate-theme-accent-rgb, 200,163,95), .35) !important;
+}
+
+.originate-progression-wizard .subclass-expanded-grid .subclass-grid-item .nav-label {
+    font-size: .7rem !important;
+    white-space: normal !important;
+    line-height: 1.05 !important;
+}
+
+/* --- Черты: выбранная остаётся в правой панели после ухода мыши --- */
+.originate-progression-wizard .simple-feat-option.selected {
+    border-color: var(--originate-accent) !important;
+    background: rgba(var(--originate-theme-accent-rgb, 200,163,95), .12) !important;
+}
+
+/* Нормализуем HTML из книг D&D5e: никакого белого/светлого фона в правой панели. */
+.originate-progression-wizard .levelup-feat-preview-body,
+.originate-progression-wizard .levelup-feat-preview-body * {
+    color: inherit !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+.originate-progression-wizard .levelup-feat-preview-body .content-link,
+.originate-progression-wizard .levelup-feat-preview-body a,
+.originate-progression-wizard .levelup-feat-preview-body .inline-roll {
+    color: var(--originate-accent) !important;
+}
+
+.originate-progression-wizard .levelup-feat-preview-body table {
+    border-collapse: collapse;
+}
+
+.originate-progression-wizard .levelup-feat-preview-body th,
+.originate-progression-wizard .levelup-feat-preview-body td {
+    border-color: rgba(255,255,255,.12) !important;
+}
+
+/* Заголовок повышения уровня на странице черт всегда по центру всей шапки. */
+.originate-progression-wizard:has(.levelup-feat-choice-layout) .sub-interface-header {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    text-align: center !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.originate-progression-wizard:has(.levelup-feat-choice-layout) .sub-interface-header h2,
+.originate-progression-wizard:has(.levelup-feat-choice-layout) .sub-interface-header .step-indicator {
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+    align-self: center !important;
+}
