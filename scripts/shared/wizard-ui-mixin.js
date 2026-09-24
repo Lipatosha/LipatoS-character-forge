@@ -157,25 +157,73 @@ export class WizardUIMixin {
     _renderFeatSelection(feats, level, savedChoice, stepId) {
         this._featBrowserFilters ??= new Map();
         this._featBrowsers ??= new Map();
+
         const e = escapeCatalogHTML;
+        const query = String(this._featBrowserFilters.get(stepId)?.query || '');
         const model = createFeatBrowser(feats, {
-            filters: this._featBrowserFilters.get(stepId), selected: savedChoice?.uuid ? [savedChoice.uuid] : [], level: this._getFeatSelectionLevel(level),
-            renderCard: (feat, selected, hidden) => {
-                const locked = feat.locked;
-                const hint = locked ? game.i18n.localize('ORIGINATE.UI.CannotSelectAgain') : catalogText('RequiredLevel', { level: getRequiredLevel(feat) || 1 });
-                return `<label class="option-card feat-option ${locked ? 'disabled selected-previously' : ''}${feat.repeatable ? ' repeatable-feat' : ''}${selected ? ' selected' : ''}" data-uuid="${e(feat.uuid)}" ${hidden ? 'hidden' : ''}>
-                    <input type="radio" name="feat-choice-${level}" value="${e(feat.uuid)}" data-uuid="${e(feat.uuid)}" ${selected ? 'checked' : ''} ${locked ? 'disabled' : ''}>
-                    <img src="${e(feat.img)}" class="feature-icon" loading="lazy" alt="">
-                    <div class="feature-info"><div class="feature-name">${e(feat.name)}</div><div class="feature-desc">${e(hint)} · ${e(feat.categoryLabel)}</div>
-                    <div class="feat-catalog-meta" title="${e(feat.packLabel)}">${e(feat.source)} · ${e(feat.packLabel)}</div>${this._renderRepeatableFeatHint(feat)}</div>
-                </label>`;
-            }
+            filters: { query },
+            selected: savedChoice?.uuid ? [savedChoice.uuid] : [],
+            level: this._getFeatSelectionLevel(level)
         });
         this._featBrowsers.set(stepId, model);
+
+        const cards = model.entries.map(feat => {
+            const locked = !!feat.locked;
+            const selected = savedChoice?.uuid === feat.uuid;
+            const hint = locked
+                ? game.i18n.localize('ORIGINATE.UI.CannotSelectAgain')
+                : catalogText('RequiredLevel', { level: getRequiredLevel(feat) || 1 });
+            const searchText = [
+                feat.name,
+                feat.categoryLabel,
+                feat.source,
+                feat.packLabel,
+                feat.requirements
+            ].filter(Boolean).join(' ').toLocaleLowerCase();
+
+            return `
+                <label class="option-card feat-option simple-feat-option${locked ? ' disabled selected-previously' : ''}${feat.repeatable ? ' repeatable-feat' : ''}${selected ? ' selected' : ''}"
+                    data-feat-uuid="${e(feat.uuid)}"
+                    data-feat-search="${e(searchText)}">
+                    <input type="radio"
+                        name="feat-choice-${level}"
+                        value="${e(feat.uuid)}"
+                        data-feat-uuid="${e(feat.uuid)}"
+                        ${selected ? 'checked' : ''}
+                        ${locked ? 'disabled' : ''}>
+                    <img src="${e(feat.img)}" class="feature-icon" loading="lazy" alt="">
+                    <div class="feature-info">
+                        <div class="feature-name">${e(feat.name)}</div>
+                        <div class="feature-desc">${e(hint)}${feat.categoryLabel ? ` · ${e(feat.categoryLabel)}` : ''}</div>
+                        ${this._renderRepeatableFeatHint(feat)}
+                    </div>
+                </label>
+            `;
+        }).join('');
+
         return `
             <div class="levelup-feat-choice-layout">
                 <section class="levelup-feat-browser-pane">
-                    ${renderFeatBrowser(model, stepId)}
+                    <div class="simple-feat-browser" data-simple-feat-browser="${e(stepId)}">
+                        <div class="simple-feat-search">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search"
+                                data-simple-feat-search
+                                value="${e(query)}"
+                                placeholder="${e(catalogText('SearchPlaceholder'))}"
+                                aria-label="${e(catalogText('SearchPlaceholder'))}"
+                                autocomplete="off">
+                            <button type="button" data-simple-feat-clear
+                                aria-label="${e(catalogText('ClearSearch'))}"
+                                ${query ? '' : 'hidden'}>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="simple-feat-list" data-simple-feat-list>
+                            ${cards}
+                        </div>
+                        <p class="feat-search-empty" data-simple-feat-empty hidden>${e(catalogText('Empty'))}</p>
+                    </div>
                 </section>
                 <aside class="levelup-feat-preview" data-feat-preview>
                     <div class="levelup-feat-preview-placeholder">
@@ -265,35 +313,68 @@ export class WizardUIMixin {
     }
 
     _bindFeatSearch(overlay) {
-        overlay.querySelectorAll('[data-feat-catalog]').forEach(root => {
-            const key = root.dataset.featCatalog;
-            const model = this._featBrowsers?.get(key);
-            if (!model) return;
-            bindFeatBrowser(root, model, {
-                onFilters: filters => this._featBrowserFilters.set(key, filters),
-                onRender: list => this._bindTooltips?.(list)
+        overlay.querySelectorAll('[data-simple-feat-browser]').forEach(root => {
+            if (root.dataset.simpleFeatBound === 'true') return;
+            root.dataset.simpleFeatBound = 'true';
+
+            const key = root.dataset.simpleFeatBrowser;
+            const input = root.querySelector('[data-simple-feat-search]');
+            const clear = root.querySelector('[data-simple-feat-clear]');
+            const empty = root.querySelector('[data-simple-feat-empty]');
+            const cards = () => Array.from(root.querySelectorAll('.simple-feat-option'));
+
+            const applySearch = () => {
+                const query = String(input?.value || '').trim().toLocaleLowerCase();
+                let visible = 0;
+                for (const card of cards()) {
+                    const matches = !query || String(card.dataset.featSearch || '').includes(query);
+                    card.hidden = !matches;
+                    if (matches) visible++;
+                }
+                if (clear) clear.hidden = !query;
+                if (empty) empty.hidden = visible > 0;
+                this._featBrowserFilters.set(key, { query });
+            };
+
+            input?.addEventListener('input', applySearch);
+            clear?.addEventListener('click', event => {
+                event.preventDefault();
+                if (!input) return;
+                input.value = '';
+                input.focus();
+                applySearch();
             });
 
-            if (root.dataset.featPreviewBound !== 'true') {
-                root.dataset.featPreviewBound = 'true';
+            const showPreview = event => {
+                const card = event.target?.closest?.('.simple-feat-option[data-feat-uuid]');
+                if (!card || !root.contains(card)) return;
+                void this._showFeatPreview(root, card.dataset.featUuid);
+            };
 
-                const showFromEvent = event => {
-                    const card = event.target?.closest?.('.feat-option[data-uuid]');
-                    if (!card || !root.contains(card)) return;
-                    void this._showFeatPreview(root, card.dataset.uuid);
-                };
+            root.addEventListener('click', showPreview);
+            root.addEventListener('pointerover', event => {
+                const card = event.target?.closest?.('.simple-feat-option[data-feat-uuid]');
+                if (!card || !root.contains(card)) return;
+                if (event.relatedTarget && card.contains(event.relatedTarget)) return;
+                void this._showFeatPreview(root, card.dataset.featUuid);
+            });
 
-                root.addEventListener('click', showFromEvent);
-                root.addEventListener('pointerover', event => {
-                    const card = event.target?.closest?.('.feat-option[data-uuid]');
-                    if (!card || !root.contains(card)) return;
-                    if (event.relatedTarget && card.contains(event.relatedTarget)) return;
-                    void this._showFeatPreview(root, card.dataset.uuid);
-                });
-            }
+            root.addEventListener('change', event => {
+                const inputEl = event.target;
+                if (!inputEl.matches?.('input[name^="feat-choice-"]')) return;
+                for (const card of cards()) {
+                    card.classList.toggle('selected', !!card.querySelector('input:checked'));
+                }
+                const selectedCard = inputEl.closest('.simple-feat-option');
+                if (selectedCard?.dataset.featUuid) {
+                    void this._showFeatPreview(root, selectedCard.dataset.featUuid);
+                }
+            });
 
-            const selected = root.querySelector('.feat-option input:checked')?.closest('.feat-option');
-            if (selected?.dataset.uuid) void this._showFeatPreview(root, selected.dataset.uuid);
+            applySearch();
+
+            const selected = root.querySelector('.simple-feat-option input:checked')?.closest('.simple-feat-option');
+            if (selected?.dataset.featUuid) void this._showFeatPreview(root, selected.dataset.featUuid);
         });
     }
 
@@ -1757,7 +1838,7 @@ export class WizardUIMixin {
                 const input = event.target;
                 if (!input.matches('input[name^="feat-choice-"]') || input.disabled) return;
                 if (!state.stepData[step.id]) state.stepData[step.id] = {};
-                state.stepData[step.id].uuid = input.dataset.uuid;
+                state.stepData[step.id].uuid = input.dataset.featUuid || input.value;
                 this._checkProgressionCanProceed(overlay);
             });
         } else if (step.type === 'item_choice') {
