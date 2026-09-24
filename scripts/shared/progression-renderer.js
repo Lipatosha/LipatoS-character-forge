@@ -169,6 +169,9 @@ function getAbilityTraitLabel(value) {
 
 function getDamageTraitLabel(value) {
     const damageKey = String(value || '').trim().toLowerCase().split(':').pop();
+    if (damageKey === 'diseased' || damageKey === 'disease') {
+        return localizeModuleKey('ORIGINATE.Trait.Disease', damageKey);
+    }
     const suffix = damageKey ? damageKey.charAt(0).toUpperCase() + damageKey.slice(1) : '';
     if (suffix) {
         const ownKey = `ORIGINATE.Damage.${suffix}`;
@@ -180,6 +183,9 @@ function getDamageTraitLabel(value) {
 
 function getConditionTraitLabel(value) {
     const conditionKey = String(value || '').trim().toLowerCase().split(':').pop();
+    if (conditionKey === 'diseased' || conditionKey === 'disease') {
+        return localizeModuleKey('ORIGINATE.Trait.Disease', conditionKey);
+    }
     return localizeConfigEntry(
         CONFIG.DND5E.conditionTypes?.[conditionKey] || CONFIG.DND5E.conditions?.[conditionKey],
         conditionKey
@@ -939,7 +945,7 @@ export function renderSubclassSelectionPanel(options, { selectedUuid = null } = 
         `;
 
     return `
-        <div class="view-selection-root subclass-progression-selection" id="progression-subclass-content">
+        <div class="view-selection-root step-class subclass-progression-selection" id="progression-subclass-content">
             <aside class="left-sidebar-drawer always-open subclass-progression-drawer">
                 <div class="drawer-content" data-subclass-detail-content>
                     ${detailContent}
