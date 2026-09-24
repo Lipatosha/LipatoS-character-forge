@@ -444,6 +444,12 @@ export class WizardUIMixin {
                         </div>
                         ` : ''}
                     </div>
+                    <div class="hp-roll-result-container hp-roll-result-above" style="display: ${savedHP?.method === 'roll' ? 'flex' : 'none'};">
+                        <div class="hp-roll-animation"><i class="fas fa-dice-d20"></i></div>
+                        <div class="hp-roll-text">
+                            ${savedHP?.method === 'roll' ? game.i18n.format('ORIGINATE.UI.Progression.HPRollResult', { roll: savedHP.rollResult ?? savedHP.hp - conMod, mod: conMod, total: savedHP.hp }) : ''}
+                        </div>
+                    </div>
                     <div class="hp-options-wrapper ${rollLocked ? 'hp-options-wrapper--locked' : ''} ${this.levelUpManager ? 'hp-roll-only' : ''}">
                         <div class="hp-option-card ${savedHP?.method === 'average' ? 'selected' : ''}" data-method="average" data-hp="${avgHP}" aria-disabled="${rollLocked}">
                             <div class="hp-option-icon"><i class="fas fa-shield-alt"></i></div>
@@ -452,18 +458,12 @@ export class WizardUIMixin {
                             <div class="hp-option-desc">${game.i18n.localize('ORIGINATE.UI.Progression.HPAverageDesc')}<br>${game.i18n.format('ORIGINATE.UI.Progression.HPAverageCalc', { avg: Math.floor(hitDie / 2) + 1, mod: conMod })}</div>
                             <div class="hp-selection-indicator"><i class="fas fa-check"></i></div>
                         </div>
-                        <div class="hp-option-card ${savedHP?.method === 'roll' ? 'selected' : ''}" data-method="roll" aria-disabled="${rollLocked}">
+                        <div class="hp-option-card ${savedHP?.method === 'roll' ? 'selected roll-locked' : ''}" data-method="roll" aria-disabled="${rollLocked}">
                             <div class="hp-option-icon"><i class="fas fa-dice-d20"></i></div>
                             <div class="hp-option-title">${game.i18n.localize('ORIGINATE.UI.Progression.HPRoll')}</div>
                             <div class="hp-option-value">1d${hitDie} + ${conMod}</div>
                             <div class="hp-option-desc">${game.i18n.localize('ORIGINATE.UI.Progression.HPRollDesc')}<br>${game.i18n.format('ORIGINATE.UI.Progression.HPRollRange', { min: 1 + conMod, max: hitDie + conMod })}</div>
                             <div class="hp-selection-indicator"><i class="fas fa-check"></i></div>
-                        </div>
-                    </div>
-                    <div class="hp-roll-result-container" style="display: ${savedHP?.method === 'roll' ? 'flex' : 'none'};">
-                        <div class="hp-roll-animation"><i class="fas fa-dice-d20"></i></div>
-                        <div class="hp-roll-text">
-                            ${savedHP?.method === 'roll' ? game.i18n.format('ORIGINATE.UI.Progression.HPRollResult', { roll: savedHP.rollResult ?? savedHP.hp - conMod, mod: conMod, total: savedHP.hp }) : ''}
                         </div>
                     </div>
                 </div>
@@ -473,11 +473,15 @@ export class WizardUIMixin {
             case 'features': {
                 const features = await Promise.all((step.items || []).map(async feature => {
                     let description = feature.description || feature.system?.description?.value || '';
-                    let uuid = feature.uuid || feature._sourceUuid || '';
+                    let uuid = feature.uuid
+                        || feature._sourceUuid
+                        || resolveItemSourceUuid(feature)
+                        || feature.flags?.core?.sourceId
+                        || '';
                     let img = feature.img || 'icons/svg/item-bag.svg';
                     let name = feature.name || '';
 
-                    if ((!description || !uuid) && uuid) {
+                    if (uuid && (!description || !name || !img)) {
                         try {
                             const doc = this.dataManager?.getDocument
                                 ? await this.dataManager.getDocument(uuid)
