@@ -196,6 +196,7 @@ export async function setAllCustomImages(customImages) {
  * 哇哦，文件名比我的代码还长。
  */
 export const CLASS_IMAGES = {
+    artificer: 'artificer.webp',
     barbarian: 'barbarian.webp',
     bard: 'bard.webp',
     cleric: 'cleric.webp',
@@ -912,6 +913,17 @@ export function getPHBImage(type, item) {
  * @returns {Object} 整容后的选项
  */
 export function enhanceOptionWithPHBImage(option, type) {
+    if (type === 'class') {
+        const mappedClassImage = getClassImage(option);
+        if (mappedClassImage) {
+            return {
+                ...option,
+                heroImage: `${mappedClassImage}?v=1.0.5`,
+                _lipatosClassImageApplied: true
+            };
+        }
+    }
+
     // 1. 首先检查是否有自定义图片（最高优先级）
     const customImage = getCustomImageConfig(type, option.uuid);
     if (customImage) {
