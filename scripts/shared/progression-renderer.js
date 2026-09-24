@@ -880,78 +880,74 @@ function getSubclassOptionKey(option = {}) {
  */
 export function renderSubclassCards(options, { selectedUuid = null } = {}) {
     if (!options || options.length === 0) {
-        return `<p style="color: #888; text-align: center; width: 100%;">${game.i18n.localize('ORIGINATE.UI.Progression.NoSubclassAvailable')}</p>`;
+        return `<p class="subclass-nav-empty">${game.i18n.localize('ORIGINATE.UI.Progression.NoSubclassAvailable')}</p>`;
     }
 
     const selectedKey = String(selectedUuid || '');
     return options.map(opt => {
-        const isSelected = !!selectedKey && (selectedKey === String(opt.uuid || '') || selectedKey === String(opt.id || ''));
+        const isSelected = !!selectedKey
+            && (selectedKey === String(opt.uuid || '') || selectedKey === String(opt.id || ''));
         return `
-        <div class="subclass-anchor-unit${isSelected ? ' selected' : ''}"
-            data-id="${escapeSubclassText(opt.id)}" data-uuid="${escapeSubclassText(opt.uuid)}"
-            role="button" tabindex="0" aria-pressed="${isSelected}">
-            <div class="subclass-image-wrapper">
-                <img src="${escapeSubclassText(opt.img || 'icons/svg/mystery-man.svg')}" class="subclass-standing-art" alt="${escapeSubclassText(opt.name)}">
-                <div class="subclass-info-caption">
-                    <h3 class="subclass-name">${escapeSubclassText(opt.name)}</h3>
-                    <div class="subclass-tagline">${escapeSubclassText(getFullCleanDescription(opt.description))}</div>
-                </div>
-            </div>
-        </div>
-    `;
+            <button type="button"
+                class="subclass-nav-item${isSelected ? ' selected' : ''}"
+                data-id="${escapeSubclassText(opt.id)}"
+                data-subclass-uuid="${escapeSubclassText(opt.uuid)}"
+                aria-pressed="${isSelected}"
+                title="${escapeSubclassText(opt.name)}">
+                <span class="subclass-nav-icon-wrapper">
+                    <img src="${escapeSubclassText(opt.img || 'icons/svg/mystery-man.svg')}"
+                        class="subclass-nav-icon" alt="">
+                </span>
+                <span class="subclass-nav-label">${escapeSubclassText(opt.name)}</span>
+            </button>
+        `;
     }).join('');
 }
 
 /**
- * 子职选择区连同左侧详情抽屉。外层流程只需要补自己的 header 和 footer。
+ * Выбор подкласса повторяет компоновку выбора класса:
+ * подробное описание слева и компактная лента вариантов справа внизу.
  */
 export function renderSubclassSelectionPanel(options, { selectedUuid = null } = {}) {
     const selectedKey = String(selectedUuid || '');
     const selected = (options || []).find(option =>
-        selectedKey && (String(option.uuid || '') === selectedKey || String(option.id || '') === selectedKey)
+        selectedKey && (
+            String(option.uuid || '') === selectedKey
+            || String(option.id || '') === selectedKey
+        )
     ) || null;
 
-    const detailContent = selected
+    const initial = selected || options?.[0] || null;
+    const detailContent = initial
         ? `
-            <h2 class="subclass-detail-title">${escapeSubclassText(selected.name)}</h2>
-            <div class="subclass-detail-body">${selected.description || ''}</div>
+            <h2 class="subclass-detail-title">${escapeSubclassText(initial.name)}</h2>
+            <div class="subclass-detail-body">${initial.description || ''}</div>
         `
         : `
             <div class="subclass-detail-placeholder">
-                <i class="fas fa-shield-halved"></i>
                 <h3>${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}</h3>
-                <p>${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SubclassPreviewHint'))}</p>
             </div>
         `;
 
     return `
-        <div class="subclass-selection-container subclass-classlike-layout" id="progression-subclass-content">
-            <aside class="subclass-classlike-detail" data-subclass-detail-content>
+        <div class="subclass-selection-container subclass-cinematic-layout" id="progression-subclass-content">
+            <aside class="subclass-cinematic-detail" data-subclass-detail-content>
                 ${detailContent}
             </aside>
-            <section class="subclass-classlike-main">
-                <div class="subclass-classlike-toolbar">
-                    <button type="button" class="subclass-status-button" data-subclass-status>
-                        <i class="fas fa-id-card"></i>
-                        <span>${escapeSubclassText(game.i18n.localize('ORIGINATE.LevelUp.Status.Toggle'))}</span>
-                    </button>
-                </div>
-                <div class="subclass-cards-wrapper">
-                    ${renderSubclassCards(options, { selectedUuid })}
-                </div>
+            <section class="subclass-cinematic-stage">
+                <nav class="subclass-cinematic-nav" aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}">
+                    <div class="subclass-cinematic-track">
+                        ${renderSubclassCards(options, { selectedUuid })}
+                    </div>
+                </nav>
             </section>
         </div>
     `;
 }
 
-/**
- * Подкласс теперь выбирается тем же способом, что и основной класс:
- * список справа, постоянное подробное описание слева.
- */
 export function bindSubclassSelectionPanel(root, options, { selectedUuid = null, onSelect = null } = {}) {
     const panel = root?.querySelector?.('#progression-subclass-content');
     const content = panel?.querySelector?.('[data-subclass-detail-content]');
-    const statusButton = panel?.querySelector?.('[data-subclass-status]');
     if (!panel || !content) return null;
 
     const optionByKey = new Map();
@@ -960,7 +956,7 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         if (option?.id) optionByKey.set(String(option.id), option);
     }
 
-    const cards = Array.from(panel.querySelectorAll('.subclass-anchor-unit'));
+    const cards = Array.from(panel.querySelectorAll('.subclass-nav-item'));
 
     const showDetails = option => {
         if (!option) return;
@@ -973,7 +969,7 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
 
     const selectCard = (card, { notify = true } = {}) => {
         if (!card) return null;
-        const option = optionByKey.get(card.dataset.uuid) || optionByKey.get(card.dataset.id);
+        const option = optionByKey.get(card.dataset.subclassUuid) || optionByKey.get(card.dataset.id);
         if (!option) return null;
 
         for (const otherCard of cards) {
@@ -994,23 +990,15 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
             event.preventDefault();
             selectCard(card);
         });
-        card.addEventListener('pointerenter', () => {
-            const option = optionByKey.get(card.dataset.uuid) || optionByKey.get(card.dataset.id);
-            if (option) showDetails(option);
-        });
     }
-
-    statusButton?.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        const appRoot = panel.closest('.originate-levelup-app') || root.parentElement;
-        appRoot?.querySelector?.('.levelup-status-toggle')?.click();
-    });
 
     const selectedKey = String(selectedUuid || '');
     const selectedCard = cards.find(card =>
         card.classList.contains('selected')
-        || (!!selectedKey && (card.dataset.uuid === selectedKey || card.dataset.id === selectedKey))
+        || (!!selectedKey && (
+            card.dataset.subclassUuid === selectedKey
+            || card.dataset.id === selectedKey
+        ))
     );
     if (selectedCard) selectCard(selectedCard, { notify: false });
 
