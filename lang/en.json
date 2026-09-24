@@ -976,5 +976,6 @@
   "ORIGINATE.FeatCatalog.PreviewTitle": "Feat Description",
   "ORIGINATE.FeatCatalog.PreviewHint": "Hover over a feat or select it to see its full description.",
   "ORIGINATE.UI.Progression.SubclassPreviewHint": "Hover over a subclass or select it to see its full description.",
-  "ORIGINATE.UI.Progression.HPRollPermanent": "The roll is permanently locked to this level. Cancelling the level up does not allow a reroll."
+  "ORIGINATE.UI.Progression.HPRollPermanent": "The roll is permanently locked to this level. Cancelling the level up does not allow a reroll.",
+  "ORIGINATE.Trait.Disease": "Disease"
 }
