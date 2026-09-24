@@ -323,6 +323,26 @@ export class WizardUIMixin {
             const empty = root.querySelector('[data-simple-feat-empty]');
             const cards = () => Array.from(root.querySelectorAll('.simple-feat-option'));
 
+            const getSelectedCard = () =>
+                root.querySelector('.simple-feat-option input:checked')?.closest('.simple-feat-option') || null;
+
+            const rememberSelected = () => {
+                const selected = getSelectedCard();
+                root.dataset.selectedFeatUuid = selected?.dataset.featUuid || '';
+                return selected;
+            };
+
+            const restoreSelectedPreview = () => {
+                const uuid = root.dataset.selectedFeatUuid;
+                if (uuid) {
+                    void this._showFeatPreview(root, uuid);
+                    return;
+                }
+
+                const selected = rememberSelected();
+                if (selected?.dataset.featUuid) void this._showFeatPreview(root, selected.dataset.featUuid);
+            };
+
             const applySearch = () => {
                 const query = String(input?.value || '').trim().toLocaleLowerCase();
                 let visible = 0;
@@ -345,13 +365,6 @@ export class WizardUIMixin {
                 applySearch();
             });
 
-            const showPreview = event => {
-                const card = event.target?.closest?.('.simple-feat-option[data-feat-uuid]');
-                if (!card || !root.contains(card)) return;
-                void this._showFeatPreview(root, card.dataset.featUuid);
-            };
-
-            root.addEventListener('click', showPreview);
             root.addEventListener('pointerover', event => {
                 const card = event.target?.closest?.('.simple-feat-option[data-feat-uuid]');
                 if (!card || !root.contains(card)) return;
@@ -359,21 +372,48 @@ export class WizardUIMixin {
                 void this._showFeatPreview(root, card.dataset.featUuid);
             });
 
+            root.addEventListener('pointerout', event => {
+                const card = event.target?.closest?.('.simple-feat-option[data-feat-uuid]');
+                if (!card || !root.contains(card)) return;
+                if (event.relatedTarget && card.contains(event.relatedTarget)) return;
+
+                const nextCard = event.relatedTarget?.closest?.('.simple-feat-option[data-feat-uuid]');
+                if (nextCard && root.contains(nextCard)) return;
+
+                restoreSelectedPreview();
+            });
+
             root.addEventListener('change', event => {
                 const inputEl = event.target;
                 if (!inputEl.matches?.('input[name^="feat-choice-"]')) return;
+
                 for (const card of cards()) {
                     card.classList.toggle('selected', !!card.querySelector('input:checked'));
                 }
+
                 const selectedCard = inputEl.closest('.simple-feat-option');
-                if (selectedCard?.dataset.featUuid) {
-                    void this._showFeatPreview(root, selectedCard.dataset.featUuid);
+                root.dataset.selectedFeatUuid = selectedCard?.dataset.featUuid || inputEl.value || '';
+                restoreSelectedPreview();
+            });
+
+            // ЛКМ по карточке фиксирует её как выбранную, а hover остаётся временным просмотром.
+            root.addEventListener('click', event => {
+                const card = event.target?.closest?.('.simple-feat-option[data-feat-uuid]');
+                if (!card || !root.contains(card) || card.classList.contains('disabled')) return;
+
+                const radio = card.querySelector('input[type="radio"][name^="feat-choice-"]');
+                if (radio && !radio.disabled && !radio.checked) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                } else if (radio?.checked) {
+                    root.dataset.selectedFeatUuid = card.dataset.featUuid || radio.value || '';
+                    restoreSelectedPreview();
                 }
             });
 
             applySearch();
 
-            const selected = root.querySelector('.simple-feat-option input:checked')?.closest('.simple-feat-option');
+            const selected = rememberSelected();
             if (selected?.dataset.featUuid) void this._showFeatPreview(root, selected.dataset.featUuid);
         });
     }
