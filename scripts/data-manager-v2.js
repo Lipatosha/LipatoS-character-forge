@@ -31,46 +31,26 @@ import {
 
 const CHARACTER_FORGE_IO_CONCURRENCY = 6;
 
-const LAARU_MODULE_IDS = Object.freeze([
-    'lipatos-laaru-dnd-legacy-2014',
-    'laaru-dnd5-hw'
-]);
-const LAARU_PACK_NAMES = Object.freeze([
+const DND5E_SOURCE_PACK_NAMES = Object.freeze([
     'classes',
     'subclasses',
     'races',
-    'racesMPMM',
     'backgrounds',
     'classfeatures',
     'spells',
     'items',
-    'goods'
+    'tradegoods'
 ]);
 
-let warnedAboutMultipleLaaruModules = false;
-
-function getActiveLaaruModuleId() {
-    const active = LAARU_MODULE_IDS.filter(id => game.modules?.get(id)?.active === true);
-    if (active.length > 1 && !warnedAboutMultipleLaaruModules) {
-        warnedAboutMultipleLaaruModules = true;
-        console.warn(
-            'Character Forge | Одновременно активны LipatoS Laaru и старый laaru-dnd5-hw. ' +
-            'Используется LipatoS-версия; старый модуль лучше отключить.'
-        );
-    }
-    return active[0] || null;
-}
-
-function getLaaruPackIds() {
-    const moduleId = getActiveLaaruModuleId();
-    if (!moduleId) return [];
-
+function getDnd5ePackIds() {
     const packs = Array.from(game.packs || []);
-    const byLower = new Map(packs.map(pack => [String(pack.collection || '').toLowerCase(), pack.collection]));
+    const byLower = new Map(
+        packs.map(pack => [String(pack.collection || '').toLowerCase(), pack.collection])
+    );
 
-    return LAARU_PACK_NAMES
+    return DND5E_SOURCE_PACK_NAMES
         .map(name => {
-            const expected = `${moduleId}.${name}`;
+            const expected = `dnd5e.${name}`;
             if (game.packs.get(expected)) return expected;
             return byLower.get(expected.toLowerCase()) || null;
         })
@@ -138,7 +118,7 @@ export class DataManager {
      * @returns {boolean} 是否有数据
      */
     hasAnyData() {
-        return !!getActiveLaaruModuleId() && getLaaruPackIds().length > 0;
+        return getDnd5ePackIds().length > 0;
     }
 
     getExcludedItemUuidSet() {
@@ -539,8 +519,7 @@ export class DataManager {
         if (this._indexLoadPromise) return this._indexLoadPromise;
 
         this._indexLoadPromise = (async () => {
-            const rawSourcePacks = getLaaruPackIds();
-            const sourcePacks = getLaaruPackIds();
+            const sourcePacks = getDnd5ePackIds();
 
             this._indexCache.clear();
             this._typeIndex.clear();
@@ -675,13 +654,8 @@ export class DataManager {
         window.OriginateLog?.('Originate | 加载法术列表数据源...');
 
         const spellListSources = game.settings.get('character-forge', 'spellListSources') || [];
-        const rawSourcePacks = getLaaruPackIds();
         const excludedItems = new Set(game.settings.get('character-forge', 'excludedItems') || []);
-        const sourcePacks = getLaaruPackIds();
-
-        if (rawSourcePacks.length > 0 && typeof rawSourcePacks[0] === 'object') {
-            window.OriginateLog?.(`Originate | Detected object-based sourcePacks setting. Normalized to ${sourcePacks.length} IDs.`);
-        }
+        const sourcePacks = getDnd5ePackIds();
 
         // 初始化映射
         const classSpellMap = new Map(); // SpellUUID -> Set<ClassIdentifier>
@@ -1345,9 +1319,9 @@ export class DataManager {
             }
         }
 
-        // Character Forge работает только с индексами Laaru.
-        // Старый fallback по всем Item-компендиумам мира намеренно удалён:
-        // он мог повторно индексировать большие библиотеки и давать заметную нагрузку.
+        // Character Forge работает только с официальными индексами D&D5e.
+        // Запасной проход по всем Item-компендиумам мира намеренно не используется:
+        // он мог повторно индексировать большие сторонние библиотеки и давать заметную нагрузку.
        
         results.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
