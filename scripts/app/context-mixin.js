@@ -17,7 +17,8 @@ const CHARACTER_FORGE_CLASS_ORDER = [
     'paladin',
     'rogue',
     'ranger',
-    'sorcerer'
+    'sorcerer',
+    'warlock'
 ];
 
 const CHARACTER_FORGE_CLASS_RANK = new Map(
@@ -184,6 +185,14 @@ export const ContextMixin = (Base) => class extends Base {
                         };
                         // 确保 PHB 图片已应用
                         selectedOption = enhanceOptionWithPHBImage(selectedOption, this.currentStep);
+
+                        if (this.currentStep === 'class') {
+                            const classIdentifier = normalizeClassIdentifier(selectedOption);
+                            if (CHARACTER_FORGE_CLASS_RANK.has(classIdentifier)) {
+                                selectedOption.classIcon =
+                                    `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${classIdentifier}.webp`;
+                            }
+                        }
 
                         // 如果没有特定的背景图，使用默认背景
 
