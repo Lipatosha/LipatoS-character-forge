@@ -13553,9 +13553,9 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-class .class-showcase-art {
     position: absolute;
     left: 75%;
-    top: 52%;
-    width: 420px;
-    height: 340px;
+    top: 61%;
+    width: 320px;
+    height: 260px;
     transform: translate(-50%, -50%);
     z-index: 5;
     display: flex;
@@ -13567,12 +13567,12 @@ body.originate-active .character-forge-item-sheet-front {
 
 .view-selection-root.step-class .class-showcase-img {
     display: block;
-    width: 420px !important;
-    height: 340px !important;
-    min-width: 420px !important;
-    min-height: 340px !important;
-    max-width: 420px !important;
-    max-height: 340px !important;
+    width: 320px !important;
+    height: 260px !important;
+    min-width: 320px !important;
+    min-height: 260px !important;
+    max-width: 320px !important;
+    max-height: 260px !important;
     object-fit: contain !important;
     object-position: center center !important;
     margin: 0 !important;
@@ -13590,14 +13590,15 @@ body.originate-active .character-forge-item-sheet-front {
 
 @media (max-width: 1500px), (max-height: 820px) {
     .view-selection-root.step-class .class-showcase-art {
-        top: 51%;
-        transform: translate(-50%, -50%) scale(0.88);
+        top: 60%;
+        transform: translate(-50%, -50%) scale(0.90);
         transform-origin: center center;
     }
 }
 
 @media (max-width: 1180px), (max-height: 700px) {
     .view-selection-root.step-class .class-showcase-art {
-        transform: translate(-50%, -50%) scale(0.72);
+        top: 59%;
+        transform: translate(-50%, -50%) scale(0.78);
     }
 }
