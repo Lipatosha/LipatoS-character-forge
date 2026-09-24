@@ -473,14 +473,27 @@ Hooks.once('ready', () => {
 
 // 既然你们非要个显眼的按钮，那就给你们一个
 // 把它塞进角色目录的头部，希望不会把原本的布局挤爆
+const LAARU_MODULE_IDS = [
+    'lipatos-laaru-dnd-legacy-2014',
+    'laaru-dnd5-hw'
+];
+
+function _getActiveLaaruModule() {
+    return LAARU_MODULE_IDS
+        .map(id => game.modules.get(id))
+        .find(module => module?.active) || null;
+}
+
 async function _openCharacterForgeForActor(actor, { grantId = null, grantUserId = null } = {}) {
     if (!actor) return;
 
     try { await legacySettingsMigrationPromise; } catch { /* migration errors logged elsewhere */ }
 
-    const laaruModule = game.modules.get('laaru-dnd5-hw');
-    if (!laaruModule?.active) {
-        ui.notifications.error('Character Forge: включите модуль Laaru (laaru-dnd5-hw).');
+    const laaruModule = _getActiveLaaruModule();
+    if (!laaruModule) {
+        ui.notifications.error(
+            'Character Forge: включите модуль LipatoS — Laaru D&D Legacy 2014.'
+        );
         return;
     }
 
@@ -1097,9 +1110,11 @@ async function _openOriginateLevelUpApp(actor) {
         return;
     }
 
-    const laaruModule = game.modules.get('laaru-dnd5-hw');
-    if (!laaruModule?.active) {
-        ui.notifications.error('Character Forge: включите модуль Laaru (laaru-dnd5-hw).');
+    const laaruModule = _getActiveLaaruModule();
+    if (!laaruModule) {
+        ui.notifications.error(
+            'Character Forge: включите модуль LipatoS — Laaru D&D Legacy 2014.'
+        );
         return;
     }
 
