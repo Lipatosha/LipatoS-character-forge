@@ -58,6 +58,33 @@ function normalizeFinalizeActorData(actorData = {}) {
     return data;
 }
 
+const FINAL_ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+
+function buildFinalAbilityActorUpdate(input = {}) {
+    const sourceSystem = input?.scaffold?.actorData?.system || {};
+    const update = {};
+
+    for (const ability of FINAL_ABILITY_KEYS) {
+        const flatKey = `abilities.${ability}.value`;
+        const rawValue = sourceSystem[flatKey]
+            ?? foundry.utils.getProperty(sourceSystem, flatKey);
+        const value = Number(rawValue);
+        if (!Number.isFinite(value)) continue;
+        update[`system.abilities.${ability}.value`] = value;
+    }
+
+    return update;
+}
+
+async function applyFinalAbilityValues(actor, input = {}) {
+    if (!actor) return actor;
+    const update = buildFinalAbilityActorUpdate(input);
+    if (Object.keys(update).length > 0) {
+        await actor.update(update);
+    }
+    return game.actors.get(actor.id) || actor;
+}
+
 function buildTraitActorUpdate(actor, traitChanges = [], manager) {
     const actorUpdate = {};
     const byMode = new Map();
@@ -178,6 +205,12 @@ export async function createCharacterFromFinalizeInput(input = {}, options = {})
     actor = game.actors.get(actor.id) || actor;
     manager.actor = actor;
 
+    // Native Advancement D&D5e может во время финализации вернуть значения
+    // характеристик к данным временного Actor. Последним критическим шагом всегда
+    // повторно пишем именно те значения, которые игрок назначил в Character Forge.
+    actor = await applyFinalAbilityValues(actor, input);
+    manager.actor = actor;
+
     // Быстрый режим используется интерфейсом Character Forge: после записи основных
     // данных не держим пользователя на финальном экране ради служебного ремонта
     // advancement.value/origin и ModifyItem. Эти операции запускаются после первого
@@ -218,6 +251,9 @@ export async function createCharacterFromFinalizeInput(input = {}, options = {})
                     stage: 'modify-item'
                 });
             }
+
+            // Repair/ModifyItem также не имеют права менять назначенные игроком статы.
+            liveActor = await applyFinalAbilityValues(game.actors.get(actorId) || liveActor, input);
 
             return {
                 actor: game.actors.get(actorId) || liveActor,
