@@ -8,3 +8,29 @@
 .view-selection-root.step-class .nav-icon{width:34px!important;height:34px!important;object-fit:contain!important}
 .view-selection-root.step-class .nav-label{margin-top:1px!important;font-size:clamp(.43rem,.48vw,.59rem)!important;line-height:1.05!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important}
 @media(max-width:1366px),(max-height:760px){.view-selection-root.step-class .class-detail-icon{top:88px;right:68px;width:140px;height:140px}.view-selection-root.step-class .class-detail-icon img{width:140px!important;height:140px!important;min-width:140px!important;min-height:140px!important;max-width:140px!important;max-height:140px!important}.view-selection-root.step-class .nav-icon-wrapper,.view-selection-root.step-class .nav-icon{width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important}.view-selection-root.step-class .nav-label{font-size:.42rem!important}}
+
+/* class-nav-one-line */
+.view-selection-root.step-class .cinematic-nav .nav-track{
+  gap:2px!important;
+  padding:.35rem .35rem!important;
+  overflow-x:hidden!important;
+  justify-content:center!important;
+}
+.view-selection-root.step-class .cinematic-nav .nav-item{
+  flex:0 0 50px!important;
+  width:50px!important;
+  height:56px!important;
+}
+.view-selection-root.step-class .cinematic-nav .nav-icon-wrapper{
+  width:32px!important;
+  height:32px!important;
+  margin-bottom:1px!important;
+  background:transparent!important;
+}
+.view-selection-root.step-class .cinematic-nav .nav-item.selected .nav-icon-wrapper{
+  background:transparent!important;
+}
+.view-selection-root.step-class .cinematic-nav .nav-label{
+  font-size:.56rem!important;
+  padding:0 1px!important;
+}
