@@ -12790,3 +12790,220 @@ body.originate-active .character-forge-item-sheet-front {
 .originate-progression-wizard .simple-feat-option[data-feat-uuid] {
     --feat-popup-disabled: 1;
 }
+
+
+/* Character Forge 1.2.7 — persistent HP, exact subclass layout, edge-to-edge feats */
+
+/* Полученные особенности: hover-подсказка должна быть поверх всех полноэкранных слоёв. */
+.originate-spell-tooltip[data-character-forge-tooltip-owner] {
+    z-index: 100100 !important;
+}
+
+/* -------------------------------------------------------------------------
+   ПОДКЛАСС — тот же каркас, размеры и визуальные классы, что у выбора класса.
+   ------------------------------------------------------------------------- */
+.originate-progression-wizard #progression-step-content:has(.subclass-progression-selection),
+.originate-progression-wizard .sub-interface-content:has(.subclass-progression-selection) {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+}
+
+.originate-progression-wizard #progression-step-content:has(.subclass-progression-selection)::before,
+.originate-progression-wizard #progression-step-content:has(.subclass-progression-selection)::after,
+.originate-progression-wizard .sub-interface-content:has(.subclass-progression-selection)::before,
+.originate-progression-wizard .sub-interface-content:has(.subclass-progression-selection)::after {
+    display: none !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection.view-selection-root {
+    position: relative !important;
+    isolation: isolate;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000;
+}
+
+/* Ширина буквально берётся из основного .left-sidebar-drawer: clamp(360px,26vw,440px). */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer {
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100% !important;
+    transform: none !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-content {
+    padding: 2rem !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-title {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body {
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    overflow-wrap: anywhere;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body table {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.originate-progression-wizard .subclass-progression-stage {
+    position: absolute;
+    inset: 0 0 0 clamp(360px, 26vw, 440px);
+    z-index: 0;
+    background: radial-gradient(ellipse at 58% 46%, rgba(32,28,20,.18), #000 72%);
+    pointer-events: none;
+}
+
+/* В основном выборе .cinematic-nav центрируется. Для подкласса пользователь
+   просит ту же маленькую панель, но именно справа внизу. */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav {
+    left: auto !important;
+    right: 30px !important;
+    bottom: 30px !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: calc(100% - clamp(360px, 26vw, 440px) - 60px) !important;
+    justify-content: flex-end !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav .nav-track {
+    max-width: min(830px, 60vw) !important;
+    width: auto !important;
+}
+
+/* Никакой второй карточной стилизации: размеры/hover/selected наследуются
+   напрямую от .view-selection-root .nav-item как при выборе класса. */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav-item {
+    min-width: 58px !important;
+    padding: 0 !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav-item .nav-label {
+    display: block !important;
+}
+
+/* Кнопка "Персонаж" остаётся единственной и находится справа в шапке. */
+.originate-levelup-app:has(.subclass-progression-selection) > .levelup-status-toggle,
+.originate-levelup-app:has(.subclass-progression-selection) .levelup-status-toggle {
+    display: flex !important;
+}
+
+/* -------------------------------------------------------------------------
+   ЧЕРТЫ — без внешних отступов: от разделителя шапки до разделителя футера.
+   ------------------------------------------------------------------------- */
+.originate-progression-wizard:has(.levelup-feat-choice-layout) .sub-interface-header {
+    margin-bottom: 0 !important;
+}
+
+.originate-progression-wizard #progression-step-content:has(.levelup-feat-choice-layout),
+.originate-progression-wizard .sub-interface-content:has(.levelup-feat-choice-layout) {
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+}
+
+.originate-progression-wizard #progression-step-content:has(.levelup-feat-choice-layout)::before,
+.originate-progression-wizard #progression-step-content:has(.levelup-feat-choice-layout)::after,
+.originate-progression-wizard .sub-interface-content:has(.levelup-feat-choice-layout)::before,
+.originate-progression-wizard .sub-interface-content:has(.levelup-feat-choice-layout)::after {
+    display: none !important;
+}
+
+.originate-progression-wizard .asi-or-feat-section:has(.levelup-feat-choice-layout),
+.originate-progression-wizard .feat-content:has(.levelup-feat-choice-layout),
+.originate-progression-wizard .feat-panel:has(.levelup-feat-choice-layout) {
+    flex: 1 1 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.originate-progression-wizard .feat-panel:has(.levelup-feat-choice-layout) {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.originate-progression-wizard .feat-panel:has(.levelup-feat-choice-layout) .feat-panel-back {
+    display: none !important;
+}
+
+.originate-progression-wizard .levelup-feat-choice-layout {
+    flex: 1 1 0 !important;
+    grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr) !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.originate-progression-wizard .levelup-feat-browser-pane,
+.originate-progression-wizard .simple-feat-browser {
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.originate-progression-wizard .simple-feat-search {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-top: 0 !important;
+    border-left: 0 !important;
+    border-right: 1px solid rgba(var(--originate-theme-accent-rgb, 200,163,95), .28) !important;
+}
+
+.originate-progression-wizard .simple-feat-list {
+    margin: 0 !important;
+    padding: 0.75rem !important;
+}
+
+.originate-progression-wizard .levelup-feat-preview {
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-top: 0 !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+}
+
+/* В каталоге черт по-прежнему нет отдельного всплывающего tooltip —
+   подробное описание остаётся в постоянной правой панели. */
+.originate-progression-wizard .simple-feat-option[data-feat-uuid] {
+    --feat-popup-disabled: 1;
+}
