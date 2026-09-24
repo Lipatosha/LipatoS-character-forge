@@ -13008,3 +13008,140 @@ body.originate-active .character-forge-item-sheet-front {
 .originate-progression-wizard .simple-feat-option[data-feat-uuid] {
     --feat-popup-disabled: 1;
 }
+
+
+/* Character Forge 1.2.8 — subclass full panel, feature-only cards, full-height feat browser */
+
+/* Подкласс теперь буквально наследует step-class, поэтому описание занимает
+   те же 50% экрана, что и описание основного класса. */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer {
+    left: 0 !important;
+    right: auto !important;
+    width: 50% !important;
+    min-width: 50% !important;
+    max-width: 50% !important;
+    --left-drawer-min-width: 50% !important;
+    --left-drawer-max-width: 50% !important;
+    --left-drawer-content-width: 50% !important;
+    border-left: 0 !important;
+    border-right: 1px solid rgba(255,255,255,.1) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box;
+    direction: rtl;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-content > * {
+    direction: ltr;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body th,
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body td {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body .content-link,
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-drawer .drawer-body .inline-roll {
+    display: inline !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+.originate-progression-wizard .subclass-progression-stage {
+    inset: 0 0 0 50% !important;
+}
+
+/* Те же координаты нижней ленты, что у основного выбора класса. */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav {
+    left: 75% !important;
+    right: auto !important;
+    bottom: 30px !important;
+    width: calc(50% - 30px) !important;
+    max-width: calc(50% - 30px) !important;
+    transform: translateX(-50%) !important;
+    justify-content: center !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav .nav-track {
+    width: auto !important;
+    max-width: min(830px, 60vw) !important;
+}
+
+/* На шагах подкласса и черт три строки мастера имеют жёсткую структуру:
+   header / растягиваемый body / footer. Это не даёт body схлопываться. */
+.originate-progression-wizard:has(.subclass-progression-selection),
+.originate-progression-wizard:has(.levelup-feat-choice-layout) {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+}
+
+.originate-progression-wizard:has(.subclass-progression-selection) .sub-interface-header,
+.originate-progression-wizard:has(.levelup-feat-choice-layout) .sub-interface-header {
+    margin-bottom: 0 !important;
+}
+
+.originate-progression-wizard:has(.subclass-progression-selection) .sub-interface-content,
+.originate-progression-wizard:has(.levelup-feat-choice-layout) .sub-interface-content {
+    min-height: 0 !important;
+    height: 100% !important;
+}
+
+/* Главная причина пустого куска снизу была здесь: старый лимит 60vh. */
+.originate-progression-wizard .feat-content:has(.feat-panel):has(.levelup-feat-choice-layout) {
+    height: 100% !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.originate-progression-wizard .asi-or-feat-section:has(.levelup-feat-choice-layout),
+.originate-progression-wizard .feat-panel:has(.levelup-feat-choice-layout),
+.originate-progression-wizard .levelup-feat-choice-layout,
+.originate-progression-wizard .levelup-feat-browser-pane,
+.originate-progression-wizard .simple-feat-browser,
+.originate-progression-wizard .levelup-feat-preview {
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: none !important;
+}
+
+/* В полученных особенностях в самой карточке только иконка + название.
+   Полное описание выдаёт hover-tooltip. */
+.originate-progression-wizard .progression-feature-item .progression-feature-desc,
+.originate-progression-wizard .progression-feature-item .feature-desc {
+    display: none !important;
+}
+
+.originate-progression-wizard .progression-feature-item {
+    align-items: center !important;
+}
