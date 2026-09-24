@@ -42,6 +42,11 @@ const DND5E_SOURCE_PACK_NAMES = Object.freeze([
     'tradegoods'
 ]);
 
+const LIPATOS_LIBRARY_MODULE_ID = 'lipatos-dnd5e-ru-library';
+const LIPATOS_LIBRARY_PACK_OVERRIDES = Object.freeze({
+    classes: `${LIPATOS_LIBRARY_MODULE_ID}.classes`
+});
+
 function getDnd5ePackIds() {
     const packs = Array.from(game.packs || []);
     const byLower = new Map(
@@ -50,6 +55,13 @@ function getDnd5ePackIds() {
 
     return DND5E_SOURCE_PACK_NAMES
         .map(name => {
+            const override = LIPATOS_LIBRARY_PACK_OVERRIDES[name];
+            if (override) {
+                if (game.packs.get(override)) return override;
+                const resolvedOverride = byLower.get(override.toLowerCase());
+                if (resolvedOverride) return resolvedOverride;
+            }
+
             const expected = `dnd5e.${name}`;
             if (game.packs.get(expected)) return expected;
             return byLower.get(expected.toLowerCase()) || null;
