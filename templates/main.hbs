@@ -693,8 +693,14 @@
             <div class="bg-overlay"></div>
         </div>
 
-        <!-- Центральный арт на выборе класса/вида/предыстории намеренно отключён.
-             Он больше не вспыхивает на весь экран при переключении вариантов. -->
+        <!-- Класс: отдельный арт 420x340 в свободной центральной зоне правой половины. -->
+        {{#if (eq currentStep "class")}}
+        {{#if selectedOption.heroImage}}
+        <div class="class-showcase-art" aria-hidden="true">
+            <img src="{{selectedOption.heroImage}}" alt="" class="class-showcase-img">
+        </div>
+        {{/if}}
+        {{/if}}
 
         <!-- 3. 搴曢儴瀛楀箷灞?(鐢靛奖瀛楀箷) - 杩欓噷鐨勯噾灞炶川鎰熸笎鍙樻槸鎴戞渶鍚庣殑鍊斿己 -->
         {{#unless (eq currentStep "subclass")}}

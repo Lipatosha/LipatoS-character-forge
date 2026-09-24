@@ -13547,9 +13547,26 @@ body.originate-active .character-forge-item-sheet-front {
 }
 
 
-/* Character Forge 1.3.4 — normalize class artwork from RU library */
-.view-selection-root.step-class .drawer-body img[src*="lipatos-dnd5e-ru-library/assets/images/pic/"],
-.view-selection-root.step-class .drawer-body img[src*="/assets/images/pic/"] {
+
+
+/* Character Forge 1.3.5 — class art in the dedicated 420x340 stage */
+.view-selection-root.step-class .class-showcase-art {
+    position: absolute;
+    left: 75%;
+    top: 52%;
+    width: 420px;
+    height: 340px;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.view-selection-root.step-class .class-showcase-img {
+    display: block;
     width: 420px !important;
     height: 340px !important;
     min-width: 420px !important;
@@ -13558,21 +13575,29 @@ body.originate-active .character-forge-item-sheet-front {
     max-height: 340px !important;
     object-fit: contain !important;
     object-position: center center !important;
-    display: block !important;
-    float: none !important;
-    margin: 1rem 0 1.5rem auto !important;
+    margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
     box-sizing: border-box !important;
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55));
 }
 
-@media (max-width: 900px) {
-    .view-selection-root.step-class .drawer-body img[src*="lipatos-dnd5e-ru-library/assets/images/pic/"],
-    .view-selection-root.step-class .drawer-body img[src*="/assets/images/pic/"] {
-        width: min(420px, 100%) !important;
-        min-width: 0 !important;
-        height: auto !important;
-        min-height: 0 !important;
-        aspect-ratio: 420 / 340;
+/* Та же картинка больше не дублируется внутри полного описания класса. */
+.view-selection-root.step-class .drawer-body img[src*="lipatos-dnd5e-ru-library/assets/images/pic/"],
+.view-selection-root.step-class .drawer-body img[src*="/assets/images/pic/"] {
+    display: none !important;
+}
+
+@media (max-width: 1500px), (max-height: 820px) {
+    .view-selection-root.step-class .class-showcase-art {
+        top: 51%;
+        transform: translate(-50%, -50%) scale(0.88);
+        transform-origin: center center;
+    }
+}
+
+@media (max-width: 1180px), (max-height: 700px) {
+    .view-selection-root.step-class .class-showcase-art {
+        transform: translate(-50%, -50%) scale(0.72);
     }
 }
