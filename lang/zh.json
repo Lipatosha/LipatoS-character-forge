@@ -953,5 +953,6 @@
   "ORIGINATE.FeatCatalog.PreviewHint": "将鼠标悬停在专长上或选择它以查看完整说明。",
   "ORIGINATE.UI.Progression.SubclassPreviewHint": "将鼠标悬停在子职上或选择它以查看完整说明。",
   "ORIGINATE.UI.Progression.HPRollPermanent": "掷骰结果会永久锁定到该等级。取消升级后也不能重新掷骰。",
-  "ORIGINATE.Trait.Disease": "疾病"
+  "ORIGINATE.Trait.Disease": "疾病",
+  "ORIGINATE.Advancement.Resistances": "抗性"
 }
