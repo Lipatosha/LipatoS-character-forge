@@ -1,8 +1,8 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "version": "1.2.25",
-  "description": "Кинематографичный мастер создания и повышения персонажа D&D5e для Foundry VTT 14. Использует официальные компендиумы D&D5e 6.0.5: классы, подклассы, расы, предыстории, особенности, заклинания и предметы.",
+  "version": "1.2.26",
+  "description": "Кинематографичный мастер создания и повышения персонажа D&D5e для Foundry VTT 14. Классы загружает из LipatoS — DND5E RU Library, остальные разделы пока использует из D&D5e 6.0.5.",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -18,7 +18,7 @@
         "id": "dnd5e",
         "type": "system",
         "compatibility": {
-          "minimum": "6.0.0",
+          "minimum": "6.0.5",
           "verified": "6.0.5"
         }
       }
@@ -27,6 +27,15 @@
       {
         "id": "dice-so-nice",
         "type": "module"
+      },
+      {
+        "id": "lipatos-dnd5e-ru-library",
+        "type": "module",
+        "manifest": "https://github.com/Lipatosha/LipatoS-DND5E-RU-Library/releases/latest/download/module.json",
+        "compatibility": {
+          "minimum": "0.1.1",
+          "verified": "0.1.1"
+        }
       }
     ],
     "recommends": []
