@@ -12389,3 +12389,404 @@ body.originate-active .character-forge-item-sheet-front {
     font-size: 0.82rem;
     line-height: 1.35;
 }
+
+
+/* Character Forge 1.2.6 — compact HP, cinematic subclass, simple feats */
+
+/* --- Повышение HP: компактно и без лишнего вертикального воздуха --- */
+.originate-progression-wizard .progression-hp-container {
+    gap: 0.8rem !important;
+    padding-top: 0.25rem !important;
+}
+
+.originate-progression-wizard .progression-hp-container .hp-header {
+    margin-bottom: 0.15rem !important;
+}
+
+.originate-progression-wizard .hp-permanent-roll-warning {
+    margin-top: 0.55rem !important;
+    padding: 0.4rem 0.7rem !important;
+    max-width: 560px !important;
+    font-size: 0.76rem !important;
+}
+
+.originate-progression-wizard .hp-roll-result-above {
+    order: 1;
+    width: fit-content;
+    max-width: 520px;
+    margin: 0.25rem auto 0 !important;
+    padding: 0.55rem 0.9rem !important;
+    min-height: 0 !important;
+    gap: 0.6rem !important;
+}
+
+.originate-progression-wizard .hp-roll-result-above .hp-roll-animation {
+    font-size: 1.35rem !important;
+}
+
+.originate-progression-wizard .hp-roll-result-above .hp-roll-text {
+    font-size: 0.9rem !important;
+}
+
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only {
+    order: 2;
+    margin-top: 0.15rem !important;
+    gap: 0 !important;
+}
+
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only .hp-option-card[data-method="roll"] {
+    flex: 0 0 300px !important;
+    width: 300px !important;
+    max-width: 300px !important;
+    min-height: 0 !important;
+    padding: 1rem 1.15rem !important;
+    gap: 0.35rem !important;
+}
+
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only .hp-option-icon {
+    margin-bottom: 0.15rem !important;
+    font-size: 2rem !important;
+}
+
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only .hp-option-title {
+    margin: 0.15rem 0 !important;
+    font-size: 1.15rem !important;
+}
+
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only .hp-option-value {
+    margin: 0.1rem 0 !important;
+    font-size: 1.8rem !important;
+}
+
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only .hp-option-desc {
+    margin-top: 0.1rem !important;
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+}
+
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only .hp-option-card.roll-locked,
+.originate-progression-wizard .hp-options-wrapper.hp-roll-only .hp-option-card[aria-disabled="true"] {
+    filter: grayscale(1) !important;
+    opacity: 0.48 !important;
+    cursor: not-allowed !important;
+    border-color: rgba(130,130,130,.35) !important;
+    background: rgba(65,65,65,.2) !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* --- Подкласс: 1:1 логика основного выбора класса --- */
+.originate-progression-wizard #progression-step-content:has(.subclass-cinematic-layout) {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+}
+
+.originate-progression-wizard .subclass-selection-container.subclass-cinematic-layout {
+    display: grid !important;
+    grid-template-columns: clamp(360px, 26vw, 440px) minmax(0, 1fr) !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #000;
+}
+
+.originate-progression-wizard .subclass-cinematic-detail {
+    min-width: 0;
+    height: 100%;
+    padding: 2rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+    background: rgba(10,10,10,.95);
+    border-right: 1px solid rgba(255,255,255,.1);
+    scrollbar-width: thin;
+    scrollbar-color: var(--originate-accent) transparent;
+}
+
+.originate-progression-wizard .subclass-cinematic-detail .subclass-detail-title {
+    margin: 4rem 0 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    color: var(--originate-accent);
+    font-family: "Cinzel", serif;
+    font-size: 2rem;
+    line-height: 1.15;
+}
+
+.originate-progression-wizard .subclass-cinematic-detail .subclass-detail-body {
+    color: #ccc;
+    font-size: 1rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.originate-progression-wizard .subclass-cinematic-detail .subclass-detail-body table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.originate-progression-wizard .subclass-cinematic-detail .subclass-detail-body th,
+.originate-progression-wizard .subclass-cinematic-detail .subclass-detail-body td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+}
+
+.originate-progression-wizard .subclass-cinematic-stage {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #111 0%, #000 75%);
+}
+
+.originate-progression-wizard .subclass-cinematic-nav {
+    position: absolute;
+    right: 28px;
+    bottom: 28px;
+    left: 28px;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+
+.originate-progression-wizard .subclass-cinematic-track {
+    display: flex;
+    max-width: min(830px, 100%);
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    overflow-x: auto;
+    align-items: center;
+    justify-content: flex-start;
+    pointer-events: auto;
+    background: rgba(10,10,10,.85);
+    border: 1px solid var(--originate-border);
+    border-radius: 60px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.6);
+    backdrop-filter: blur(10px);
+    scrollbar-width: none;
+}
+
+.originate-progression-wizard .subclass-cinematic-track::-webkit-scrollbar {
+    display: none;
+}
+
+.originate-progression-wizard .subclass-nav-item {
+    flex: 0 0 58px;
+    width: 58px;
+    height: 58px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: rgba(136,136,136,.7);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    overflow: visible;
+}
+
+.originate-progression-wizard .subclass-nav-icon-wrapper {
+    display: block;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+
+.originate-progression-wizard .subclass-nav-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) brightness(.7);
+    transition: filter .2s ease, transform .2s ease;
+}
+
+.originate-progression-wizard .subclass-nav-label {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    color: rgba(136,136,136,.65);
+    font-size: .58rem;
+    line-height: 1.05;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.originate-progression-wizard .subclass-nav-item:hover,
+.originate-progression-wizard .subclass-nav-item:focus-visible {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+}
+
+.originate-progression-wizard .subclass-nav-item:hover .subclass-nav-icon,
+.originate-progression-wizard .subclass-nav-item:focus-visible .subclass-nav-icon {
+    filter: grayscale(0%) brightness(1);
+    transform: scale(1.06);
+}
+
+.originate-progression-wizard .subclass-nav-item:hover .subclass-nav-label,
+.originate-progression-wizard .subclass-nav-item:focus-visible .subclass-nav-label {
+    color: #aaa;
+}
+
+.originate-progression-wizard .subclass-nav-item.selected .subclass-nav-icon-wrapper {
+    border: 2px solid var(--originate-accent);
+    box-shadow: none;
+}
+
+.originate-progression-wizard .subclass-nav-item.selected .subclass-nav-icon {
+    filter: grayscale(0%) brightness(1.1);
+}
+
+.originate-progression-wizard .subclass-nav-item.selected .subclass-nav-label {
+    color: var(--originate-accent);
+}
+
+/* На шаге подкласса используем единственную кнопку персонажа в шапке справа. */
+.originate-levelup-app:has(.subclass-cinematic-layout) > .levelup-status-toggle,
+.originate-levelup-app:has(.subclass-cinematic-layout) .levelup-status-toggle {
+    display: flex !important;
+}
+
+/* --- Черты: весь body, только поиск + единый список + постоянное описание справа --- */
+.originate-progression-wizard #progression-step-content:has(.levelup-feat-choice-layout) {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 0.75rem 1.25rem !important;
+    box-sizing: border-box;
+    overflow: hidden !important;
+    align-items: stretch !important;
+}
+
+.originate-progression-wizard .asi-or-feat-section:has(.levelup-feat-choice-layout),
+.originate-progression-wizard .feat-content:has(.levelup-feat-choice-layout),
+.originate-progression-wizard .feat-panel:has(.levelup-feat-choice-layout) {
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+}
+
+.originate-progression-wizard .feat-panel:has(.levelup-feat-choice-layout) {
+    display: flex;
+    flex-direction: column;
+}
+
+.originate-progression-wizard .feat-panel:has(.levelup-feat-choice-layout) .feat-panel-back {
+    flex: 0 0 auto;
+    min-height: 32px;
+    margin-bottom: 0.35rem;
+}
+
+.originate-progression-wizard .levelup-feat-choice-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 3fr) minmax(340px, 2fr) !important;
+    gap: 1rem !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+}
+
+.originate-progression-wizard .levelup-feat-browser-pane,
+.originate-progression-wizard .simple-feat-browser {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.originate-progression-wizard .simple-feat-browser {
+    display: flex;
+    flex-direction: column;
+}
+
+.originate-progression-wizard .simple-feat-search {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-height: 46px;
+    padding: 0 0.9rem;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200,163,95), .38);
+    border-radius: 7px;
+    background: rgba(8,8,10,.78);
+}
+
+.originate-progression-wizard .simple-feat-search > i {
+    color: var(--originate-accent);
+}
+
+.originate-progression-wizard .simple-feat-search input {
+    flex: 1;
+    height: 42px;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    color: var(--originate-text-main);
+    box-shadow: none;
+}
+
+.originate-progression-wizard .simple-feat-search button {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.originate-progression-wizard .simple-feat-list {
+    flex: 1;
+    min-height: 0;
+    margin-top: 0.7rem;
+    padding: 0.15rem 0.25rem 0.8rem 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
+    grid-auto-rows: min-content;
+    align-content: start;
+    gap: 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--originate-accent) transparent;
+}
+
+.originate-progression-wizard .simple-feat-option {
+    min-width: 0;
+    margin: 0 !important;
+}
+
+.originate-progression-wizard .levelup-feat-preview {
+    height: 100% !important;
+    min-height: 0 !important;
+    box-sizing: border-box;
+}
+
+/* В каталоге черт нет всплывающих tooltip: описание живёт только в правой панели. */
+.originate-progression-wizard .simple-feat-option[data-feat-uuid] {
+    --feat-popup-disabled: 1;
+}
