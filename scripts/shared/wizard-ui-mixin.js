@@ -453,7 +453,9 @@ export class WizardUIMixin {
                 <i class="fas fa-arrow-left"></i> ${game.i18n.localize('ORIGINATE.UI.Button.Back')}
             </button>
             <button type="button" class="confirm-btn" id="progression-next-btn" disabled>
-                ${isLast ? game.i18n.localize('ORIGINATE.UI.Button.FinishCreation') : game.i18n.localize('ORIGINATE.UI.Button.Next')} <i class="fas fa-arrow-right"></i>
+                ${currentStep.type === 'subclass_selection'
+                    ? game.i18n.localize('ORIGINATE.UI.Button.Next')
+                    : (isLast ? game.i18n.localize('ORIGINATE.UI.Button.FinishCreation') : game.i18n.localize('ORIGINATE.UI.Button.Next'))} <i class="fas fa-arrow-right"></i>
             </button>
         </div>
     `;
@@ -594,7 +596,6 @@ export class WizardUIMixin {
                                 <img src="${f.img || 'icons/svg/item-bag.svg'}" class="feature-icon">
                                 <div class="feature-info">
                                     <div class="feature-name">${f.name}</div>
-                                    ${f.description ? `<div class="feature-desc progression-feature-desc">${this._cleanDescription(f.description)}</div>` : ''}
                                 </div>
                             </div>
                         `;
