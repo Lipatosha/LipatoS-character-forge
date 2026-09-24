@@ -1007,6 +1007,7 @@ export function renderSubclassSelectionPanel(options, { selectedUuid = null } = 
 }
 
 export function bindSubclassSelectionPanel(root, options, { selectedUuid = null, onSelect = null } = {}) {
+    const selectedKey = String(selectedUuid || '');
     const panel = root?.querySelector?.('#progression-subclass-content');
     const content = panel?.querySelector?.('[data-subclass-detail-content]');
     const stageTitle = panel?.querySelector?.('[data-subclass-stage-title]');
