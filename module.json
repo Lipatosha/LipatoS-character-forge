@@ -1,7 +1,7 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "version": "1.2.26",
+  "version": "1.2.27",
   "description": "Кинематографичный мастер создания и повышения персонажа D&D5e для Foundry VTT 14. Классы загружает из LipatoS — DND5E RU Library, остальные разделы пока использует из D&D5e 6.0.5.",
   "compatibility": {
     "minimum": "14",
