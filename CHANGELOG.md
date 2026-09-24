@@ -1,5 +1,9 @@
 # История изменений
 
+## 1.2.20
+
+- Ссылка manifest рекомендуемого LipatoS Laaru направлена на `releases/latest/download/module.json`, где она будет публиковаться сборщиком нового модуля.
+
 ## 1.2.19
 
 - Индекс заклинаний обновлён под D&D5e 6.x: Character Forge теперь читает актуальное `system.sourceItem`.
