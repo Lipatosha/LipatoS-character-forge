@@ -31,7 +31,10 @@ import {
 
 const CHARACTER_FORGE_IO_CONCURRENCY = 6;
 
-const LAARU_MODULE_ID = 'laaru-dnd5-hw';
+const LAARU_MODULE_IDS = Object.freeze([
+    'lipatos-laaru-dnd-legacy-2014',
+    'laaru-dnd5-hw'
+]);
 const LAARU_PACK_NAMES = Object.freeze([
     'classes',
     'subclasses',
@@ -44,15 +47,30 @@ const LAARU_PACK_NAMES = Object.freeze([
     'goods'
 ]);
 
+let warnedAboutMultipleLaaruModules = false;
+
+function getActiveLaaruModuleId() {
+    const active = LAARU_MODULE_IDS.filter(id => game.modules?.get(id)?.active === true);
+    if (active.length > 1 && !warnedAboutMultipleLaaruModules) {
+        warnedAboutMultipleLaaruModules = true;
+        console.warn(
+            'Character Forge | Одновременно активны LipatoS Laaru и старый laaru-dnd5-hw. ' +
+            'Используется LipatoS-версия; старый модуль лучше отключить.'
+        );
+    }
+    return active[0] || null;
+}
+
 function getLaaruPackIds() {
-    if (!game.modules?.get(LAARU_MODULE_ID)?.active) return [];
+    const moduleId = getActiveLaaruModuleId();
+    if (!moduleId) return [];
 
     const packs = Array.from(game.packs || []);
     const byLower = new Map(packs.map(pack => [String(pack.collection || '').toLowerCase(), pack.collection]));
 
     return LAARU_PACK_NAMES
         .map(name => {
-            const expected = `${LAARU_MODULE_ID}.${name}`;
+            const expected = `${moduleId}.${name}`;
             if (game.packs.get(expected)) return expected;
             return byLower.get(expected.toLowerCase()) || null;
         })
@@ -120,8 +138,7 @@ export class DataManager {
      * @returns {boolean} 是否有数据
      */
     hasAnyData() {
-        return game.modules?.get(LAARU_MODULE_ID)?.active === true
-            && getLaaruPackIds().length > 0;
+        return !!getActiveLaaruModuleId() && getLaaruPackIds().length > 0;
     }
 
     getExcludedItemUuidSet() {
