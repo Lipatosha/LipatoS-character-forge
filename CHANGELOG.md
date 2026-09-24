@@ -1,5 +1,12 @@
 # История изменений
 
+## 1.2.25
+
+- Полностью удалена runtime- и manifest-зависимость Character Forge от Laaru.
+- Удалены проверки `laaru-dnd5-hw` и `lipatos-laaru-dnd-legacy-2014` при создании персонажа и повышении уровня.
+- DataManager переведён на официальные компендиумы D&D5e 6.0.5: `classes`, `subclasses`, `races`, `backgrounds`, `classfeatures`, `spells`, `items`, `tradegoods`.
+- Character Forge теперь запускается без Laaru; русификацию официального системного контента будем подключать отдельным модулем позднее.
+
 ## 1.2.24
 
 - Исправлены две оставшиеся жёсткие проверки старого модуля `laaru-dnd5-hw` в `scripts/main.js`.
