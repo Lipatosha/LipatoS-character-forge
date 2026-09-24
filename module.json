@@ -1,7 +1,7 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Мастер создания и повышения персонажа D&D5e для Foundry VTT 14. Данные классов, подклассов, рас, происхождений, особенностей, заклинаний и предметов берёт из LipatoS — DND5E RU Library.",
   "compatibility": {
     "minimum": "14",
