@@ -463,16 +463,25 @@ export function updateTooltipPosition(e, tooltip) {
  * @param {Object} dataManager DataManager 实例（用于 getDocument）
  */
 export function bindTooltips(container, dataManager) {
-    const preservedPinnedTooltip = document.querySelector('.originate-spell-tooltip.is-pinned[data-pinned="true"]');
+    if (!container) return null;
 
-    document.querySelectorAll('.originate-spell-tooltip').forEach(el => {
-        if (el !== preservedPinnedTooltip) el.remove();
-    });
+    // Раньше каждый новый bindTooltips() удалял tooltip предыдущего контейнера.
+    // В progression после карточек особенностей сразу привязывается drawer "Персонаж",
+    // из-за чего hover карточек оставался с ссылкой на уже удалённый DOM-узел.
+    // Теперь у каждого контейнера свой стабильный tooltip.
+    const ownerId = container.dataset.characterForgeTooltipOwner
+        || foundry.utils.randomID(12);
+    container.dataset.characterForgeTooltipOwner = ownerId;
+
+    const tooltipSelector = `.originate-spell-tooltip[data-character-forge-tooltip-owner="${ownerId}"]`;
+    let tooltip = document.querySelector(tooltipSelector);
+
     document.querySelectorAll('.originate-nested-tooltip').forEach(el => el.remove());
 
-    const tooltip = preservedPinnedTooltip || document.createElement('div');
-    if (!preservedPinnedTooltip) {
+    if (!tooltip) {
+        tooltip = document.createElement('div');
         tooltip.className = 'originate-spell-tooltip';
+        tooltip.dataset.characterForgeTooltipOwner = ownerId;
         tooltip.dataset.pinned = 'false';
         Object.assign(tooltip.style, {
             position: 'fixed',
@@ -889,24 +898,24 @@ export function renderSubclassCards(options, { selectedUuid = null } = {}) {
             && (selectedKey === String(opt.uuid || '') || selectedKey === String(opt.id || ''));
         return `
             <button type="button"
-                class="subclass-nav-item${isSelected ? ' selected' : ''}"
+                class="nav-item subclass-progression-nav-item${isSelected ? ' selected' : ''}"
                 data-id="${escapeSubclassText(opt.id)}"
                 data-subclass-uuid="${escapeSubclassText(opt.uuid)}"
                 aria-pressed="${isSelected}"
                 title="${escapeSubclassText(opt.name)}">
-                <span class="subclass-nav-icon-wrapper">
+                <span class="nav-icon-wrapper">
                     <img src="${escapeSubclassText(opt.img || 'icons/svg/mystery-man.svg')}"
-                        class="subclass-nav-icon" alt="">
+                        class="nav-icon" alt="">
                 </span>
-                <span class="subclass-nav-label">${escapeSubclassText(opt.name)}</span>
+                <span class="nav-label">${escapeSubclassText(opt.name)}</span>
             </button>
         `;
     }).join('');
 }
 
 /**
- * Выбор подкласса повторяет компоновку выбора класса:
- * подробное описание слева и компактная лента вариантов справа внизу.
+ * Подкласс использует ту же визуальную систему, что и основной класс:
+ * постоянная левая панель описания и маленькие варианты справа внизу.
  */
 export function renderSubclassSelectionPanel(options, { selectedUuid = null } = {}) {
     const selectedKey = String(selectedUuid || '');
@@ -920,27 +929,31 @@ export function renderSubclassSelectionPanel(options, { selectedUuid = null } = 
     const initial = selected || options?.[0] || null;
     const detailContent = initial
         ? `
-            <h2 class="subclass-detail-title">${escapeSubclassText(initial.name)}</h2>
-            <div class="subclass-detail-body">${initial.description || ''}</div>
+            <h2 class="drawer-title subclass-detail-title">${escapeSubclassText(initial.name)}</h2>
+            <div class="drawer-body subclass-detail-body">${initial.description || ''}</div>
         `
         : `
-            <div class="subclass-detail-placeholder">
-                <h3>${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}</h3>
+            <div class="drawer-empty-state subclass-detail-placeholder">
+                ${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}
             </div>
         `;
 
     return `
-        <div class="subclass-selection-container subclass-cinematic-layout" id="progression-subclass-content">
-            <aside class="subclass-cinematic-detail" data-subclass-detail-content>
-                ${detailContent}
+        <div class="view-selection-root subclass-progression-selection" id="progression-subclass-content">
+            <aside class="left-sidebar-drawer always-open subclass-progression-drawer">
+                <div class="drawer-content" data-subclass-detail-content>
+                    ${detailContent}
+                </div>
             </aside>
-            <section class="subclass-cinematic-stage">
-                <nav class="subclass-cinematic-nav" aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}">
-                    <div class="subclass-cinematic-track">
-                        ${renderSubclassCards(options, { selectedUuid })}
-                    </div>
-                </nav>
-            </section>
+
+            <div class="subclass-progression-stage" aria-hidden="true"></div>
+
+            <nav class="cinematic-nav subclass-progression-nav"
+                aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}">
+                <div class="nav-track">
+                    ${renderSubclassCards(options, { selectedUuid })}
+                </div>
+            </nav>
         </div>
     `;
 }
@@ -956,13 +969,13 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         if (option?.id) optionByKey.set(String(option.id), option);
     }
 
-    const cards = Array.from(panel.querySelectorAll('.subclass-nav-item'));
+    const cards = Array.from(panel.querySelectorAll('.subclass-progression-nav-item'));
 
     const showDetails = option => {
         if (!option) return;
         content.innerHTML = `
-            <h2 class="subclass-detail-title">${escapeSubclassText(option.name)}</h2>
-            <div class="subclass-detail-body">${option.description || ''}</div>
+            <h2 class="drawer-title subclass-detail-title">${escapeSubclassText(option.name)}</h2>
+            <div class="drawer-body subclass-detail-body">${option.description || ''}</div>
         `;
         content.scrollTop = 0;
     };
@@ -983,6 +996,8 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         return option;
     };
 
+    // Наведение ничего не меняет в описании: как у выбора класса,
+    // возле маленькой иконки остаётся только название. Подробности меняются по клику.
     for (const card of cards) {
         card.addEventListener('click', () => selectCard(card));
         card.addEventListener('keydown', event => {
