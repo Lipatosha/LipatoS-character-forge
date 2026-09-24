@@ -760,6 +760,13 @@
             <div class="drawer-content">
                 {{#if selectedOption}}
                 <h2 class="drawer-title">{{#if selectedOption.displayName}}{{selectedOption.displayName}}{{else}}{{localize selectedOption.name}}{{/if}}</h2>
+                {{#if (eq currentStep "class")}}
+                {{#if selectedOption.classIcon}}
+                <div class="class-detail-icon" aria-hidden="true">
+                    <img src="{{selectedOption.classIcon}}" alt="">
+                </div>
+                {{/if}}
+                {{/if}}
                 <div class="drawer-body">
                     {{{selectedOption.description}}}
                 </div>
