@@ -44,8 +44,31 @@ const DND5E_SOURCE_PACK_NAMES = Object.freeze([
 
 const LIPATOS_LIBRARY_MODULE_ID = 'lipatos-dnd5e-ru-library';
 const LIPATOS_LIBRARY_PACK_OVERRIDES = Object.freeze({
-    classes: `${LIPATOS_LIBRARY_MODULE_ID}.classes`
+    classes: `${LIPATOS_LIBRARY_MODULE_ID}.classes`,
+    subclasses: `${LIPATOS_LIBRARY_MODULE_ID}.subclasses`,
+    races: `${LIPATOS_LIBRARY_MODULE_ID}.races`,
+    backgrounds: `${LIPATOS_LIBRARY_MODULE_ID}.backgrounds`,
+    classfeatures: `${LIPATOS_LIBRARY_MODULE_ID}.classfeatures`,
+    spells: `${LIPATOS_LIBRARY_MODULE_ID}.spells`,
+    items: `${LIPATOS_LIBRARY_MODULE_ID}.items`,
+    tradegoods: `${LIPATOS_LIBRARY_MODULE_ID}.goods`
 });
+
+const LIPATOS_FORGE_CLASS_IDENTIFIERS = new Set([
+    'artificer',
+    'barbarian',
+    'bard',
+    'cleric',
+    'druid',
+    'fighter',
+    'monk',
+    'paladin',
+    'ranger',
+    'rogue',
+    'sorcerer',
+    'warlock',
+    'wizard'
+]);
 
 function getDnd5ePackIds() {
     const packs = Array.from(game.packs || []);
@@ -344,6 +367,15 @@ export class DataManager {
         // Subclasses can now be filtered from the compendium index on dnd5e 6.x.
         // Only fall back to loading a document when a third-party pack omitted classIdentifier.
         let candidates = Array.from(candidateMap.values());
+
+        // В библиотеке сохранён полный набор Laaru, включая напарников и сторонние классы.
+        // В Character Forge показываем согласованный набор из 13 основных классов.
+        if (type === 'class') {
+            candidates = candidates.filter(entry =>
+                LIPATOS_FORGE_CLASS_IDENTIFIERS.has(String(entry.system?.identifier || '').trim())
+            );
+        }
+
         if (type === 'subclass' && classIdentifier) {
             const filtered = await mapWithConcurrency(candidates, CHARACTER_FORGE_IO_CONCURRENCY, async entry => {
                 const indexedClass = entry.system?.classIdentifier;
