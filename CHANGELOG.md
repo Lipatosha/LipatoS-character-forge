@@ -1,5 +1,11 @@
 # История изменений
 
+## 1.2.19
+
+- Индекс заклинаний обновлён под D&D5e 6.x: Character Forge теперь читает актуальное `system.sourceItem`.
+- Старое `system.sourceClass` остаётся fallback только для ещё не мигрированных документов.
+- Для UI сохраняется вычисляемый `sourceClass`, если `sourceItem` имеет вид `class:<identifier>`.
+
 ## 1.2.18
 
 - LipatoS Laaru переведён из жёсткой зависимости Character Forge в рекомендуемый источник данных.
