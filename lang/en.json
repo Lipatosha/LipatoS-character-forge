@@ -679,7 +679,7 @@
   "ORIGINATE.Error.LoadLevelUpFailed": "Failed to load level up content.",
   "ORIGINATE.LevelUp.Intercepted": "Character Forge has taken over the level up process.",
   "ORIGINATE.LevelUp.OpenFailed": "Failed to open Level Up wizard",
-  "ORIGINATE.LevelUp.Status.Toggle": "Status",
+  "ORIGINATE.LevelUp.Status.Toggle": "Character",
   "ORIGINATE.LevelUp.Status.Kicker": "Current Character",
   "ORIGINATE.LevelUp.Status.Title": "Character Status",
   "ORIGINATE.LevelUp.Status.Close": "Close status panel",
@@ -976,5 +976,5 @@
   "ORIGINATE.FeatCatalog.PreviewTitle": "Feat Description",
   "ORIGINATE.FeatCatalog.PreviewHint": "Hover over a feat or select it to see its full description.",
   "ORIGINATE.UI.Progression.SubclassPreviewHint": "Hover over a subclass or select it to see its full description.",
-  "ORIGINATE.UI.Progression.HPRollPermanent": "The first roll is permanently locked to this level. Cancelling the level up does not allow a reroll."
+  "ORIGINATE.UI.Progression.HPRollPermanent": "The roll is permanently locked to this level. Cancelling the level up does not allow a reroll."
 }
