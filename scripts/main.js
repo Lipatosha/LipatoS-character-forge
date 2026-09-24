@@ -467,35 +467,16 @@ Hooks.once('ready', () => {
     });
 
     // Character Forge работает в ленивом режиме.
-    // Никакой фоновой индексации Laaru и загрузки пользовательских шрифтов,
+    // Никакой фоновой индексации официальных D&D5e-паков и загрузки пользовательских шрифтов,
     // пока пользователь сам не запускает создание или повышение уровня.
 });
 
 // 既然你们非要个显眼的按钮，那就给你们一个
 // 把它塞进角色目录的头部，希望不会把原本的布局挤爆
-const LAARU_MODULE_IDS = [
-    'lipatos-laaru-dnd-legacy-2014',
-    'laaru-dnd5-hw'
-];
-
-function _getActiveLaaruModule() {
-    return LAARU_MODULE_IDS
-        .map(id => game.modules.get(id))
-        .find(module => module?.active) || null;
-}
-
 async function _openCharacterForgeForActor(actor, { grantId = null, grantUserId = null } = {}) {
     if (!actor) return;
 
     try { await legacySettingsMigrationPromise; } catch { /* migration errors logged elsewhere */ }
-
-    const laaruModule = _getActiveLaaruModule();
-    if (!laaruModule) {
-        ui.notifications.error(
-            'Character Forge: включите модуль LipatoS — Laaru D&D Legacy 2014.'
-        );
-        return;
-    }
 
     await FontLoader.loadFonts();
 
@@ -1107,14 +1088,6 @@ async function _openOriginateLevelUpApp(actor) {
 
     if (!game.user.isGM && !actor.isOwner) {
         ui.notifications.warn(game.i18n.localize('ORIGINATE.LevelUpGrant.NotOwner'));
-        return;
-    }
-
-    const laaruModule = _getActiveLaaruModule();
-    if (!laaruModule) {
-        ui.notifications.error(
-            'Character Forge: включите модуль LipatoS — Laaru D&D Legacy 2014.'
-        );
         return;
     }
 
