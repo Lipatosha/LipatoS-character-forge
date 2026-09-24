@@ -1,7 +1,7 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "version": "1.2.19",
+  "version": "1.2.20",
   "description": "Кинематографичный мастер создания персонажа D&D 5e с полной русификацией и данными LipatoS Laaru: 12 базовых классов, строгие обязательные выборы, закрепляемые интерактивные подсказки и сохранение прогресса.",
   "compatibility": {
     "minimum": "14",
@@ -33,7 +33,7 @@
       {
         "id": "lipatos-laaru-dnd-legacy-2014",
         "type": "module",
-        "manifest": "https://raw.githubusercontent.com/Lipatosha/LipatoS-Laaru-dnd-legacy-2014/main/module.json"
+        "manifest": "https://github.com/Lipatosha/LipatoS-Laaru-dnd-legacy-2014/releases/latest/download/module.json"
       }
     ]
   },
