@@ -692,7 +692,7 @@
   "ORIGINATE.Error.LoadLevelUpFailed": "Не удалось загрузить данные повышения уровня.",
   "ORIGINATE.LevelUp.Intercepted": "Character Forge перехватил процесс повышения уровня.",
   "ORIGINATE.LevelUp.OpenFailed": "Не удалось открыть мастер повышения уровня",
-  "ORIGINATE.LevelUp.Status.Toggle": "Состояние",
+  "ORIGINATE.LevelUp.Status.Toggle": "Персонаж",
   "ORIGINATE.LevelUp.Status.Kicker": "Текущий персонаж",
   "ORIGINATE.LevelUp.Status.Title": "Состояние персонажа",
   "ORIGINATE.LevelUp.Status.Close": "Закрыть панель состояния",
@@ -989,5 +989,5 @@
   "ORIGINATE.FeatCatalog.PreviewTitle": "Описание черты",
   "ORIGINATE.FeatCatalog.PreviewHint": "Наведите на черту или выберите её, чтобы увидеть полное описание.",
   "ORIGINATE.UI.Progression.SubclassPreviewHint": "Наведите на подкласс или выберите его, чтобы увидеть полное описание.",
-  "ORIGINATE.UI.Progression.HPRollPermanent": "Первый бросок закрепляется за этим уровнем навсегда. Отмена повышения уровня не позволит перебросить кость."
+  "ORIGINATE.UI.Progression.HPRollPermanent": "Бросок закрепляется за этим уровнем навсегда. Отмена повышения уровня не позволит перебросить кость."
 }
