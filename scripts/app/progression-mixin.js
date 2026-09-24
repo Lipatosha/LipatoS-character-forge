@@ -1091,7 +1091,11 @@ export const ProgressionMixin = (Base) => {
                     <i class="fas fa-arrow-left"></i> ${game.i18n.localize('ORIGINATE.UI.Button.Back')}
                 </button>
                 <button type="button" class="confirm-btn" id="progression-next-btn" disabled>
-                    ${(state.currentStepIndex === state.steps.length - 1 && state.currentLevel === state.targetLevel) ? game.i18n.localize('ORIGINATE.UI.Button.FinishCreation') : game.i18n.localize('ORIGINATE.UI.Button.Next')} <i class="fas fa-arrow-right"></i>
+                    ${currentStep.type === 'subclass_selection'
+                        ? game.i18n.localize('ORIGINATE.UI.Button.Next')
+                        : ((state.currentStepIndex === state.steps.length - 1 && state.currentLevel === state.targetLevel)
+                            ? game.i18n.localize('ORIGINATE.UI.Button.FinishCreation')
+                            : game.i18n.localize('ORIGINATE.UI.Button.Next'))} <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
         `;
