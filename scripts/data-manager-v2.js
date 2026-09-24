@@ -550,7 +550,7 @@ export class DataManager {
             const fields = [
                 'name', 'type', 'img', 'system.type.value', 'system.type.subtype',
                 'system.prerequisites.level', 'system.prerequisites.items', 'system.prerequisites.repeatable', 'system.repeatable',
-                'system.level', 'system.school', 'system.sourceClass', 'system.identifier',
+                'system.level', 'system.school', 'system.sourceItem', 'system.sourceClass', 'system.identifier',
                 'system.classIdentifier'
             ];
 
@@ -2177,7 +2177,11 @@ export class DataManager {
                 img: entry.img,
                 level: entry.system?.level,
                 school: entry.system?.school,
-                sourceClass: entry.system?.sourceClass,
+                sourceItem: entry.system?.sourceItem,
+                sourceClass: entry.system?.sourceClass
+                    || (typeof entry.system?.sourceItem === 'string' && entry.system.sourceItem.startsWith('class:')
+                        ? entry.system.sourceItem.slice(6)
+                        : null),
                 description: ""
             });
         }
@@ -2223,7 +2227,11 @@ export class DataManager {
                         img: item.img,
                         level: item.system?.level,
                         school: item.system?.school,
-                        sourceClass: item.system?.sourceClass,
+                        sourceItem: item.system?.sourceItem,
+                        sourceClass: item.system?.sourceClass
+                            || (typeof item.system?.sourceItem === 'string' && item.system.sourceItem.startsWith('class:')
+                                ? item.system.sourceItem.slice(6)
+                                : null),
                         description: ""
                     });
                     resultUuids.add(spellUuid);
