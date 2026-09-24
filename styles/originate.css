@@ -13364,7 +13364,8 @@ body.originate-active .character-forge-item-sheet-front {
 .originate-progression-wizard .subclass-progression-selection .subclass-progression-nav .nav-track {
     /* Размер и визуал карточек не меняются: меняется только раскладка. */
     --cf-subclass-item-size: 58px;
-    --cf-subclass-gap: 0.5rem;
+    --cf-subclass-column-gap: 1.5rem;
+    --cf-subclass-row-gap: 0.65rem;
 
     box-sizing: border-box !important;
     display: flex !important;
@@ -13372,16 +13373,17 @@ body.originate-active .character-forge-item-sheet-front {
     flex: 0 0 auto !important;
 
     /* Не больше шести элементов в строке.
-       Для 1–5 элементов контейнер сжимается до содержимого. */
+       Иконка остаётся прежнего размера, но ячейкам даём воздух для подписей. */
     width: max-content !important;
     max-width: calc(
         (6 * var(--cf-subclass-item-size)) +
-        (5 * var(--cf-subclass-gap)) +
+        (5 * var(--cf-subclass-column-gap)) +
         3rem
     ) !important;
 
     margin-inline: auto !important;
-    gap: var(--cf-subclass-gap) !important;
+    column-gap: var(--cf-subclass-column-gap) !important;
+    row-gap: var(--cf-subclass-row-gap) !important;
     overflow: visible !important;
     justify-content: center !important;
     align-items: center !important;
@@ -13532,4 +13534,14 @@ body.originate-active .character-forge-item-sheet-front {
 
 .originate-progression-wizard:has(.spell-browser-section) .sub-interface-footer .confirm-btn {
     margin-left: auto !important;
+}
+
+
+/* Character Forge 1.2.16 — подписи подклассов больше не зажаты шириной иконки. */
+.originate-progression-wizard .subclass-progression-selection
+.subclass-progression-nav .subclass-progression-nav-item .nav-label {
+    width: 80px !important;
+    max-width: 80px !important;
+    margin-left: -11px !important;
+    margin-right: -11px !important;
 }
