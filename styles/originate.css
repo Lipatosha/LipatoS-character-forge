@@ -13346,33 +13346,58 @@ body.originate-active .character-forge-item-sheet-front {
 }
 
 
-/* Character Forge 1.2.10 — максимум 8 подклассов в строке. */
-.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav .nav-track {
-    margin-inline: auto !important;
+/* Character Forge 1.2.11 — универсальная раскладка вариантов в правом блоке.
+   Никакой привязки к названию выбранного элемента: центр задаётся геометрией stage. */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav {
+    /* .subclass-progression-nav уже находится ВНУТРИ правого 40%-stage.
+       Поэтому 50% — настоящий центр под .subclass-stage-title. */
+    left: 50% !important;
+    right: auto !important;
+    bottom: 30px !important;
+    width: calc(100% - 36px) !important;
+    max-width: calc(100% - 36px) !important;
+    transform: translateX(-50%) !important;
     justify-content: center !important;
-    align-items: end !important;
+    align-items: flex-end !important;
 }
 
-.originate-progression-wizard .subclass-progression-selection
-.subclass-progression-nav .nav-track:has(> .subclass-progression-nav-item:nth-child(9)) {
-    display: grid !important;
-    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
-    grid-auto-flow: row !important;
-    grid-auto-rows: 58px !important;
-    column-gap: 0.25rem !important;
-    row-gap: 0.55rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav .nav-track {
+    /* Размер и визуал карточек не меняются: меняется только раскладка. */
+    --cf-subclass-item-size: 58px;
+    --cf-subclass-gap: 0.5rem;
+
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-flow: row wrap-reverse !important;
+    flex: 0 0 auto !important;
+
+    /* Не больше шести элементов в строке.
+       Для 1–5 элементов контейнер сжимается до содержимого. */
+    width: max-content !important;
+    max-width: calc(
+        (6 * var(--cf-subclass-item-size)) +
+        (5 * var(--cf-subclass-gap)) +
+        3rem
+    ) !important;
+
+    margin-inline: auto !important;
+    gap: var(--cf-subclass-gap) !important;
     overflow: visible !important;
     justify-content: center !important;
-    align-content: end !important;
+    align-items: center !important;
+    align-content: flex-end !important;
 }
 
 .originate-progression-wizard .subclass-progression-selection
-.subclass-progression-nav .nav-track:has(> .subclass-progression-nav-item:nth-child(9))
-.subclass-progression-nav-item {
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: 58px !important;
-    justify-self: center !important;
+.subclass-progression-nav .subclass-progression-nav-item {
+    flex: 0 0 var(--cf-subclass-item-size) !important;
+    width: var(--cf-subclass-item-size) !important;
+    min-width: var(--cf-subclass-item-size) !important;
+    max-width: var(--cf-subclass-item-size) !important;
+}
+
+/* После переноса все варианты видны сразу, отдельная кнопка раскрытия не нужна.
+   Это не меняет дизайн самих карточек и не зависит от текста выбранного варианта. */
+.originate-progression-wizard .subclass-progression-selection .subclass-expand-btn {
+    display: none !important;
 }
