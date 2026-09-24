@@ -1,5 +1,11 @@
 # История изменений
 
+## 1.2.21
+
+- После выпуска LipatoS — Laaru D&D Legacy 2014 v1.0.0 новый модуль снова подключён к Character Forge как обязательная зависимость.
+- Manifest зависимости указывает на GitHub Release нового Laaru; старый `laaru-dnd5-hw` больше не нужен для нормальной работы Character Forge.
+- Legacy fallback старого ID оставлен только для переходного периода и старых миров.
+
 ## 1.2.20
 
 - Ссылка manifest рекомендуемого LipatoS Laaru направлена на `releases/latest/download/module.json`, где она будет публиковаться сборщиком нового модуля.
