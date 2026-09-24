@@ -668,16 +668,17 @@ export function getClassImage(classItem) {
     const normalizedId = normalizeIdentifier(identifier);
     const normalizedName = normalizeIdentifier(name);
 
-    // PHB 优先
-    if (isPHBAvailable()) {
-        const filename = CLASS_IMAGES[normalizedId] || CLASS_IMAGES[normalizedName];
-        if (filename) return getFullImagePath(filename);
-    }
+    // Классовые арты теперь всегда берём из нашей RU-библиотеки.
+    // Раньше этот код подменял их старыми PHB/Eberron-картинками,
+    // из-за чего замена файлов в assets/images/pic вообще не была видна.
+    const filename =
+        CLASS_IMAGES[normalizedId]
+        || CLASS_IMAGES[normalizedName]
+        || EBERRON_CLASS_IMAGES[normalizedId]
+        || EBERRON_CLASS_IMAGES[normalizedName];
 
-    // 艾伯伦兜底
-    if (isEberronAvailable()) {
-        const ebFilename = EBERRON_CLASS_IMAGES[normalizedId] || EBERRON_CLASS_IMAGES[normalizedName];
-        if (ebFilename) return getEberronFullImagePath(ebFilename);
+    if (filename) {
+        return `modules/lipatos-dnd5e-ru-library/assets/images/pic/${filename}`;
     }
 
     return null;
