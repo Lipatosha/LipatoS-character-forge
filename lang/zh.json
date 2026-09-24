@@ -675,7 +675,7 @@
   "ORIGINATE.Error.LoadLevelUpFailed": "加载升级内容失败。",
   "ORIGINATE.LevelUp.Intercepted": "Character Forge 接管了升级流程",
   "ORIGINATE.LevelUp.OpenFailed": "无法打开升级向导",
-  "ORIGINATE.LevelUp.Status.Toggle": "状态",
+  "ORIGINATE.LevelUp.Status.Toggle": "角色",
   "ORIGINATE.LevelUp.Status.Kicker": "当前角色",
   "ORIGINATE.LevelUp.Status.Title": "角色状态",
   "ORIGINATE.LevelUp.Status.Close": "关闭状态面板",
@@ -952,5 +952,5 @@
   "ORIGINATE.FeatCatalog.PreviewTitle": "专长说明",
   "ORIGINATE.FeatCatalog.PreviewHint": "将鼠标悬停在专长上或选择它以查看完整说明。",
   "ORIGINATE.UI.Progression.SubclassPreviewHint": "将鼠标悬停在子职上或选择它以查看完整说明。",
-  "ORIGINATE.UI.Progression.HPRollPermanent": "第一次生命值骰结果会永久锁定到该等级。取消升级后也不能重新掷骰。"
+  "ORIGINATE.UI.Progression.HPRollPermanent": "掷骰结果会永久锁定到该等级。取消升级后也不能重新掷骰。"
 }
