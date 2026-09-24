@@ -721,7 +721,7 @@
   "ORIGINATE.UI.Navigation.IncompleteStep": "Вы не завершили текущий этап.",
   "ORIGINATE.UI.Navigation.ConfirmTitle": "Подтверждение",
   "ORIGINATE.UI.Navigation.ConfirmWarning": "Продолжить? Данные персонажа могут оказаться неполными.",
-  "ORIGINATE.Error.NoDataSources": "Источник данных Laaru недоступен. Убедитесь, что модуль Laaru установлен и включён.",
+  "ORIGINATE.Error.NoDataSources": "Официальные данные D&D5e недоступны. Проверьте установку и версию системы D&D5e.",
   "ORIGINATE.LevelUp.Title": "Character Forge — повышение уровня",
   "ORIGINATE.LevelUp.TitleWithLevel": "{name}: повышение до {level} уровня",
   "ORIGINATE.LevelUp.ButtonTooltip": "Повысить уровень через Character Forge",
