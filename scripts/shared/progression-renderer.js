@@ -154,6 +154,21 @@ function localizeModuleKey(key, fallback) {
     return fallback;
 }
 
+function getSkillTraitLabel(value) {
+    const skillKey = String(value || '').trim().toLowerCase().split(':').pop();
+    const suffixes = {
+        acr: 'Acr', ani: 'Ani', arc: 'Arc', ath: 'Ath', dec: 'Dec', his: 'His',
+        ins: 'Ins', itm: 'Itm', inv: 'Inv', med: 'Med', nat: 'Nat', prc: 'Prc',
+        prf: 'Prf', per: 'Per', rel: 'Rel', slt: 'Slt', ste: 'Ste', sur: 'Sur'
+    };
+    const suffix = suffixes[skillKey];
+    if (suffix) {
+        const ownLabel = localizeModuleKey(`ORIGINATE.Skill.${suffix}`, null);
+        if (ownLabel) return ownLabel;
+    }
+    return localizeConfigEntry(CONFIG.DND5E.skills?.[skillKey], skillKey);
+}
+
 function getAbilityTraitLabel(value) {
     const abilityKey = String(value || '').trim().toLowerCase().split(':').pop();
     const suffixes = { str: 'Str', dex: 'Dex', con: 'Con', int: 'Int', wis: 'Wis', cha: 'Cha' };
@@ -185,6 +200,11 @@ function getConditionTraitLabel(value) {
     const conditionKey = String(value || '').trim().toLowerCase().split(':').pop();
     if (conditionKey === 'diseased' || conditionKey === 'disease') {
         return localizeModuleKey('ORIGINATE.Trait.Disease', conditionKey);
+    }
+    const suffix = conditionKey ? conditionKey.charAt(0).toUpperCase() + conditionKey.slice(1) : '';
+    if (suffix) {
+        const ownLabel = localizeModuleKey(`ORIGINATE.Condition.${suffix}`, null);
+        if (ownLabel) return ownLabel;
     }
     return localizeConfigEntry(
         CONFIG.DND5E.conditionTypes?.[conditionKey] || CONFIG.DND5E.conditions?.[conditionKey],
@@ -224,10 +244,8 @@ export function getTraitLabel(key) {
     const value = parts.slice(1).join(':');
 
     switch (type) {
-        case 'skills': {
-            const skillKey = value.includes(':') ? value.split(':').pop() : value;
-            return localizeConfigEntry(CONFIG.DND5E.skills?.[skillKey], skillKey);
-        }
+        case 'skills':
+            return getSkillTraitLabel(value);
         case 'saves':
         case 'save':
             return getAbilityTraitLabel(value);
@@ -237,7 +255,7 @@ export function getTraitLabel(key) {
             return localizeConfigEntry(label, langKey);
         }
         case 'tool':
-            return getToolLabel(value.includes(':') ? value.split(':').pop() : value) || value;
+            return getToolLabel(value) || value;
         case 'weapon': {
             const weaponKey = String(value || '').trim().toLowerCase().split(':').pop();
             if (weaponKey === 'sim' || weaponKey === 'simple') {
@@ -298,13 +316,11 @@ export function expandWildcardPool(poolArray) {
             else traverseLanguageTree(exoticLangs, results);
         } else if (pattern === 'skills:*') {
             const skills = CONFIG.DND5E.skills || {};
-            for (const [key, value] of Object.entries(skills)) {
-                const label = typeof value === 'string' ? value : (value.label || key);
-                results.push({ key: `skills:${key}`, label });
+            for (const key of Object.keys(skills)) {
+                results.push({ key: `skills:${key}`, label: getTraitLabel(`skills:${key}`) });
             }
         } else if (pattern === 'tool:*') {
-            // 遍历全部分类
-            for (const cat of ['art', 'music', 'game']) {
+            for (const cat of ['art', 'music', 'game', 'vehicle']) {
                 const catTools = getToolsByCategory(cat);
                 results.push(...catTools);
             }
@@ -345,6 +361,16 @@ export function expandWildcardPool(poolArray) {
                         }
                     }
                 }
+            }
+        } else if (['dr:*', 'di:*', 'dv:*', 'damageResistance:*', 'damageImmunity:*', 'damageVulnerability:*'].includes(pattern)) {
+            const prefix = pattern.slice(0, -2);
+            for (const key of Object.keys(CONFIG.DND5E.damageTypes || {})) {
+                results.push({ key: `${prefix}:${key}`, label: getDamageTraitLabel(key) });
+            }
+        } else if (pattern === 'ci:*' || pattern === 'conditionImmunity:*') {
+            const prefix = pattern.slice(0, -2);
+            for (const key of Object.keys(CONFIG.DND5E.conditionTypes || CONFIG.DND5E.conditions || {})) {
+                results.push({ key: `${prefix}:${key}`, label: getConditionTraitLabel(key) });
             }
         } else if (pattern === 'weapon:*') {
             const weapons = CONFIG.DND5E.weaponIds || {};

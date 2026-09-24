@@ -97,6 +97,13 @@ export const DND5E_MAPPING = {
         "thief": "ORIGINATE.Tool.Thieves",
         "vehicle": "ORIGINATE.Tool.Vehicle"
     },
+    // Типы транспорта — отдельные дочерние значения Trait "tool:vehicle:*".
+    vehicleTypes: {
+        "air": "ORIGINATE.Vehicle.Air",
+        "land": "ORIGINATE.Vehicle.Land",
+        "space": "ORIGINATE.Vehicle.Space",
+        "water": "ORIGINATE.Vehicle.Water"
+    },
     // 职业主属性 - 决定你靠什么吃饭
     // 战士靠力量（或者敏捷，但我懒得写判断逻辑了，就当你是力量战士吧）。
     // 武僧靠敏捷和感知，但我只能选一个，所以……敏捷吧。
@@ -338,9 +345,17 @@ export const WEAPON_MASTERY_MAPPING = {
  * @returns {string} 人话
  */
 export function getToolLabel(toolKey) {
-    const normalizedKey = normalizeToolId(toolKey);
+    const rawKey = String(toolKey ?? '').trim().toLowerCase();
+    const parts = rawKey.split(':').filter(Boolean);
+    const normalizedKey = normalizeToolId(rawKey);
 
-    // 挨个列表找。笨办法，但管用。
+    const vehicleType = parts.includes('vehicle')
+        ? parts[parts.length - 1]
+        : (DND5E_MAPPING.vehicleTypes[normalizedKey] ? normalizedKey : null);
+    if (vehicleType && DND5E_MAPPING.vehicleTypes[vehicleType]) {
+        return game.i18n.localize(DND5E_MAPPING.vehicleTypes[vehicleType]);
+    }
+
     if (DND5E_MAPPING.artisanTools[normalizedKey]) {
         return game.i18n.localize(DND5E_MAPPING.artisanTools[normalizedKey]);
     }
@@ -353,9 +368,7 @@ export function getToolLabel(toolKey) {
     if (DND5E_MAPPING.otherTools[normalizedKey]) {
         return game.i18n.localize(DND5E_MAPPING.otherTools[normalizedKey]);
     }
-    
-    // 实在找不到，我就把 key 格式化一下扔给你。
-    // 比如 "thievesTools" -> "Thieves Tools"。凑合看吧。
+
     return normalizedKey.charAt(0).toUpperCase() + normalizedKey.slice(1).replace(/([A-Z])/g, ' $1');
 }
 
@@ -381,6 +394,10 @@ export function getToolsByCategory(category) {
     } else if (category === 'game' || category === 'gaming') {
         for (const [key, label] of Object.entries(DND5E_MAPPING.gamingSets)) {
             results.push({ key: `tool:${key}`, label: game.i18n.localize(label) });
+        }
+    } else if (category === 'vehicle') {
+        for (const [key, label] of Object.entries(DND5E_MAPPING.vehicleTypes)) {
+            results.push({ key: `tool:vehicle:${key}`, label: game.i18n.localize(label) });
         }
     }
     

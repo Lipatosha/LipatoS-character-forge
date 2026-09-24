@@ -3218,14 +3218,14 @@ export const UIMixin = (Base) => class extends Base {
 
             if (poolArray.some(p => p === 'skills:*')) {
                 const skills = CONFIG.DND5E.skills;
-                Object.entries(skills).forEach(([k, v]) => {
-                    displayOptions.push({ key: k, label: v.label || v });
+                Object.entries(skills).forEach(([k]) => {
+                    displayOptions.push({ key: k, label: this._getTraitLabel(`skills:${k}`) });
                 });
             } else {
                 poolArray.forEach(key => {
                     if (key.startsWith('skills:')) {
                         const skillKey = key.split(':')[1];
-                        const label = CONFIG.DND5E.skills[skillKey]?.label || skillKey;
+                        const label = this._getTraitLabel(`skills:${skillKey}`);
                         displayOptions.push({ key: skillKey, label });
                     }
                 });

@@ -225,11 +225,17 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     async _prepareContext(options) {
+        const steps = this._state.steps || [];
+        const currentStepIndex = this._state.currentStepIndex || 0;
         return {
             actor: this.actor,
             currentLevel: this.levelUpManager.currentLevel,
             targetLevel: this._state.targetLevel,
-            isLoading: this._state.steps.length === 0
+            currentStepIndex,
+            steps,
+            isFirstStep: currentStepIndex === 0,
+            isLastStep: steps.length > 0 && currentStepIndex === steps.length - 1,
+            isLoading: steps.length === 0
         };
     }
 

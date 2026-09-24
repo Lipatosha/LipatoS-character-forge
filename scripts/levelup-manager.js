@@ -2963,10 +2963,16 @@ export class LevelUpManager {
             const sourceUuid = this._normalizeResolutionSourceUuid(pending.itemData);
 
             if (pending?.itemData?.type === 'subclass' && pending.isSubclass && sourceUuid) {
+                // Нативному SubclassAdvancement нужен реальный UUID для fromUuid(), а не
+                // сокращённый ключ, который Character Forge использует только для сравнений.
+                const nativeSourceUuid = resolveItemSourceUuid(pending.itemData)
+                    || pending.itemData?._sourceUuid
+                    || pending.itemData?.uuid
+                    || sourceUuid;
                 nativeSubclassSelection = {
                     level: pending.level ?? normalizedInput.level,
                     stepType: pending.stepType || 'class',
-                    sourceUuid,
+                    sourceUuid: nativeSourceUuid,
                     entry: foundry.utils.deepClone(pending)
                 };
                 continue;
@@ -3136,14 +3142,71 @@ export class LevelUpManager {
             return false;
         }
 
+        const itemData = selection.entry?.itemData || {};
+        const rawCandidates = [
+            selection.sourceUuid,
+            resolveItemSourceUuid(itemData),
+            itemData?._sourceUuid,
+            itemData?.uuid,
+            itemData?._stats?.compendiumSource,
+            itemData?.flags?.originate?.sourceUuid,
+            itemData?.flags?.['hero-genesis']?.sourceUuid
+        ].filter(Boolean);
+
+        const candidates = [];
+        for (const candidate of rawCandidates) {
+            if (!candidates.includes(candidate)) candidates.push(candidate);
+            if (candidate.startsWith('Compendium.') && !candidate.includes('.Item.')) {
+                const parts = candidate.split('.');
+                if (parts.length >= 4) {
+                    const canonical = [...parts.slice(0, -1), 'Item', parts.at(-1)].join('.');
+                    if (!candidates.includes(canonical)) candidates.push(canonical);
+                }
+            }
+        }
+
+        let sourceUuid = null;
+        for (const candidate of candidates) {
+            try {
+                const source = await fromUuid(candidate);
+                if (source?.type === 'subclass') {
+                    sourceUuid = source.uuid || candidate;
+                    break;
+                }
+            } catch (error) {
+                console.warn('Originate | [LevelUp] Не удалось разрешить UUID подкласса:', candidate, error);
+            }
+        }
+
+        if (!sourceUuid) {
+            console.warn('Originate | [LevelUp] Подкласс не найден по UUID; используем ручной fallback.', {
+                classItem: classItem?.name || null,
+                candidates,
+                itemName: itemData?.name || null
+            });
+            return false;
+        }
+
         this._logTraitDebug('开始执行原生子职选择', {
             classItem: classItem?.name || null,
-            subclassUuid: selection.sourceUuid,
+            subclassUuid: sourceUuid,
             level: selection.level ?? context.lockedLevel ?? this.currentLevel + 1
         });
-        await advancement.apply(selection.level ?? context.lockedLevel ?? this.currentLevel + 1, {
-            uuid: selection.sourceUuid
-        });
+
+        try {
+            await advancement.apply(selection.level ?? context.lockedLevel ?? this.currentLevel + 1, {
+                uuid: sourceUuid
+            });
+        } catch (error) {
+            // D&D5e 6.0.x обращается к itemData.flags до собственной null-проверки.
+            // Не позволяем этой системной ошибке оборвать всё повышение.
+            console.warn('Originate | [LevelUp] Нативное применение подкласса не удалось; используем ручной fallback.', {
+                sourceUuid,
+                itemName: itemData?.name || null,
+                error
+            });
+            return false;
+        }
 
         this._logTraitDebug('原生子职选择执行完成', {
             classItem: classItem?.name || null,

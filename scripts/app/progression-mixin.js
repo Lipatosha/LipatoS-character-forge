@@ -3120,7 +3120,10 @@ export const ProgressionMixin = (Base) => {
                     if (poolArray.some(p => p === 'skills:*')) {
                         const skills = CONFIG.DND5E.skills;
                         Object.entries(skills).forEach(([k, v]) => {
-                            displayOptions.push({ key: `skills:${k}`, label: v.label || v });
+                            displayOptions.push({
+                                key: `skills:${k}`,
+                                label: this._getTraitLabel?.(`skills:${k}`) || v.label || v
+                            });
                         });
                     }
                 }

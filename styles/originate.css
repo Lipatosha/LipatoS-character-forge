@@ -13344,3 +13344,35 @@ body.originate-active .character-forge-item-sheet-front {
     text-align: center !important;
     align-self: center !important;
 }
+
+
+/* Character Forge 1.2.10 — максимум 8 подклассов в строке. */
+.originate-progression-wizard .subclass-progression-selection .subclass-progression-nav .nav-track {
+    margin-inline: auto !important;
+    justify-content: center !important;
+    align-items: end !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection
+.subclass-progression-nav .nav-track:has(> .subclass-progression-nav-item:nth-child(9)) {
+    display: grid !important;
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    grid-auto-rows: 58px !important;
+    column-gap: 0.25rem !important;
+    row-gap: 0.55rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    justify-content: center !important;
+    align-content: end !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection
+.subclass-progression-nav .nav-track:has(> .subclass-progression-nav-item:nth-child(9))
+.subclass-progression-nav-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 58px !important;
+    justify-self: center !important;
+}

@@ -6,12 +6,14 @@
 
     <div class="levelup-header">
         <h2>{{localize "ORIGINATE.LevelUp.TitleWithLevel" name=actor.name level=targetLevel}}</h2>
+        {{#unless isLoading}}
         <div class="step-indicator">
             {{localize "ORIGINATE.UI.Step.Indicator" current=(add currentStepIndex 1) total=steps.length}}
         </div>
         <div class="progress-bar">
             <div class="progress-fill" style="width: {{calculateProgress currentStepIndex steps.length}}%"></div>
         </div>
+        {{/unless}}
     </div>
 
     <div class="levelup-content">
