@@ -518,8 +518,15 @@ async function _openCharacterForgeForActor(actor, { grantId = null, grantUserId 
     }
 }
 
+let _creationGrantOutsideHandler = null;
+let _levelUpGrantOutsideHandler = null;
+
 function _closeCreationGrantPopover() {
     document.querySelectorAll('.character-forge-grant-popover').forEach(el => el.remove());
+    if (_creationGrantOutsideHandler) {
+        document.removeEventListener('pointerdown', _creationGrantOutsideHandler, true);
+        _creationGrantOutsideHandler = null;
+    }
 }
 
 function _openCreationGrantPopover(anchorButton) {
@@ -627,17 +634,27 @@ function _openCreationGrantPopover(anchorButton) {
     }
 
     setTimeout(() => {
-        const closeOnOutside = event => {
+        // Если окно уже успели закрыть/перерисовать, не оставляем "мертвый" listener.
+        if (!popover.isConnected) return;
+
+        if (_creationGrantOutsideHandler) {
+            document.removeEventListener('pointerdown', _creationGrantOutsideHandler, true);
+        }
+
+        _creationGrantOutsideHandler = event => {
             if (popover.contains(event.target) || anchorButton.contains(event.target)) return;
             _closeCreationGrantPopover();
-            document.removeEventListener('pointerdown', closeOnOutside, true);
         };
-        document.addEventListener('pointerdown', closeOnOutside, true);
+        document.addEventListener('pointerdown', _creationGrantOutsideHandler, true);
     }, 0);
 }
 
 function _closeLevelUpGrantPopover() {
     document.querySelectorAll('.character-forge-levelup-grant-popover').forEach(el => el.remove());
+    if (_levelUpGrantOutsideHandler) {
+        document.removeEventListener('pointerdown', _levelUpGrantOutsideHandler, true);
+        _levelUpGrantOutsideHandler = null;
+    }
 }
 
 function _openLevelUpGrantPopover(anchorButton) {
@@ -759,12 +776,19 @@ function _openLevelUpGrantPopover(anchorButton) {
     }
 
     setTimeout(() => {
-        const closeOnOutside = event => {
+        // Старый document-listener обязательно снимается вместе со старым popover.
+        // Иначе он считает клики внутри нового окна "внешними" и тут же закрывает его.
+        if (!popover.isConnected) return;
+
+        if (_levelUpGrantOutsideHandler) {
+            document.removeEventListener('pointerdown', _levelUpGrantOutsideHandler, true);
+        }
+
+        _levelUpGrantOutsideHandler = event => {
             if (popover.contains(event.target) || anchorButton.contains(event.target)) return;
             _closeLevelUpGrantPopover();
-            document.removeEventListener('pointerdown', closeOnOutside, true);
         };
-        document.addEventListener('pointerdown', closeOnOutside, true);
+        document.addEventListener('pointerdown', _levelUpGrantOutsideHandler, true);
     }, 0);
 }
 
