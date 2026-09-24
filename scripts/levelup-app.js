@@ -87,47 +87,69 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this._restoreLockedHitPointRoll();
     }
 
-    _getLockedHitPointRollKey() {
+    _getLockedHitPointRollKeys() {
         const classItem = this.levelUpManager?.classItem;
-        const classKey = String(
-            classItem?.id
-            || classItem?.system?.identifier
-            || 'class'
-        ).replace(/[^a-zA-Z0-9_-]+/g, '-');
-        return classKey + ':' + this._state.targetLevel;
+        const level = Number(this._state?.targetLevel || (this.levelUpManager?.currentLevel ?? 0) + 1);
+        const normalize = value => String(value || 'class').replace(/[^a-zA-Z0-9_-]+/g, '-');
+
+        // identifier стабилен между перезапусками и переоткрытием приложения.
+        // id оставляем вторым ключом для совместимости с бросками, сохранёнными в 1.2.6.
+        const stable = normalize(classItem?.system?.identifier || classItem?.id || 'class') + ':' + level;
+        const legacy = normalize(classItem?.id || classItem?.system?.identifier || 'class') + ':' + level;
+        return [...new Set([stable, legacy])];
+    }
+
+    _getLockedHitPointRollKey() {
+        return this._getLockedHitPointRollKeys()[0];
+    }
+
+    _getUserLockedHitPointRollKeys() {
+        const actorKey = String(this.actor?.id || this.actor?._id || 'actor');
+        return this._getLockedHitPointRollKeys().map(key => actorKey + ':' + key);
     }
 
     _readLockedHitPointRoll() {
-        const rolls = this.actor?.getFlag?.('character-forge', 'lockedHitPointRolls') || {};
-        return rolls?.[this._getLockedHitPointRollKey()] || null;
+        const actorRolls = this.actor?.getFlag?.('character-forge', 'lockedHitPointRolls') || {};
+        for (const key of this._getLockedHitPointRollKeys()) {
+            if (actorRolls?.[key]?.method === 'roll') return actorRolls[key];
+        }
+
+        // Дублируем lock на текущем User. Это резерв на случай, если клиент успел
+        // закрыть мастер до синхронизации Actor или у владельца ограничены права на флаги Actor.
+        const userRolls = game.user?.getFlag?.('character-forge', 'lockedHitPointRolls') || {};
+        for (const key of this._getUserLockedHitPointRollKeys()) {
+            if (userRolls?.[key]?.method === 'roll') return userRolls[key];
+        }
+        return null;
     }
 
     _restoreLockedHitPointRoll() {
         const saved = this._readLockedHitPointRoll();
         if (!saved || saved.method !== 'roll') return false;
 
-        this._state.hpGain = Number(saved.hp);
+        const hp = Number(saved.hp);
+        const rollResult = Number(saved.rollResult);
+        if (!Number.isFinite(hp) || !Number.isFinite(rollResult)) return false;
+
+        this._state.hpGain = hp;
         this._state.hpMethod = 'roll';
-        this._state.hpRollResult = Number(saved.rollResult);
-        return Number.isFinite(this._state.hpGain) && Number.isFinite(this._state.hpRollResult);
+        this._state.hpRollResult = rollResult;
+        return true;
     }
 
     async _persistLockedHitPointRoll(choice) {
         if (!choice || choice.method !== 'roll') return;
 
-        const key = this._getLockedHitPointRollKey();
-        const existing = foundry.utils.deepClone(
-            this.actor?.getFlag?.('character-forge', 'lockedHitPointRolls') || {}
-        );
-
-        if (existing[key]?.method === 'roll') {
-            this._state.hpGain = Number(existing[key].hp);
+        // Уже закреплённый результат всегда авторитетнее нового броска.
+        const locked = this._readLockedHitPointRoll();
+        if (locked?.method === 'roll') {
+            this._state.hpGain = Number(locked.hp);
             this._state.hpMethod = 'roll';
-            this._state.hpRollResult = Number(existing[key].rollResult);
+            this._state.hpRollResult = Number(locked.rollResult);
             return;
         }
 
-        existing[key] = {
+        const record = {
             method: 'roll',
             level: Number(choice.level || this._state.targetLevel),
             hp: Number(choice.hp),
@@ -135,10 +157,48 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
             constitutionModifier: Number(this._getConstitutionModifier()),
             classId: this.levelUpManager?.classItem?.id || null,
             classIdentifier: this.levelUpManager?.classItem?.system?.identifier || null,
+            actorId: this.actor?.id || null,
             rolledAt: new Date().toISOString()
         };
 
-        await this.actor.setFlag('character-forge', 'lockedHitPointRolls', existing);
+        const actorKey = this._getLockedHitPointRollKey();
+        const userKey = this._getUserLockedHitPointRollKeys()[0];
+        let persisted = false;
+
+        if (this.actor?.setFlag) {
+            try {
+                const actorRolls = foundry.utils.deepClone(
+                    this.actor.getFlag?.('character-forge', 'lockedHitPointRolls') || {}
+                );
+                actorRolls[actorKey] = record;
+                await this.actor.setFlag('character-forge', 'lockedHitPointRolls', actorRolls);
+                persisted = true;
+            } catch (error) {
+                console.warn('Character Forge | Не удалось закрепить бросок HP на Actor:', error);
+            }
+        }
+
+        if (game.user?.setFlag) {
+            try {
+                const userRolls = foundry.utils.deepClone(
+                    game.user.getFlag?.('character-forge', 'lockedHitPointRolls') || {}
+                );
+                userRolls[userKey] = record;
+                await game.user.setFlag('character-forge', 'lockedHitPointRolls', userRolls);
+                persisted = true;
+            } catch (error) {
+                console.warn('Character Forge | Не удалось создать резервную блокировку броска HP на User:', error);
+            }
+        }
+
+        if (!persisted) {
+            // Даже если обе записи не прошли, текущий сеанс всё равно остаётся заблокирован.
+            console.warn('Character Forge | Бросок HP не удалось записать во флаги; блокировка сохранена только в текущем сеансе.');
+        }
+
+        this._state.hpGain = record.hp;
+        this._state.hpMethod = 'roll';
+        this._state.hpRollResult = record.rollResult;
     }
 
     static DEFAULT_OPTIONS = {
@@ -175,6 +235,11 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     async _onRender(context, options) {
         super._onRender(context, options);
+
+        // Флаг мог синхронизироваться уже после создания экземпляра приложения.
+        // Поэтому перед каждым отображением ещё раз восстанавливаем закреплённый бросок.
+        this._restoreLockedHitPointRoll();
+
         document.body.classList.add("originate-active");
         this._hideConflictingUI();
         bindButtonSounds(this.element, {
@@ -1775,6 +1840,10 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
                 this._rollbackStep(prevStep.id);
             }
 
+            // Возврат назад отменяет обычный черновик шага, но никогда не отменяет
+            // уже совершённый бросок кости хитов этого уровня.
+            this._restoreLockedHitPointRoll();
+
             this._discardFutureSandboxState(state.currentStepIndex + 1, state);
             this._pruneCurrentLevelSandbox(state);
             await this._renderCurrentStep();
@@ -1830,6 +1899,9 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
         state.hpGain = history.hpGain ?? null;
         state.hpMethod = history.hpMethod ?? null;
         state.hpRollResult = history.hpRollResult ?? null;
+
+        // Снимок истории может быть сделан до броска; постоянный lock важнее снимка.
+        this._restoreLockedHitPointRoll();
 
         this._pruneCurrentLevelSandbox(state);
 
