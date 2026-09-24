@@ -1,8 +1,8 @@
 {
   "id": "character-forge",
   "title": "Character Forge",
-  "version": "1.2.24",
-  "description": "Кинематографичный мастер создания персонажа D&D 5e с полной русификацией и данными LipatoS Laaru: 12 базовых классов, строгие обязательные выборы, закрепляемые интерактивные подсказки и сохранение прогресса.",
+  "version": "1.2.25",
+  "description": "Кинематографичный мастер создания и повышения персонажа D&D5e для Foundry VTT 14. Использует официальные компендиумы D&D5e 6.0.5: классы, подклассы, расы, предыстории, особенности, заклинания и предметы.",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -24,15 +24,6 @@
       }
     ],
     "requires": [
-      {
-        "id": "lipatos-laaru-dnd-legacy-2014",
-        "type": "module",
-        "manifest": "https://github.com/Lipatosha/LipatoS-Laaru-dnd-legacy-2014/releases/latest/download/module.json",
-        "compatibility": {
-          "minimum": "1.0.4",
-          "verified": "1.0.4"
-        }
-      },
       {
         "id": "dice-so-nice",
         "type": "module"
