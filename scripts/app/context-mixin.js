@@ -6,19 +6,19 @@ import {
 } from '../shared/character-creation-settings.js';
 
 const CHARACTER_FORGE_CLASS_ORDER = [
-    'bard',
-    'barbarian',
-    'fighter',
-    'wizard',
-    'druid',
-    'cleric',
     'artificer',
+    'barbarian',
+    'bard',
+    'cleric',
+    'druid',
+    'fighter',
     'monk',
     'paladin',
-    'rogue',
     'ranger',
+    'rogue',
     'sorcerer',
-    'warlock'
+    'warlock',
+    'wizard'
 ];
 
 const CHARACTER_FORGE_CLASS_RANK = new Map(
@@ -190,7 +190,7 @@ export const ContextMixin = (Base) => class extends Base {
                             const classIdentifier = normalizeClassIdentifier(selectedOption);
                             if (CHARACTER_FORGE_CLASS_RANK.has(classIdentifier)) {
                                 selectedOption.classIcon =
-                                    `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${classIdentifier}.webp`;
+                                    `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${classIdentifier}.webp?v=1.0.5`;
                             }
                         }
 
