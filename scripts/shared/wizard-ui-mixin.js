@@ -583,15 +583,22 @@ export class WizardUIMixin {
                 return `
                 <div class="progression-feature-group page-wrapper">
                     <div class="options-container features-granted-list">
-                        ${features.map(f => `
-                            <div class="option-card progression-feature-item" data-uuid="${f.uuid || ''}">
+                        ${features.map(f => {
+                            const tooltipText = f.description
+                                ? (this._getFullCleanDescription?.(f.description) || this._cleanDescription(f.description))
+                                : '';
+                            return `
+                            <div class="option-card progression-feature-item"
+                                data-uuid="${f.uuid || ''}"
+                                ${tooltipText ? `data-originate-tooltip="${escapeCatalogHTML(tooltipText)}"` : ''}>
                                 <img src="${f.img || 'icons/svg/item-bag.svg'}" class="feature-icon">
                                 <div class="feature-info">
                                     <div class="feature-name">${f.name}</div>
                                     ${f.description ? `<div class="feature-desc progression-feature-desc">${this._cleanDescription(f.description)}</div>` : ''}
                                 </div>
                             </div>
-                        `).join('')}
+                        `;
+                        }).join('')}
                     </div>
                     <div class="selection-hint">${game.i18n.localize('ORIGINATE.UI.Progression.AutoAddHint')}</div>
                 </div>
