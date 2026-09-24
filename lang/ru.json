@@ -990,5 +990,6 @@
   "ORIGINATE.FeatCatalog.PreviewHint": "Наведите на черту или выберите её, чтобы увидеть полное описание.",
   "ORIGINATE.UI.Progression.SubclassPreviewHint": "Наведите на подкласс или выберите его, чтобы увидеть полное описание.",
   "ORIGINATE.UI.Progression.HPRollPermanent": "Бросок закрепляется за этим уровнем навсегда. Отмена повышения уровня не позволит перебросить кость.",
-  "ORIGINATE.Trait.Disease": "Болезнь"
+  "ORIGINATE.Trait.Disease": "Болезнь",
+  "ORIGINATE.Advancement.Resistances": "Устойчивости"
 }
