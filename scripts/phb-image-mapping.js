@@ -679,7 +679,7 @@ export function getClassImage(classItem) {
         || EBERRON_CLASS_IMAGES[normalizedName];
 
     if (filename) {
-        return `modules/lipatos-dnd5e-ru-library/assets/images/pic/${filename}`;
+        return `modules/lipatos-dnd5e-ru-library/assets/images/classes/${filename}`;
     }
 
     return null;
@@ -918,7 +918,7 @@ export function enhanceOptionWithPHBImage(option, type) {
         if (mappedClassImage) {
             return {
                 ...option,
-                heroImage: `${mappedClassImage}?v=1.0.5`,
+                heroImage: `${mappedClassImage}?v=1.0.7`,
                 _lipatosClassImageApplied: true
             };
         }
