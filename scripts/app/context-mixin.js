@@ -141,7 +141,14 @@ export const ContextMixin = (Base) => class extends Base {
                         .sort((a, b) => (
                             CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(a))
                             - CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(b))
-                        ));
+                        ))
+                        .map(option => {
+                            const identifier = normalizeClassIdentifier(option);
+                            return {
+                                ...option,
+                                img: `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${identifier}-icon.png?v=1.0.7`
+                            };
+                        });
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -190,7 +197,7 @@ export const ContextMixin = (Base) => class extends Base {
                             const classIdentifier = normalizeClassIdentifier(selectedOption);
                             if (CHARACTER_FORGE_CLASS_RANK.has(classIdentifier)) {
                                 selectedOption.classIcon =
-                                    `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${classIdentifier}.webp?v=1.0.5`;
+                                    `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${classIdentifier}-icon.png?v=1.0.7`;
                             }
                         }
 
