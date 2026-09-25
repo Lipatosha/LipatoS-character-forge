@@ -34,3 +34,27 @@
   font-size:.56rem!important;
   padding:0 1px!important;
 }
+
+
+/* Full class artwork in the bottom selector; class-detail PNG icons remain unchanged. */
+.view-selection-root.step-class .cinematic-nav .nav-item{
+  height:68px!important;
+}
+.view-selection-root.step-class .cinematic-nav .nav-icon-wrapper{
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  min-height:44px!important;
+  margin:0 auto 2px!important;
+  overflow:visible!important;
+  border-radius:0!important;
+}
+.view-selection-root.step-class .cinematic-nav .nav-icon{
+  display:block!important;
+  width:44px!important;
+  height:44px!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  border-radius:0!important;
+  clip-path:none!important;
+}
