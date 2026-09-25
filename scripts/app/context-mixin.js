@@ -164,7 +164,7 @@ export const ContextMixin = (Base) => class extends Base {
                             return {
                                 ...option,
                                 tagline: CHARACTER_FORGE_CLASS_TAGLINES[identifier] ?? option.tagline,
-                                img: `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${identifier}-icon.png?v=1.0.7`
+                                img: `modules/lipatos-dnd5e-ru-library/assets/images/classes/${identifier}.webp?v=1.0.7`
                             };
                         });
                 }
