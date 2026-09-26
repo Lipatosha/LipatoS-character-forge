@@ -791,6 +791,10 @@ export class DataManager {
 
         // 2. 处理手动配置的法术列表来源（如果有的话，会覆盖自动扫描的）
         for (const journalUuid of spellListSources) {
+            // Preserve explicit world journals, but never import lists from the retired library.
+            if (typeof journalUuid !== 'string') continue;
+            if (journalUuid.startsWith('Compendium.')
+                && !journalUuid.startsWith(`Compendium.${LAARU_LIBRARY_MODULE_ID}.`)) continue;
             try {
                 const journal = await fromUuid(journalUuid);
                 if (!journal || journal.documentName !== 'JournalEntry') {
