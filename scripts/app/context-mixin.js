@@ -163,8 +163,8 @@ export const ContextMixin = (Base) => class extends Base {
                             const identifier = normalizeClassIdentifier(option);
                             return {
                                 ...option,
-                                tagline: CHARACTER_FORGE_CLASS_TAGLINES[identifier] ?? option.tagline,
-                                img: `modules/lipatos-dnd5e-ru-library/assets/images/classes/${identifier}.webp?v=1.0.7`
+                                tagline: CHARACTER_FORGE_CLASS_TAGLINES[identifier] ?? option.tagline
+                                // Keep the original Laaru Item image; do not point at the removed library.
                             };
                         });
                 }
@@ -212,11 +212,8 @@ export const ContextMixin = (Base) => class extends Base {
                         selectedOption = enhanceOptionWithPHBImage(selectedOption, this.currentStep);
 
                         if (this.currentStep === 'class') {
-                            const classIdentifier = normalizeClassIdentifier(selectedOption);
-                            if (CHARACTER_FORGE_CLASS_RANK.has(classIdentifier)) {
-                                selectedOption.classIcon =
-                                    `modules/lipatos-dnd5e-ru-library/assets/icons/classes/${classIdentifier}-icon.png?v=1.0.7`;
-                            }
+                            // The class detail icon comes from the installed Laaru compendium.
+                            selectedOption.classIcon = selectedOption.classIcon || selectedOption.img || null;
                         }
 
                         // 如果没有特定的背景图，使用默认背景
