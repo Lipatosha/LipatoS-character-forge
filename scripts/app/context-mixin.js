@@ -144,27 +144,17 @@ export const ContextMixin = (Base) => class extends Base {
                 // 应用 PHB 图片增强
                 currentOptions = enhanceOptionsWithPHBImages(currentOptions, this.currentStep);
 
-                // Character Forge показывает только выбранные Мастером 12 базовых классов.
-                // Порядок фиксирован и совпадает с нижней полосой выбора.
+                // Keep all entries from the active library, including additional
+                // classes and book variants. Prioritise core classes visually only.
                 if (this.currentStep === 'class') {
-                    const seen = new Set();
+                    const rank = option => CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(option)) ?? Number.MAX_SAFE_INTEGER;
                     currentOptions = currentOptions
-                        .filter(option => {
-                            const identifier = normalizeClassIdentifier(option);
-                            if (!CHARACTER_FORGE_CLASS_RANK.has(identifier) || seen.has(identifier)) return false;
-                            seen.add(identifier);
-                            return true;
-                        })
-                        .sort((a, b) => (
-                            CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(a))
-                            - CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(b))
-                        ))
+                        .sort((a, b) => rank(a) - rank(b) || String(a.name || '').localeCompare(String(b.name || ''), 'ru'))
                         .map(option => {
                             const identifier = normalizeClassIdentifier(option);
                             return {
                                 ...option,
                                 tagline: CHARACTER_FORGE_CLASS_TAGLINES[identifier] ?? option.tagline
-                                // Keep the original Laaru Item image; do not point at the removed library.
                             };
                         });
                 }
