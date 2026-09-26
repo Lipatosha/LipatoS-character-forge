@@ -13583,7 +13583,7 @@ body.originate-active .character-forge-item-sheet-front {
 }
 
 /* Та же картинка больше не дублируется внутри полного описания класса. */
-.view-selection-root.step-class .drawer-body img[src*="lipatos-dnd5e-ru-library/assets/images/pic/"],
+.view-selection-root.step-class .drawer-body img[src*="laaru-dnd5-hw/assets/images/pic/"],
 .view-selection-root.step-class .drawer-body img[src*="/assets/images/pic/"] {
     display: none !important;
 }
