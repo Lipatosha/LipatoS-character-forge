@@ -664,25 +664,9 @@ function normalizeIdentifier(identifier) {
  * @returns {string|null} 图片路径
  */
 export function getClassImage(classItem) {
-    const identifier = classItem.identifier || classItem.system?.identifier;
-    const name = classItem.name;
-    const normalizedId = normalizeIdentifier(identifier);
-    const normalizedName = normalizeIdentifier(name);
-
-    // Классовые арты теперь всегда берём из нашей RU-библиотеки.
-    // Раньше этот код подменял их старыми PHB/Eberron-картинками,
-    // из-за чего замена файлов в assets/images/pic вообще не была видна.
-    const filename =
-        CLASS_IMAGES[normalizedId]
-        || CLASS_IMAGES[normalizedName]
-        || EBERRON_CLASS_IMAGES[normalizedId]
-        || EBERRON_CLASS_IMAGES[normalizedName];
-
-    if (filename) {
-        return `modules/lipatos-dnd5e-ru-library/assets/images/classes/${filename}`;
-    }
-
-    return null;
+    // Do not invent asset paths from the paid module: use the actual Item image.
+    // The user-installed library owns the image and its asset files.
+    return classItem?.heroImage || classItem?.img || null;
 }
 
 /**
@@ -913,18 +897,7 @@ export function getPHBImage(type, item) {
  * @returns {Object} 整容后的选项
  */
 export function enhanceOptionWithPHBImage(option, type) {
-    if (type === 'class') {
-        const mappedClassImage = getClassImage(option);
-        if (mappedClassImage) {
-            return {
-                ...option,
-                heroImage: `${mappedClassImage}?v=1.0.7`,
-                _lipatosClassImageApplied: true
-            };
-        }
-    }
-
-    // 1. 首先检查是否有自定义图片（最高优先级）
+    // User-defined artwork takes priority over the source compendium image.
     const customImage = getCustomImageConfig(type, option.uuid);
     if (customImage) {
         window.OriginateLog(`使用自定义图片: ${option.name} -> ${customImage.path}`);
@@ -934,6 +907,11 @@ export function enhanceOptionWithPHBImage(option, type) {
             heroImageFit: customImage.fit,
             _customImageApplied: true
         };
+    }
+
+    if (type === 'class') {
+        const sourceImage = getClassImage(option);
+        return sourceImage ? { ...option, heroImage: sourceImage } : option;
     }
 
     const phbAvailable = isPHBAvailable();
