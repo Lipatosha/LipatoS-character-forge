@@ -255,6 +255,25 @@ async function migrateLegacyOriginateSettings() {
     return { migrated };
 }
 
+// Replace saved pack selections from the previous library without clearing other GM settings.
+async function migrateLaaruSourcePackSelections() {
+    if (!game.user?.isGM) return;
+
+    const setting = 'sourcePacks';
+    const selected = game.settings.get('character-forge', setting);
+    if (!Array.isArray(selected)) return;
+    const oldPrefix = 'lipatos-dnd5e-ru-library.';
+    if (!selected.some(id => typeof id === 'string' && id.startsWith(oldPrefix))) return;
+
+    const laaruPacks = [
+        'classes', 'subclasses', 'races', 'racesMPMM', 'backgrounds',
+        'classfeatures', 'classfeatures2', 'spells', 'items', 'goods'
+    ].map(name => `laaru-dnd5-hw.${name}`);
+    const preserved = selected.filter(id => typeof id === 'string' && !id.startsWith(oldPrefix));
+    await game.settings.set('character-forge', setting, Array.from(new Set([...preserved, ...laaruPacks])));
+    console.info('Character Forge | Migrated source pack selection to installed Laaru library');
+}
+
 Hooks.once('init', () => {
     forceUnloadForgeStyles();
     window.OriginateLog('Originate | 正在初始化角色创建器模块... 希望这次别炸。');
@@ -351,7 +370,15 @@ Hooks.once('init', () => {
 Hooks.once('ready', () => {
     installCreationGrantSocket();
     window.OriginateLog('Originate | 游戏就绪，正在预加载数据源索引... 稍安勿躁。');
-    legacySettingsMigrationPromise = migrateLegacyOriginateSettings();
+    legacySettingsMigrationPromise = migrateLegacyOriginateSettings()
+        .then(async result => {
+            await migrateLaaruSourcePackSelections();
+            return result;
+        })
+        .catch(error => {
+            console.warn('Character Forge | Library source selection migration failed', error);
+            return { migrated: 0 };
+        });
 
     // 暴露 API 给那些喜欢折腾的开发者
     // 别把我的 DataManager 玩坏了，好吗？
