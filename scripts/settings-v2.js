@@ -2718,7 +2718,18 @@ export function registerSettings() {
         scope: 'world',
         config: false,
         type: Array,
-        default: []
+        default: [
+            'laaru-dnd5-hw.classes',
+            'laaru-dnd5-hw.subclasses',
+            'laaru-dnd5-hw.races',
+            'laaru-dnd5-hw.racesMPMM',
+            'laaru-dnd5-hw.backgrounds',
+            'laaru-dnd5-hw.classfeatures',
+            'laaru-dnd5-hw.classfeatures2',
+            'laaru-dnd5-hw.spells',
+            'laaru-dnd5-hw.items',
+            'laaru-dnd5-hw.goods'
+        ]
     });
 
     // 排除的物品列表
