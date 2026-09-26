@@ -13602,3 +13602,101 @@ body.originate-active .character-forge-item-sheet-front {
         transform: translate(-50%, -50%) scale(0.78);
     }
 }
+
+
+/* Character Forge 1.3.14 — adaptive class and race choices.
+   The right-hand panel shows every library choice, wrapping vertically instead
+   of hiding items beyond the former 12-column class strip / race carousel. */
+.view-selection-root.step-class .cinematic-nav,
+.view-selection-root.step-race .cinematic-nav {
+    align-items: flex-end !important;
+    overflow: visible !important;
+}
+
+.view-selection-root.step-class .cinematic-nav .nav-track,
+.view-selection-root.step-race .cinematic-nav .nav-track {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(55px, 1fr)) !important;
+    grid-auto-rows: minmax(65px, auto) !important;
+    align-content: start !important;
+    align-items: center !important;
+    justify-content: center !important;
+    column-gap: 5px !important;
+    row-gap: 7px !important;
+    padding: 6px 5px !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .4) transparent !important;
+    overscroll-behavior: contain;
+}
+
+.view-selection-root.step-class .cinematic-nav .nav-track {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: min(31vh, 260px) !important;
+}
+
+.view-selection-root.step-race .cinematic-nav .nav-track {
+    width: calc(100% - 54px) !important;
+    max-width: calc(100% - 54px) !important;
+    max-height: clamp(145px, calc(100vh - 380px), 410px) !important;
+    border-radius: 12px !important;
+}
+
+.view-selection-root.step-class .cinematic-nav .nav-track::-webkit-scrollbar,
+.view-selection-root.step-race .cinematic-nav .nav-track::-webkit-scrollbar {
+    display: block !important;
+    width: 5px;
+    height: 0;
+}
+.view-selection-root.step-class .cinematic-nav .nav-track::-webkit-scrollbar-thumb,
+.view-selection-root.step-race .cinematic-nav .nav-track::-webkit-scrollbar-thumb {
+    background: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .4);
+    border-radius: 4px;
+}
+
+.view-selection-root.step-class .cinematic-nav .nav-item,
+.view-selection-root.step-race .cinematic-nav .nav-item {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 65px !important;
+    min-height: 65px !important;
+    flex: none !important;
+    margin: 0 !important;
+}
+
+.view-selection-root.step-class .cinematic-nav .nav-label,
+.view-selection-root.step-race .cinematic-nav .nav-label {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    line-height: 1.1 !important;
+    min-height: 1.1em;
+    max-height: 2.2em;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-overflow: clip !important;
+    text-align: center !important;
+    font-size: clamp(.5rem, .56vw, .68rem) !important;
+}
+
+/* Move the class artwork above multi-row navigation without touching the
+   layout of other steps or the separately scrollable description pane. */
+.view-selection-root.step-class .class-showcase-art {
+    top: 42% !important;
+    transform: translate(-50%, -50%) scale(.9) !important;
+}
+@media (max-height: 800px) {
+    .view-selection-root.step-class .class-showcase-art {
+        top: 38% !important;
+        transform: translate(-50%, -50%) scale(.72) !important;
+    }
+    .view-selection-root.step-class .cinematic-nav .nav-track {
+        max-height: min(24vh, 170px) !important;
+    }
+}
