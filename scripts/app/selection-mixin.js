@@ -3,10 +3,7 @@ import {
     setAdvancementSource
 } from '../utils/advancement-utils.js';
 import { isSpellChoiceEvent } from '../shared/advancement-choice-rules.js';
-import {
-    buildStartingEquipmentEvent,
-    mergeStartingEquipmentCurrencyFallback
-} from '../shared/starting-equipment.js';
+import { buildStartingEquipmentEvent } from '../shared/starting-equipment.js';
 
 function getEquipmentConfigUuid(value) {
     if (typeof value === 'string') return value;
@@ -779,10 +776,9 @@ export const SelectionMixin = (Base) => class extends Base {
         }
         if (!doc) return null;
 
-        let startingEquipment = Array.isArray(doc.system?.startingEquipment)
+        const startingEquipment = Array.isArray(doc.system?.startingEquipment)
             ? doc.system.startingEquipment
             : [];
-        startingEquipment = await this._recoverStartingEquipmentCurrencies(doc, startingEquipment);
         const wealth = doc.system?.wealth;
         const categoryOptions = new Map();
         const event = await buildStartingEquipmentEvent({
@@ -813,36 +809,6 @@ export const SelectionMixin = (Base) => class extends Base {
         for (const warning of event.warnings) console.warn(`Originate | ${warning}`);
         window.OriginateLog(`Originate | 起始装备事件构建完成 (${event.roots.length} 个顶层组):`, event);
         return event;
-    }
-
-    async _recoverStartingEquipmentCurrencies(doc, entries) {
-        if (game.system?.id !== 'dnd5e'
-            || doc?.type !== 'class'
-            || entries.some(entry => entry?.type === 'currency')) {
-            return entries;
-        }
-
-        for (const packId of ['dnd5e.classes24', 'dnd5e.classes']) {
-            if (doc.pack === packId) continue;
-            const pack = game.packs?.get?.(packId);
-            if (!pack) continue;
-
-            try {
-                const fallbackDoc = await pack.getDocument(doc.id);
-                const merged = mergeStartingEquipmentCurrencyFallback(
-                    entries,
-                    fallbackDoc?.system?.startingEquipment
-                );
-                if (merged.length > entries.length) {
-                    window.OriginateLog(`Originate | 从 ${packId} 补回 ${merged.length - entries.length} 条起始货币记录`);
-                    return merged;
-                }
-            } catch (error) {
-                window.OriginateLog(`Originate | 起始货币回源失败: ${packId}`, error);
-            }
-        }
-
-        return entries;
     }
 
     async _getStartingEquipmentCategoryOptions(entry) {
