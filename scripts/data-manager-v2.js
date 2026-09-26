@@ -46,22 +46,6 @@ const LAARU_LIBRARY_PACK_NAMES = Object.freeze([
     'goods'
 ]);
 
-const FORGE_CLASS_IDENTIFIERS = new Set([
-    'artificer',
-    'barbarian',
-    'bard',
-    'cleric',
-    'druid',
-    'fighter',
-    'monk',
-    'paladin',
-    'ranger',
-    'rogue',
-    'sorcerer',
-    'warlock',
-    'wizard'
-]);
-
 function getDnd5ePackIds() {
     // A missing or disabled library must not silently mix official or old-library data.
     if (!game.modules?.get(LAARU_LIBRARY_MODULE_ID)?.active) return [];
@@ -358,13 +342,8 @@ export class DataManager {
         // Only fall back to loading a document when a third-party pack omitted classIdentifier.
         let candidates = Array.from(candidateMap.values());
 
-        // Библиотека Laaru содержит дополнительные классы, поэтому показываем согласованный набор Forge.
-        // В Character Forge показываем согласованный набор из 13 основных классов.
-        if (type === 'class') {
-            candidates = candidates.filter(entry =>
-                FORGE_CLASS_IDENTIFIERS.has(String(entry.system?.identifier || '').trim())
-            );
-        }
+        // All class Items from installed source packs are selectable. Do not
+        // filter by a hardcoded identifier list: subscribed books add classes.
 
         if (type === 'subclass' && classIdentifier) {
             const filtered = await mapWithConcurrency(candidates, CHARACTER_FORGE_IO_CONCURRENCY, async entry => {
