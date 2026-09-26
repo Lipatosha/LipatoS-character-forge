@@ -31,30 +31,22 @@ import {
 
 const CHARACTER_FORGE_IO_CONCURRENCY = 6;
 
-const DND5E_SOURCE_PACK_NAMES = Object.freeze([
+// The paid library remains installed locally in Foundry; no compendium data is bundled here.
+const LAARU_LIBRARY_MODULE_ID = 'laaru-dnd5-hw';
+const LAARU_LIBRARY_PACK_NAMES = Object.freeze([
     'classes',
     'subclasses',
     'races',
+    'racesMPMM',
     'backgrounds',
     'classfeatures',
+    'classfeatures2',
     'spells',
     'items',
-    'tradegoods'
+    'goods'
 ]);
 
-const LIPATOS_LIBRARY_MODULE_ID = 'lipatos-dnd5e-ru-library';
-const LIPATOS_LIBRARY_PACK_OVERRIDES = Object.freeze({
-    classes: `${LIPATOS_LIBRARY_MODULE_ID}.classes`,
-    subclasses: `${LIPATOS_LIBRARY_MODULE_ID}.subclasses`,
-    races: `${LIPATOS_LIBRARY_MODULE_ID}.races`,
-    backgrounds: `${LIPATOS_LIBRARY_MODULE_ID}.backgrounds`,
-    classfeatures: `${LIPATOS_LIBRARY_MODULE_ID}.classfeatures`,
-    spells: `${LIPATOS_LIBRARY_MODULE_ID}.spells`,
-    items: `${LIPATOS_LIBRARY_MODULE_ID}.items`,
-    tradegoods: `${LIPATOS_LIBRARY_MODULE_ID}.goods`
-});
-
-const LIPATOS_FORGE_CLASS_IDENTIFIERS = new Set([
+const FORGE_CLASS_IDENTIFIERS = new Set([
     'artificer',
     'barbarian',
     'bard',
@@ -71,27 +63,25 @@ const LIPATOS_FORGE_CLASS_IDENTIFIERS = new Set([
 ]);
 
 function getDnd5ePackIds() {
-    const packs = Array.from(game.packs || []);
+    // A missing or disabled library must not silently mix official or old-library data.
+    if (!game.modules?.get(LAARU_LIBRARY_MODULE_ID)?.active) return [];
+
     const byLower = new Map(
-        packs.map(pack => [String(pack.collection || '').toLowerCase(), pack.collection])
+        Array.from(game.packs || []).map(pack => [
+            String(pack.collection || '').toLowerCase(),
+            pack.collection
+        ])
     );
 
-    return DND5E_SOURCE_PACK_NAMES
+    return LAARU_LIBRARY_PACK_NAMES
         .map(name => {
-            const override = LIPATOS_LIBRARY_PACK_OVERRIDES[name];
-            if (override) {
-                if (game.packs.get(override)) return override;
-                const resolvedOverride = byLower.get(override.toLowerCase());
-                if (resolvedOverride) return resolvedOverride;
-            }
-
-            const expected = `dnd5e.${name}`;
-            if (game.packs.get(expected)) return expected;
-            return byLower.get(expected.toLowerCase()) || null;
+            const expected = `${LAARU_LIBRARY_MODULE_ID}.${name}`;
+            return game.packs.get(expected)?.collection
+                || byLower.get(expected.toLowerCase())
+                || null;
         })
         .filter(Boolean);
 }
-
 
 async function mapWithConcurrency(items, limit, worker) {
     const source = Array.from(items || []);
@@ -368,11 +358,11 @@ export class DataManager {
         // Only fall back to loading a document when a third-party pack omitted classIdentifier.
         let candidates = Array.from(candidateMap.values());
 
-        // В библиотеке сохранён полный набор Laaru, включая напарников и сторонние классы.
+        // Библиотека Laaru содержит дополнительные классы, поэтому показываем согласованный набор Forge.
         // В Character Forge показываем согласованный набор из 13 основных классов.
         if (type === 'class') {
             candidates = candidates.filter(entry =>
-                LIPATOS_FORGE_CLASS_IDENTIFIERS.has(String(entry.system?.identifier || '').trim())
+                FORGE_CLASS_IDENTIFIERS.has(String(entry.system?.identifier || '').trim())
             );
         }
 
