@@ -214,6 +214,37 @@ function isUndeadRace(option = {}) {
         || /\b(?:скелет|зомби|мумия|призрак|упырь|вурдалак|лич|ревенант)\b/iu.test(label);
 }
 
+
+function isHiddenRaceAfterDisplayEnhancement(option = {}) {
+    const values = [
+        option.displayName,
+        option.name,
+        option.label,
+        option.title
+    ].filter(value => typeof value === 'string' && value.trim());
+
+    for (const value of values) {
+        const normalized = normalizeRaceCatalogText(value)
+            .replace(/<[^>]*>/gu, ' ')
+            .replace(/[\u200B-\u200D\u2060\uFEFF]/gu, '')
+            .replace(/\s+/gu, ' ')
+            .trim();
+        const compact = normalized.replace(/[^a-zа-я0-9]+/giu, '');
+
+        // Главное: метки вырезаются уже по финальному отображаемому имени.
+        if (/(?:^|\s)метка(?:\s|$)/iu.test(normalized)
+            || /(?:^|\s)mark\s+of(?:\s|$)/iu.test(normalized)) {
+            return true;
+        }
+
+        if (compact.includes('гнол') || compact.includes('gnoll')) return true;
+        if (normalized.includes('мидгард') || normalized.includes('midgard')) return true;
+        if (compact.includes('стиктиккал') || compact.includes('stiktikkal')) return true;
+    }
+
+    return false;
+}
+
 export const ContextMixin = (Base) => class extends Base {
     async _prepareContext(options) {
         try {
@@ -307,6 +338,13 @@ export const ContextMixin = (Base) => class extends Base {
                 currentOptions = await this.dataManager.getOptions(this.currentStep, this.context);
                 // 应用 PHB 图片增强
                 currentOptions = enhanceOptionsWithPHBImages(currentOptions, this.currentStep);
+
+                // Повторная обязательная фильтрация рас уже после формирования
+                // displayName. Это не даёт меткам, гноллам и Мидгарду пройти
+                // через различия между исходным и отображаемым названием.
+                if (this.currentStep === 'race') {
+                    currentOptions = currentOptions.filter(option => !isHiddenRaceAfterDisplayEnhancement(option));
+                }
 
                 // Class selector: show only the requested official and alternative catalogs,
                 // in a deterministic order independent of compendium order.
