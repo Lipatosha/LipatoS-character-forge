@@ -67,6 +67,28 @@ function getDnd5ePackIds() {
         .filter(Boolean);
 }
 
+
+/**
+ * Скрывает альтернативные/вариативные расы только из пользовательского выбора.
+ * Исходные записи остаются в библиотеке и в настройках источников.
+ */
+function isHiddenRaceSelectionOption(option) {
+    const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
+    const name = String(option?.name || option?.displayName || '').trim();
+
+    // Laaru хранит переработанные варианты MPMM в отдельном компендиуме.
+    if (uuid.includes('.laaru-dnd5-hw.racesmpmm.')) return true;
+
+    // Дополнительная страховка для вручную добавленных источников и вариантов,
+    // которые могут находиться не в racesMPMM.
+    if (/\b(?:вариант\w*|вариатив\w*|variant)\b/iu.test(name)) return true;
+
+    // Эберронские драконьи метки в библиотеке представлены как варианты рас.
+    if (/\bметк\w*\b/iu.test(name) || /\bmark\s+of\b/iu.test(name)) return true;
+
+    return false;
+}
+
 async function mapWithConcurrency(items, limit, worker) {
     const source = Array.from(items || []);
     if (!source.length) return [];
@@ -342,6 +364,12 @@ export class DataManager {
         // Only fall back to loading a document when a third-party pack omitted classIdentifier.
         let candidates = Array.from(candidateMap.values());
 
+        // В списке выбора расы не показываем вариативные версии и драконьи метки.
+        // includeExcluded используется экраном настройки источников — там сохраняем полный каталог.
+        if (type === 'race' && !includeExcluded) {
+            candidates = candidates.filter(option => !isHiddenRaceSelectionOption(option));
+        }
+
         // All class Items from installed source packs are selectable. Do not
         // filter by a hardcoded identifier list: subscribed books add classes.
 
@@ -427,6 +455,7 @@ export class DataManager {
 
         const result = Array.from(optionsMap.values())
             .filter(option => type !== 'feat' || isPlayerFeat(option))
+            .filter(option => type !== 'race' || includeExcluded || !isHiddenRaceSelectionOption(option))
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         this._optionsCache.set(cacheKey, result);
