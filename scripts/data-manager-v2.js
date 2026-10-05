@@ -87,7 +87,7 @@ const HIDDEN_ALTERNATIVE_RACE_ALIASES = Object.freeze([
     'драконорожденный металлический', 'металлический драконорожденный',
     'драконорожденный самоцветный', 'самоцветный драконорожденный',
     'драконорожденный цветной', 'цветной драконорожденный', 'хроматический драконорожденный',
-    'изменяющийся', 'чейнджлинг', 'чейджлинг', 'changeling',
+    'изменяющийся', 'чейнджлинг', 'чейджлинг', 'подменыш', 'changeling',
     'двергар', 'дуэргар',
     'кендер', 'кендлер', 'kender',
     'гифф', 'giff',
@@ -106,7 +106,7 @@ const HIDDEN_ALTERNATIVE_RACE_ALIASES = Object.freeze([
     'тритон',
     'фирболг',
     'хадози', 'hadozee',
-    'фейри', 'fairy',
+    'фейри', 'фея', 'fairy',
     'харенгон', 'harengon',
     'хобгоблин',
     'шадар каи', 'шадар-каи', 'shadar kai', 'shadar-kai',
@@ -114,7 +114,8 @@ const HIDDEN_ALTERNATIVE_RACE_ALIASES = Object.freeze([
     'эладрин',
     'эльф астральный', 'астральный эльф',
     'эльф морской', 'морской эльф',
-    'юань ти', 'юань-ти', 'yuan ti', 'yuan-ti'
+    'юань ти', 'юань-ти', 'yuan ti', 'yuan-ti',
+    'custom lineage'
 ]);
 
 const HIDDEN_RACE_NAME_FRAGMENTS = Object.freeze([
@@ -124,7 +125,8 @@ const HIDDEN_RACE_NAME_FRAGMENTS = Object.freeze([
     'минотавр мидгарда',
     'пустотный',
     'своя раса',
-    'стиктикал'
+    'стиктикал',
+    'стиктик'
 ]);
 
 function normalizeRaceSelectionName(value) {
@@ -153,7 +155,6 @@ function matchesHiddenAlternativeRaceName(name) {
 }
 
 function isHiddenRaceSelectionOption(option) {
-    const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
     const rawName = option?.name || option?.displayName || '';
     const normalized = normalizeRaceSelectionName(rawName);
 
@@ -168,10 +169,9 @@ function isHiddenRaceSelectionOption(option) {
         return true;
     }
 
-    // Для обычных названий скрываем только альтернативную запись из racesMPMM,
-    // оставляя основную версию той же расы из races.
-    const isMpmm = uuid.includes('.laaru-dnd5-hw.racesmpmm.');
-    return isMpmm && matchesHiddenAlternativeRaceName(rawName);
+    // Пользователь задал точный перечень названий, поэтому совпадающие
+    // варианты скрываются независимо от того, в каком компендиуме они лежат.
+    return matchesHiddenAlternativeRaceName(rawName);
 }
 
 
