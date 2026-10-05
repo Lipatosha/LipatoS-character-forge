@@ -198,8 +198,37 @@ function normalizeRaceCatalogText(value) {
         .trim();
 }
 
+
+function resolveRaceDisplayName(option = {}) {
+    const values = [
+        option.raceDisplayName,
+        option.displayName,
+        option.name,
+        option.label,
+        option.title
+    ].filter(value => typeof value === 'string' && value.trim());
+
+    // Сначала ищем реально локализованное значение. Это тот же источник,
+    // из которого Handlebars-helper {{localize ...}} получал русский текст.
+    for (const value of values) {
+        try {
+            const localized = game.i18n.localize(value);
+            if (typeof localized === 'string' && localized.trim() && localized !== value) {
+                return localized.trim();
+            }
+        } catch (_) {
+            // Не ключ локализации — проверим следующий вариант.
+        }
+    }
+
+    // Если значение уже русское/готовое, localize вернёт его без изменений.
+    return String(values[0] || '').trim();
+}
+
 function getRaceCatalogNames(option = {}) {
     const values = [
+        resolveRaceDisplayName(option),
+        option.raceDisplayName,
         option.displayName,
         option.name,
         option.label,
@@ -249,18 +278,37 @@ function isUndeadRace(option = {}) {
 function isMarkRace(option = {}) {
     const names = getRaceCatalogNames(option);
 
-    return names.some(name => {
+    const visibleMark = names.some(name => {
         const normalized = normalizeRaceCatalogText(name)
             .replace(/<[^>]*>/gu, ' ')
             .replace(/[\u200B-\u200D\u2060\uFEFF]/gu, '')
             .replace(/\s+/gu, ' ')
             .trim();
 
-        // Любая локализованная запись с отдельным словом "Метка"
-        // или английским "Mark of" уходит в скрытую категорию.
-        return /(?:^|\s|[-—–])метка(?:\s|$|[-—–])/iu.test(normalized)
-            || /(?:^|\s|[-—–])mark\s+of(?:\s|$|[-—–])/iu.test(normalized);
+        return normalized.includes('метка')
+            || normalized.includes('mark of')
+            || normalized.includes('dragonmark');
     });
+
+    if (visibleMark) return true;
+
+    // Дополнительная проверка внутренних ключей Laaru/UUID.
+    const machine = [
+        option.uuid,
+        option.id,
+        option.identifier,
+        option.system?.identifier,
+        option.name,
+        option.displayName
+    ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .replace(/[^a-zа-я0-9]+/giu, '');
+
+    return machine.includes('markof')
+        || machine.includes('dragonmark')
+        || machine.includes('метка');
 }
 
 function getRaceCatalogCategory(option = {}) {
@@ -331,6 +379,7 @@ function getRaceCatalogCategory(option = {}) {
 
 function isHiddenRaceAfterDisplayEnhancement(option = {}) {
     const baseValues = [
+        option.raceDisplayName,
         option.displayName,
         option.name,
         option.label,
@@ -474,6 +523,11 @@ export const ContextMixin = (Base) => class extends Base {
                 // displayName. Это не даёт меткам, гноллам и Мидгарду пройти
                 // через различия между исходным и отображаемым названием.
                 if (this.currentStep === 'race') {
+                    currentOptions = currentOptions.map(option => ({
+                        ...option,
+                        raceDisplayName: resolveRaceDisplayName(option)
+                    }));
+
                     currentOptions = currentOptions.filter(option => !isHiddenRaceAfterDisplayEnhancement(option));
                 }
 
