@@ -416,45 +416,8 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         super._onRender(context, options);
         const html = $(this.element);
 
-        // Финальная DOM-страховка: все визуально распознанные "Метки"
-        // переносим в скрытую секцию, а не оставляем в видимых категориях.
-        if (this.currentStep === 'race') {
-            const root = this.element instanceof HTMLElement ? this.element : this.element?.[0];
-
-            const segregateMarkCards = () => {
-                if (!root?.isConnected) return;
-                const hiddenGrid = root.querySelector('.race-nav-grid-marks');
-                if (!hiddenGrid) return;
-
-                root.querySelectorAll('.race-nav-grid .nav-item, .grid-selector-item').forEach(card => {
-                    if (card.closest('.race-nav-group-marks')) return;
-
-                    const visibleText = String(card.textContent || '').replace(/\s+/gu, ' ').trim().toLowerCase();
-                    const titleText = String(card.getAttribute?.('title') || '').trim().toLowerCase();
-                    const ariaText = String(card.getAttribute?.('aria-label') || '').trim().toLowerCase();
-                    const combined = `${visibleText} ${titleText} ${ariaText}`;
-
-                    if (combined.includes('метка') || combined.includes('mark of')) {
-                        hiddenGrid.appendChild(card);
-                    }
-                });
-            };
-
-            segregateMarkCards();
-            requestAnimationFrame(() => {
-                segregateMarkCards();
-                requestAnimationFrame(segregateMarkCards);
-            });
-
-            this._raceMarkObserver?.disconnect?.();
-            if (root) {
-                this._raceMarkObserver = new MutationObserver(() => segregateMarkCards());
-                this._raceMarkObserver.observe(root, { childList: true, subtree: true });
-            }
-        } else {
-            this._raceMarkObserver?.disconnect?.();
-            this._raceMarkObserver = null;
-        }
+        this._raceMarkObserver?.disconnect?.();
+        this._raceMarkObserver = null;
 
         // 添加激活类以隐藏原生 UI
         // 我觉得我的UI好看
