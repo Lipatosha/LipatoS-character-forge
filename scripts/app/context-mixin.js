@@ -246,7 +246,28 @@ function isUndeadRace(option = {}) {
         || /\b(?:нежить|скелет|зомби|мумия|призрак|упырь|вурдалак|лич|ревенант|дампир|возрожденн\w*)\b/iu.test(label);
 }
 
+function isMarkRace(option = {}) {
+    const names = getRaceCatalogNames(option);
+
+    return names.some(name => {
+        const normalized = normalizeRaceCatalogText(name)
+            .replace(/<[^>]*>/gu, ' ')
+            .replace(/[\u200B-\u200D\u2060\uFEFF]/gu, '')
+            .replace(/\s+/gu, ' ')
+            .trim();
+
+        // Любая локализованная запись с отдельным словом "Метка"
+        // или английским "Mark of" уходит в скрытую категорию.
+        return /(?:^|\s|[-—–])метка(?:\s|$|[-—–])/iu.test(normalized)
+            || /(?:^|\s|[-—–])mark\s+of(?:\s|$|[-—–])/iu.test(normalized);
+    });
+}
+
 function getRaceCatalogCategory(option = {}) {
+    // Метки всегда изолируем раньше всех остальных правил.
+    // Категория существует только внутри данных и никогда не выводится в шаблон.
+    if (isMarkRace(option)) return 'marks';
+
     // Нежить имеет высший приоритет: дампир/возрождённый не должны
     // попадать в общие гуманоидные категории.
     if (isUndeadRace(option)) return 'death';
@@ -337,11 +358,8 @@ function isHiddenRaceAfterDisplayEnhancement(option = {}) {
             .trim();
         const compact = normalized.replace(/[^a-zа-я0-9]+/giu, '');
 
-        if (/(?:^|\s)метка(?:\s|$)/iu.test(normalized)
-            || /(?:^|\s)mark\s+of(?:\s|$)/iu.test(normalized)) {
-            return true;
-        }
-
+        // Метки здесь НЕ удаляем: они направляются в отдельную скрытую
+        // категорию marks внутри getRaceCatalogCategory().
         if (compact.includes('гнол') || compact.includes('gnoll')) return true;
         if (normalized.includes('мидгард') || normalized.includes('midgard')) return true;
         if (compact.includes('стиктиккал') || compact.includes('stiktikkal')) return true;
@@ -519,7 +537,8 @@ export const ContextMixin = (Base) => class extends Base {
                         dragon: [],
                         planar: [],
                         unusual: [],
-                        death: []
+                        death: [],
+                        marks: []
                     };
 
                     for (const option of currentOptions) {
