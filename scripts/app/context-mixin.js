@@ -454,6 +454,7 @@ export const ContextMixin = (Base) => class extends Base {
             let racePlanarOptions = [];
             let raceUnusualOptions = [];
             let raceDeathOptions = [];
+            let raceMarkOptions = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -555,6 +556,7 @@ export const ContextMixin = (Base) => class extends Base {
                     racePlanarOptions = raceBuckets.planar;
                     raceUnusualOptions = raceBuckets.unusual;
                     raceDeathOptions = raceBuckets.death;
+                    raceMarkOptions = raceBuckets.marks;
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -648,6 +650,7 @@ export const ContextMixin = (Base) => class extends Base {
                 racePlanarOptions,
                 raceUnusualOptions,
                 raceDeathOptions,
+                raceMarkOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
