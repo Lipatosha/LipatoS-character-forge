@@ -124,6 +124,21 @@ const HIDDEN_VARIANT_RACE_ALIASES = Object.freeze([
     'юань-ти', 'юань ти', 'yuan-ti', 'yuan ti'
 ]);
 
+const HIDDEN_RACE_MARK_PREFIXES = Object.freeze([
+    'метка бури',
+    'метка гостеприимства',
+    'метка исцеления',
+    'метка обнаружения',
+    'метка опеки',
+    'метка письма',
+    'метка поиска',
+    'метка пути',
+    'метка создания',
+    'метка стража',
+    'метка тени',
+    'метка ухода'
+]);
+
 function normalizeRaceSelectionName(value) {
     return String(value || '')
         .toLowerCase()
@@ -135,6 +150,10 @@ function normalizeRaceSelectionName(value) {
         .replace(/[^a-zа-я0-9-]+/giu, ' ')
         .replace(/\s+/gu, ' ')
         .trim();
+}
+
+function compactRaceSelectionName(value) {
+    return normalizeRaceSelectionName(value).replace(/[^a-zа-я0-9]+/giu, '');
 }
 
 function matchesHiddenVariantRaceName(name) {
@@ -150,13 +169,26 @@ function matchesHiddenVariantRaceName(name) {
 }
 
 function isHiddenRaceSelectionOption(option) {
-    const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
+    const rawName = option?.name || option?.displayName || '';
+    const normalized = normalizeRaceSelectionName(rawName);
+    const compact = compactRaceSelectionName(rawName);
 
-    // Скрываем только записи из отдельного вариативного компендиума.
-    // Одноимённые обычные расы из основного races остаются в Character Forge.
+    // Конкретные драконьи метки со скриншота скрываются из любого источника.
+    if (HIDDEN_RACE_MARK_PREFIXES.some(prefix => normalized.startsWith(normalizeRaceSelectionName(prefix)))) {
+        return true;
+    }
+
+    // Все четыре варианта Стик'Тик'Кал со второго скриншота.
+    if (compact.includes('стиктиккал') || compact.includes('stiktikkal')) return true;
+
+    // Гноллы/гнолы скрываются независимо от книги и приписки Мидгарда.
+    if (/\bгнолл?\w*\b/iu.test(normalized) || /\bgnoll\w*\b/iu.test(normalized)) return true;
+
+    // Список из 48 вариативных рас скрываем только в отдельном racesMPMM.
+    // Обычные одноимённые версии из races остаются.
+    const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
     if (!uuid.includes('.laaru-dnd5-hw.racesmpmm.')) return false;
 
-    const rawName = option?.name || option?.displayName || '';
     return matchesHiddenVariantRaceName(rawName);
 }
 
