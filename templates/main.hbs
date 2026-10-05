@@ -856,33 +856,134 @@
             </div>
             {{else if (eq currentStep "race")}}
             <div class="nav-track race-nav-track">
-                <section class="race-nav-group race-nav-group-all">
-                    <h3 class="race-nav-heading">Все</h3>
-                    <div class="race-nav-grid race-nav-grid-all">
-                        {{#each raceAllOptions}}
+                {{#if raceKingdomOptions}}
+                <section class="race-nav-group race-nav-group-kingdoms">
+                    <h3 class="race-nav-heading">Народы Королевств</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceKingdomOptions}}
                         <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}"
-                            title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
-                            <div class="nav-icon-wrapper">
-                                {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
-                            </div>
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
                             <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
                         </div>
                         {{/each}}
                     </div>
                 </section>
+                {{/if}}
 
-                {{#if raceUndeadOptions}}
-                <section class="race-nav-group race-nav-group-undead">
-                    <h3 class="race-nav-heading">Нежить</h3>
-                    <div class="race-nav-grid race-nav-grid-undead">
-                        {{#each raceUndeadOptions}}
+                {{#if raceElfOptions}}
+                <section class="race-nav-group race-nav-group-elf">
+                    <h3 class="race-nav-heading">Эльфийская Кровь</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceElfOptions}}
                         <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}"
-                            title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
-                            <div class="nav-icon-wrapper">
-                                {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
-                            </div>
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if raceMountainOptions}}
+                <section class="race-nav-group race-nav-group-mountain">
+                    <h3 class="race-nav-heading">Народы Гор и Холмов</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceMountainOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if raceFangOptions}}
+                <section class="race-nav-group race-nav-group-fang">
+                    <h3 class="race-nav-heading">Народы Клыка и Железа</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceFangOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if raceBeastOptions}}
+                <section class="race-nav-group race-nav-group-beast">
+                    <h3 class="race-nav-heading">Звериные Народы</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceBeastOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if raceDragonOptions}}
+                <section class="race-nav-group race-nav-group-dragon">
+                    <h3 class="race-nav-heading">Драконья Кровь</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceDragonOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if racePlanarOptions}}
+                <section class="race-nav-group race-nav-group-planar">
+                    <h3 class="race-nav-heading">Планарные Народы</h3>
+                    <div class="race-nav-grid">
+                        {{#each racePlanarOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if raceUnusualOptions}}
+                <section class="race-nav-group race-nav-group-unusual">
+                    <h3 class="race-nav-heading">Необычные Народы</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceUnusualOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if raceDeathOptions}}
+                <section class="race-nav-group race-nav-group-death">
+                    <h3 class="race-nav-heading">Порождения Смерти</h3>
+                    <div class="race-nav-grid">
+                        {{#each raceDeathOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
                             <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
                         </div>
                         {{/each}}
