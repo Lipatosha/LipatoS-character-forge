@@ -198,8 +198,41 @@ function normalizeRaceCatalogText(value) {
         .trim();
 }
 
+function getRaceCatalogNames(option = {}) {
+    const values = [
+        option.displayName,
+        option.name,
+        option.label,
+        option.title
+    ].filter(value => typeof value === 'string' && value.trim());
+
+    const names = new Set(values);
+
+    for (const value of values) {
+        try {
+            const localized = game.i18n.localize(value);
+            if (typeof localized === 'string' && localized.trim()) names.add(localized);
+        } catch (_) {
+            // Если это не ключ локализации, достаточно исходного значения.
+        }
+    }
+
+    return Array.from(names)
+        .map(normalizeRaceCatalogText)
+        .filter(Boolean);
+}
+
+function raceNameIncludes(option, aliases) {
+    const names = getRaceCatalogNames(option);
+    return aliases.some(alias => {
+        const needle = normalizeRaceCatalogText(alias);
+        return names.some(name => name.includes(needle));
+    });
+}
+
 function isUndeadRace(option = {}) {
-    const label = normalizeRaceCatalogText(option.displayName || option.name || '');
+    const names = getRaceCatalogNames(option);
+    const label = names.join(' ');
     const typeValue = normalizeRaceCatalogText(
         option.coreTraits?.type
         || option.system?.type?.value
@@ -208,10 +241,70 @@ function isUndeadRace(option = {}) {
     );
 
     if (typeValue === 'undead' || typeValue.includes('нежить')) return true;
-    return label.startsWith('нежить')
-        || label.includes(' нежить')
-        || /\b(?:undead|skeleton|zombie|mummy|ghost|wight|wraith|lich|revenant)\b/i.test(label)
-        || /\b(?:скелет|зомби|мумия|призрак|упырь|вурдалак|лич|ревенант)\b/iu.test(label);
+
+    return /\b(?:undead|skeleton|zombie|mummy|ghost|wight|wraith|lich|revenant|dhampir|reborn)\b/i.test(label)
+        || /\b(?:нежить|скелет|зомби|мумия|призрак|упырь|вурдалак|лич|ревенант|дампир|возрожденн\w*)\b/iu.test(label);
+}
+
+function getRaceCatalogCategory(option = {}) {
+    // Нежить имеет высший приоритет: дампир/возрождённый не должны
+    // попадать в общие гуманоидные категории.
+    if (isUndeadRace(option)) return 'death';
+
+    // Шадар-кай, эладрины и прочие эльфийские варианты держим вместе,
+    // даже если у них есть выраженная планарная связь.
+    if (raceNameIncludes(option, [
+        'эльф', 'elf', 'дроу', 'drow', 'шадар', 'shadar',
+        'полуэльф', 'half-elf', 'half elf', 'эладрин', 'eladrin'
+    ])) return 'elf';
+
+    if (raceNameIncludes(option, [
+        'дварф', 'dwarf', 'дуэргар', 'duergar', 'полудварф', 'half-dwarf', 'half dwarf',
+        'гном', 'gnome', 'полурослик', 'halfling', 'голиаф', 'goliath'
+    ])) return 'mountain';
+
+    if (raceNameIncludes(option, [
+        'драконорожден', 'dragonborn', 'драконокров', 'dragonkin',
+        'кобольд', 'kobold', 'полудракон', 'half-dragon', 'half dragon'
+    ])) return 'dragon';
+
+    if (raceNameIncludes(option, [
+        'аасимар', 'асимар', 'aasimar', 'тифлинг', 'tiefling',
+        'дженази', 'genasi', 'гитьянки', 'githyanki', 'гитзерай', 'githzerai',
+        'калаштар', 'kalashtar'
+    ])) return 'planar';
+
+    if (raceNameIncludes(option, [
+        'орк', 'orc', 'полуорк', 'half-orc', 'half orc',
+        'гоблин', 'goblin', 'хобгоблин', 'hobgoblin',
+        'багбер', 'багбир', 'bugbear', 'вердан', 'verdan'
+    ])) return 'fang';
+
+    if (raceNameIncludes(option, [
+        'ааракокра', 'aarakocra', 'кенку', 'kenku', 'людоворон', 'crowfolk',
+        'табакси', 'tabaxi', 'леонин', 'leonin', 'локсодонт', 'loxodon',
+        'кицун', 'kitsune', 'котов', 'catfolk', 'мышин', 'mousefolk',
+        'людокрыс', 'ratfolk', 'людомедвед', 'bearfolk',
+        'людоящер', 'lizardfolk', 'тортл', 'tortle', 'грунг', 'grung',
+        'юань-ти', 'юань ти', 'yuan-ti', 'yuan ti'
+    ])) return 'beast';
+
+    if (raceNameIncludes(option, [
+        'человек', 'human', 'получеловек'
+    ])) return 'kingdoms';
+
+    if (raceNameIncludes(option, [
+        'фирболг', 'firbolg', 'сатир', 'satyr', 'фэйри', 'фейри', 'fairy',
+        'кентавр', 'centaur', 'минотавр', 'minotaur',
+        'чейнджлинг', 'чейджлинг', 'changeling', 'изменяющийся',
+        'шифтер', 'shifter', 'гибрид симиков', 'simic hybrid',
+        'кован', 'warforged', 'маген', 'magen', 'ведалкен', 'vedalken',
+        'энтлинг', 'entling'
+    ])) return 'unusual';
+
+    // Всё редкое, искусственное и хоумбрю, которое не совпало с явными
+    // правилами выше, отправляем сюда, чтобы ни одна раса не потерялась.
+    return 'unusual';
 }
 
 
@@ -334,8 +427,15 @@ export const ContextMixin = (Base) => class extends Base {
             let alternativeClassOptions = [];
             let unofficialClassOptions = [];
             let companionClassOptions = [];
-            let raceAllOptions = [];
-            let raceUndeadOptions = [];
+            let raceKingdomOptions = [];
+            let raceElfOptions = [];
+            let raceMountainOptions = [];
+            let raceFangOptions = [];
+            let raceBeastOptions = [];
+            let raceDragonOptions = [];
+            let racePlanarOptions = [];
+            let raceUnusualOptions = [];
+            let raceDeathOptions = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -410,8 +510,32 @@ export const ContextMixin = (Base) => class extends Base {
                 }
 
                 if (this.currentStep === 'race') {
-                    raceUndeadOptions = currentOptions.filter(option => isUndeadRace(option));
-                    raceAllOptions = currentOptions.filter(option => !isUndeadRace(option));
+                    const raceBuckets = {
+                        kingdoms: [],
+                        elf: [],
+                        mountain: [],
+                        fang: [],
+                        beast: [],
+                        dragon: [],
+                        planar: [],
+                        unusual: [],
+                        death: []
+                    };
+
+                    for (const option of currentOptions) {
+                        const category = getRaceCatalogCategory(option);
+                        (raceBuckets[category] || raceBuckets.unusual).push(option);
+                    }
+
+                    raceKingdomOptions = raceBuckets.kingdoms;
+                    raceElfOptions = raceBuckets.elf;
+                    raceMountainOptions = raceBuckets.mountain;
+                    raceFangOptions = raceBuckets.fang;
+                    raceBeastOptions = raceBuckets.beast;
+                    raceDragonOptions = raceBuckets.dragon;
+                    racePlanarOptions = raceBuckets.planar;
+                    raceUnusualOptions = raceBuckets.unusual;
+                    raceDeathOptions = raceBuckets.death;
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -496,8 +620,15 @@ export const ContextMixin = (Base) => class extends Base {
                 alternativeClassOptions,
                 unofficialClassOptions,
                 companionClassOptions,
-                raceAllOptions,
-                raceUndeadOptions,
+                raceKingdomOptions,
+                raceElfOptions,
+                raceMountainOptions,
+                raceFangOptions,
+                raceBeastOptions,
+                raceDragonOptions,
+                racePlanarOptions,
+                raceUnusualOptions,
+                raceDeathOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
