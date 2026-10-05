@@ -149,8 +149,9 @@ function buildClassCatalogGroup(options, order, isAlternative) {
             ...option,
             classCatalogKey: info.key,
             classNavLabel,
-            classNavLine1: isBloodHunter ? 'Кровавый' : null,
-            classNavLine2: isBloodHunter ? (isAlternative ? 'охотник (альт.)' : 'охотник') : null
+            classNavLine1: isBloodHunter ? 'Кровавый' : (isAlternative ? baseLabel : null),
+            classNavLine2: isBloodHunter ? 'охотник' : (isAlternative ? '(альт.)' : null),
+            classNavLine3: isBloodHunter && isAlternative ? '(альт.)' : null
         });
     }
 
