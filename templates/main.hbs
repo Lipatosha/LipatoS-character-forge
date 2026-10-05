@@ -856,6 +856,18 @@
             </div>
             {{else if (eq currentStep "race")}}
             <div class="nav-track race-nav-track">
+                <section class="race-nav-group race-nav-group-marks" hidden aria-hidden="true" style="display:none !important;">
+                    <h3 class="race-nav-heading">Метки</h3>
+                    <div class="race-nav-grid race-nav-grid-marks">
+                        {{#each raceMarkOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}" title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
                 {{#if raceKingdomOptions}}
                 <section class="race-nav-group race-nav-group-kingdoms">
                     <h3 class="race-nav-heading">Народы Королевств</h3>
