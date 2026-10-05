@@ -124,21 +124,6 @@ const HIDDEN_VARIANT_RACE_ALIASES = Object.freeze([
     'юань-ти', 'юань ти', 'yuan-ti', 'yuan ti'
 ]);
 
-const HIDDEN_RACE_MARK_PREFIXES = Object.freeze([
-    'метка бури',
-    'метка гостеприимства',
-    'метка исцеления',
-    'метка обнаружения',
-    'метка опеки',
-    'метка письма',
-    'метка поиска',
-    'метка пути',
-    'метка создания',
-    'метка стража',
-    'метка тени',
-    'метка ухода'
-]);
-
 function normalizeRaceSelectionName(value) {
     return String(value || '')
         .toLowerCase()
@@ -173,16 +158,20 @@ function isHiddenRaceSelectionOption(option) {
     const normalized = normalizeRaceSelectionName(rawName);
     const compact = compactRaceSelectionName(rawName);
 
-    // Конкретные драконьи метки со скриншота скрываются из любого источника.
-    if (HIDDEN_RACE_MARK_PREFIXES.some(prefix => normalized.startsWith(normalizeRaceSelectionName(prefix)))) {
+    // Любая раса, начинающаяся с "Метка ...", скрывается полностью.
+    // Также учитываем английское "Mark of ..." на случай непереведённой записи.
+    if (normalized === 'метка' || normalized.startsWith('метка ') || normalized.startsWith('mark of ')) {
         return true;
     }
 
-    // Все четыре варианта Стик'Тик'Кал со второго скриншота.
+    // Все варианты Стик'Тик'Кал.
     if (compact.includes('стиктиккал') || compact.includes('stiktikkal')) return true;
 
-    // Гноллы/гнолы скрываются независимо от книги и приписки Мидгарда.
-    if (/\bгнолл?\w*\b/iu.test(normalized) || /\bgnoll\w*\b/iu.test(normalized)) return true;
+    // Все гноллы/гнолы, независимо от написания и источника.
+    if (compact.includes('гнол') || compact.includes('gnoll')) return true;
+
+    // Все расы Мидгарда удаляются из выбора целиком.
+    if (normalized.includes('мидгард') || normalized.includes('midgard')) return true;
 
     // Список из 48 вариативных рас скрываем только в отдельном racesMPMM.
     // Обычные одноимённые версии из races остаются.
