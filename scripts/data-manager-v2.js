@@ -154,31 +154,39 @@ function matchesHiddenVariantRaceName(name) {
 }
 
 function isHiddenRaceSelectionOption(option) {
-    const rawName = option?.name || option?.displayName || '';
-    const normalized = normalizeRaceSelectionName(rawName);
-    const compact = compactRaceSelectionName(rawName);
+    const rawNames = [
+        option?.name,
+        option?.displayName
+    ].filter(value => typeof value === 'string' && value.trim());
 
-    // Любая раса, начинающаяся с "Метка ...", скрывается полностью.
-    // Также учитываем английское "Mark of ..." на случай непереведённой записи.
-    if (normalized === 'метка' || normalized.startsWith('метка ') || normalized.startsWith('mark of ')) {
+    const normalizedNames = rawNames.map(normalizeRaceSelectionName);
+    const compactNames = rawNames.map(compactRaceSelectionName);
+
+    // Драконьи метки в библиотеке могут иметь другое исходное имя,
+    // а в интерфейсе становиться "Метка ...". Поэтому ловим слово "метка"
+    // и английское "Mark of" в любой части любого доступного имени.
+    if (normalizedNames.some(name =>
+        /(?:^|\s)метка(?:\s|$)/iu.test(name)
+        || /(?:^|\s)mark\s+of(?:\s|$)/iu.test(name)
+    )) {
         return true;
     }
 
     // Все варианты Стик'Тик'Кал.
-    if (compact.includes('стиктиккал') || compact.includes('stiktikkal')) return true;
+    if (compactNames.some(name => name.includes('стиктиккал') || name.includes('stiktikkal'))) return true;
 
     // Все гноллы/гнолы, независимо от написания и источника.
-    if (compact.includes('гнол') || compact.includes('gnoll')) return true;
+    if (compactNames.some(name => name.includes('гнол') || name.includes('gnoll'))) return true;
 
     // Все расы Мидгарда удаляются из выбора целиком.
-    if (normalized.includes('мидгард') || normalized.includes('midgard')) return true;
+    if (normalizedNames.some(name => name.includes('мидгард') || name.includes('midgard'))) return true;
 
     // Список из 48 вариативных рас скрываем только в отдельном racesMPMM.
     // Обычные одноимённые версии из races остаются.
     const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
     if (!uuid.includes('.laaru-dnd5-hw.racesmpmm.')) return false;
 
-    return matchesHiddenVariantRaceName(rawName);
+    return rawNames.some(matchesHiddenVariantRaceName);
 }
 
 
