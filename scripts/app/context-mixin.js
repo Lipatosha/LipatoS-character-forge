@@ -198,11 +198,6 @@ function normalizeRaceCatalogText(value) {
         .trim();
 }
 
-function isMidgardRace(option = {}) {
-    const label = normalizeRaceCatalogText(option.displayName || option.name || '');
-    return label.includes('мидгард') || label.includes('midgard');
-}
-
 function isUndeadRace(option = {}) {
     const label = normalizeRaceCatalogText(option.displayName || option.name || '');
     const typeValue = normalizeRaceCatalogText(
@@ -297,7 +292,6 @@ export const ContextMixin = (Base) => class extends Base {
             let unofficialClassOptions = [];
             let companionClassOptions = [];
             let raceAllOptions = [];
-            let raceMidgardOptions = [];
             let raceUndeadOptions = [];
 
             if (this.currentStep === 'level') {
@@ -366,13 +360,8 @@ export const ContextMixin = (Base) => class extends Base {
                 }
 
                 if (this.currentStep === 'race') {
-                    raceMidgardOptions = currentOptions.filter(option => isMidgardRace(option));
-                    raceUndeadOptions = currentOptions.filter(option =>
-                        !isMidgardRace(option) && isUndeadRace(option)
-                    );
-                    raceAllOptions = currentOptions.filter(option =>
-                        !isMidgardRace(option) && !isUndeadRace(option)
-                    );
+                    raceUndeadOptions = currentOptions.filter(option => isUndeadRace(option));
+                    raceAllOptions = currentOptions.filter(option => !isUndeadRace(option));
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -458,7 +447,6 @@ export const ContextMixin = (Base) => class extends Base {
                 unofficialClassOptions,
                 companionClassOptions,
                 raceAllOptions,
-                raceMidgardOptions,
                 raceUndeadOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
