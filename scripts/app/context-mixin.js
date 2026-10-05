@@ -5,25 +5,55 @@ import {
     isCharacterCreationDetailStep
 } from '../shared/character-creation-settings.js';
 
-const CHARACTER_FORGE_CLASS_ORDER = [
-    'artificer',
-    'barbarian',
-    'bard',
-    'cleric',
-    'druid',
+const CHARACTER_FORGE_OFFICIAL_CLASS_ORDER = [
     'fighter',
-    'monk',
-    'paladin',
-    'ranger',
+    'barbarian',
     'rogue',
+    'ranger',
+    'monk',
+    'blood-hunter',
+    'paladin',
+    'bard',
+    'druid',
+    'wizard',
     'sorcerer',
     'warlock',
-    'wizard'
+    'artificer',
+    'cleric'
 ];
 
-const CHARACTER_FORGE_CLASS_RANK = new Map(
-    CHARACTER_FORGE_CLASS_ORDER.map((id, index) => [id, index])
-);
+const CHARACTER_FORGE_ALTERNATIVE_CLASS_ORDER = [
+    'fighter',
+    'barbarian',
+    'rogue',
+    'ranger',
+    'monk',
+    'blood-hunter',
+    'paladin',
+    'bard',
+    'druid',
+    'wizard',
+    'sorcerer',
+    'warlock',
+    'artificer'
+];
+
+const CHARACTER_FORGE_CLASS_LABELS_RU = Object.freeze({
+    fighter: 'Воин',
+    barbarian: 'Варвар',
+    rogue: 'Плут',
+    ranger: 'Следопыт',
+    monk: 'Монах',
+    'blood-hunter': 'Кровавый охотник',
+    paladin: 'Паладин',
+    bard: 'Бард',
+    druid: 'Друид',
+    wizard: 'Волшебник',
+    sorcerer: 'Чародей',
+    warlock: 'Колдун',
+    artificer: 'Изобретатель',
+    cleric: 'Жрец'
+});
 
 // Короткие подписи на странице выбора класса. Правила в библиотеке не изменяем.
 const CHARACTER_FORGE_CLASS_TAGLINES = {
@@ -48,6 +78,83 @@ function normalizeClassIdentifier(option = {}) {
         || option.system?.identifier
         || ''
     ).trim().toLowerCase();
+}
+
+function normalizeClassCatalogText(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/ё/g, 'е')
+        .replace(/[’']/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function getClassCatalogInfo(option = {}) {
+    const identifier = normalizeClassIdentifier(option);
+    const name = normalizeClassCatalogText(option.displayName || option.name || '');
+    const altByName = /\((?:альт\.?|alt\.?)\)|\bальт\.?\b|\balternative\b/u.test(name);
+    const altByIdentifier = /(?:^|[-_.])(alt|alternative)(?:$|[-_.])/i.test(identifier);
+    const isAlternative = altByName || altByIdentifier;
+
+    const baseName = name
+        .replace(/\((?:альт\.?|alt\.?)\)/gu, '')
+        .replace(/\bальт\.?\b/gu, '')
+        .replace(/\balternative\b/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const compactId = identifier.replace(/[^a-z0-9а-я]+/giu, '');
+    const compactName = baseName.replace(/[^a-z0-9а-я]+/giu, '');
+
+    const aliases = [
+        ['blood-hunter', ['bloodhunter', 'кровавыйохотник']],
+        ['fighter', ['fighter', 'воин']],
+        ['barbarian', ['barbarian', 'варвар']],
+        ['rogue', ['rogue', 'плут']],
+        ['ranger', ['ranger', 'следопыт']],
+        ['monk', ['monk', 'монах']],
+        ['paladin', ['paladin', 'паладин']],
+        ['bard', ['bard', 'бард']],
+        ['druid', ['druid', 'друид']],
+        ['wizard', ['wizard', 'волшебник']],
+        ['sorcerer', ['sorcerer', 'чародей']],
+        ['warlock', ['warlock', 'колдун']],
+        ['artificer', ['artificer', 'изобретатель']],
+        ['cleric', ['cleric', 'жрец']]
+    ];
+
+    const match = aliases.find(([, values]) => values.some(alias =>
+        compactId.includes(alias) || compactName === alias || compactName.startsWith(alias)
+    ));
+
+    return {
+        key: match?.[0] || null,
+        isAlternative
+    };
+}
+
+function buildClassCatalogGroup(options, order, isAlternative) {
+    const byKey = new Map();
+
+    for (const option of options) {
+        const info = getClassCatalogInfo(option);
+        if (!info.key || info.isAlternative !== isAlternative || !order.includes(info.key)) continue;
+        if (byKey.has(info.key)) continue;
+
+        const baseLabel = CHARACTER_FORGE_CLASS_LABELS_RU[info.key] || option.displayName || option.name;
+        const classNavLabel = isAlternative ? `${baseLabel} (альт.)` : baseLabel;
+        const isBloodHunter = info.key === 'blood-hunter';
+
+        byKey.set(info.key, {
+            ...option,
+            classCatalogKey: info.key,
+            classNavLabel,
+            classNavLine1: isBloodHunter ? 'Кровавый' : null,
+            classNavLine2: isBloodHunter ? (isAlternative ? 'охотник (альт.)' : 'охотник') : null
+        });
+    }
+
+    return order.map(key => byKey.get(key)).filter(Boolean);
 }
 
 function stripBookSuffix(name) {
@@ -129,6 +236,8 @@ export const ContextMixin = (Base) => class extends Base {
             let currentOptions = [];
             let selectedOption = null;
             let availableClasses = [];
+            let officialClassOptions = [];
+            let alternativeClassOptions = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -144,19 +253,28 @@ export const ContextMixin = (Base) => class extends Base {
                 // 应用 PHB 图片增强
                 currentOptions = enhanceOptionsWithPHBImages(currentOptions, this.currentStep);
 
-                // Keep all entries from the active library, including additional
-                // classes and book variants. Prioritise core classes visually only.
+                // Class selector: show only the requested official and alternative catalogs,
+                // in a deterministic order independent of compendium order.
                 if (this.currentStep === 'class') {
-                    const rank = option => CHARACTER_FORGE_CLASS_RANK.get(normalizeClassIdentifier(option)) ?? Number.MAX_SAFE_INTEGER;
-                    currentOptions = currentOptions
-                        .sort((a, b) => rank(a) - rank(b) || String(a.name || '').localeCompare(String(b.name || ''), 'ru'))
-                        .map(option => {
-                            const identifier = normalizeClassIdentifier(option);
-                            return {
-                                ...option,
-                                tagline: CHARACTER_FORGE_CLASS_TAGLINES[identifier] ?? option.tagline
-                            };
-                        });
+                    const enriched = currentOptions.map(option => {
+                        const identifier = getClassCatalogInfo(option).key || normalizeClassIdentifier(option);
+                        return {
+                            ...option,
+                            tagline: CHARACTER_FORGE_CLASS_TAGLINES[identifier] ?? option.tagline
+                        };
+                    });
+
+                    officialClassOptions = buildClassCatalogGroup(
+                        enriched,
+                        CHARACTER_FORGE_OFFICIAL_CLASS_ORDER,
+                        false
+                    );
+                    alternativeClassOptions = buildClassCatalogGroup(
+                        enriched,
+                        CHARACTER_FORGE_ALTERNATIVE_CLASS_ORDER,
+                        true
+                    );
+                    currentOptions = [...officialClassOptions, ...alternativeClassOptions];
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -237,6 +355,8 @@ export const ContextMixin = (Base) => class extends Base {
                 currentSelectedId: this.context[this.currentStep],
                 steps: steps.filter(s => !s.hidden), // 过滤掉隐藏的步骤，别让用户看到不该看的
                 options: currentOptions,
+                officialClassOptions,
+                alternativeClassOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
