@@ -13907,3 +13907,86 @@ body.originate-active .character-forge-item-sheet-front {
         font-size: .40rem !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.28 — группы рас: Все / Мидгард / Нежить
+   ============================================================ */
+
+.view-selection-root.step-race .cinematic-nav .race-nav-track {
+    display: block !important;
+    grid-template-columns: none !important;
+    grid-auto-rows: unset !important;
+    align-content: start !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    padding: 7px 6px 10px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+.view-selection-root.step-race .race-nav-group {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 12px !important;
+}
+
+.view-selection-root.step-race .race-nav-group:last-child {
+    margin-bottom: 2px !important;
+}
+
+.view-selection-root.step-race .race-nav-heading {
+    margin: 0 0 6px !important;
+    padding: 0 0 4px !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .28) !important;
+    color: var(--originate-accent, #c8a35f) !important;
+    font-family: var(--originate-font-display, "Cinzel"), serif !important;
+    font-size: clamp(.84rem, .96vw, 1.08rem) !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: .035em !important;
+    text-align: left !important;
+}
+
+.view-selection-root.step-race .race-nav-grid {
+    display: grid !important;
+    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+    grid-auto-rows: 66px !important;
+    align-items: start !important;
+    justify-content: stretch !important;
+    column-gap: 2px !important;
+    row-gap: 5px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.view-selection-root.step-race .race-nav-grid .nav-item {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+}
+
+@media (max-height: 760px), (max-width: 1200px) {
+    .view-selection-root.step-race .cinematic-nav .race-nav-track {
+        padding: 5px 4px 7px !important;
+    }
+
+    .view-selection-root.step-race .race-nav-group {
+        margin-bottom: 8px !important;
+    }
+
+    .view-selection-root.step-race .race-nav-heading {
+        margin-bottom: 4px !important;
+        padding-bottom: 3px !important;
+        font-size: .76rem !important;
+    }
+
+    .view-selection-root.step-race .race-nav-grid {
+        grid-auto-rows: 58px !important;
+        row-gap: 3px !important;
+    }
+}
