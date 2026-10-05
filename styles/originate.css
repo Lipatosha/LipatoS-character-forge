@@ -11850,7 +11850,9 @@ body.originate-active .character-forge-item-sheet-front {
 
 .originate-nested-tooltip {
     position: fixed;
-    z-index: 100020;
+    /* Вложенная подсказка должна быть выше закреплённой основной подсказки
+       (.originate-spell-tooltip = 100100), иначе она визуально уходит под неё. */
+    z-index: 100120 !important;
     width: min(410px, calc(100vw - 32px));
     max-height: min(480px, calc(100vh - 32px));
     overflow: auto;
