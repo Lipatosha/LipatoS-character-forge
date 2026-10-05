@@ -416,6 +416,26 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         super._onRender(context, options);
         const html = $(this.element);
 
+        // Финальный DOM-фильтр рас. Он работает по уже отрисованному русскому
+        // тексту карточки, поэтому не зависит от того, каким ключом Laaru
+        // хранит name внутри Item и как именно Foundry его локализует.
+        if (this.currentStep === 'race') {
+            const root = this.element instanceof HTMLElement ? this.element : this.element?.[0];
+            root?.querySelectorAll?.('.race-nav-grid .nav-item, .grid-selector-item').forEach(card => {
+                const visibleText = String(card.textContent || '').replace(/\s+/gu, ' ').trim().toLowerCase();
+                const titleText = String(card.getAttribute?.('title') || '').trim().toLowerCase();
+                const ariaText = String(card.getAttribute?.('aria-label') || '').trim().toLowerCase();
+                const combined = `${visibleText} ${titleText} ${ariaText}`;
+
+                // Пользователь потребовал полностью убрать все драконьи метки.
+                // Проверяем уже видимый DOM: если на карточке написано "Метка" —
+                // карточка физически удаляется до привязки событий.
+                if (combined.includes('метка') || combined.includes('mark of')) {
+                    card.remove();
+                }
+            });
+        }
+
         // 添加激活类以隐藏原生 UI
         // 我觉得我的UI好看
         document.body.classList.add("originate-active");
