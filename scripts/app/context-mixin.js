@@ -680,6 +680,11 @@ export const ContextMixin = (Base) => class extends Base {
                             selectedOption.classIcon = selectedOption.classIcon || selectedOption.img || null;
                         }
 
+                        if (this.currentStep === 'race') {
+                            // Иконка выбранной расы в описании работает так же, как у классов.
+                            selectedOption.raceIcon = selectedOption.raceIcon || selectedOption.img || null;
+                        }
+
                         // 如果没有特定的背景图，使用默认背景
 
 
