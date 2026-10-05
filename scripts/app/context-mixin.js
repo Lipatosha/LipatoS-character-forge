@@ -245,7 +245,7 @@ const RACE_CATEGORY_WHITELIST = Object.freeze({
         ['Гном глубинный', 'Глубинный гном', 'Глубинный гном (свирфнеблин)'],
         ['Тифлинг Асмодея'],
         ['Тифлинг Мефистофеля'],
-        ['Тифлинг Зариэль'],
+        ['Тифлинг Зариэли', 'Тифлинг Зариэль'],
         ['Драконорождённый', 'Драконорожденный']
     ]),
     beast: Object.freeze([
@@ -264,6 +264,8 @@ const RACE_CATEGORY_WHITELIST = Object.freeze({
         ['Кентавр'],
         ['Локсодон'],
         ['Склизыш'],
+        ['Гифф', 'Гиффы', 'Giff'],
+        ['Совлин', 'Owlin'],
         ['Табакси'],
         ['Тортл'],
         ['Юань-ти', 'Юань ти']
@@ -306,6 +308,7 @@ const RACE_CATEGORY_WHITELIST = Object.freeze({
     ]),
     death: Object.freeze([
         ['Дампир'],
+        ['Возрождённый', 'Возрожденный', 'Reborn'],
         ['Кадавр'],
         ['Нежить: Мумия'],
         ['Нежить: Призрак'],
@@ -376,7 +379,10 @@ function isVariantRaceOption(option = {}) {
         normalizeRaceWhitelistKey('Морской эльф'),
         normalizeRaceWhitelistKey('Гном глубинный'),
         normalizeRaceWhitelistKey('Глубинный гном'),
-        normalizeRaceWhitelistKey('Глубинный гном (свирфнеблин)')
+        normalizeRaceWhitelistKey('Глубинный гном (свирфнеблин)'),
+        normalizeRaceWhitelistKey('Гифф'),
+        normalizeRaceWhitelistKey('Гиффы'),
+        normalizeRaceWhitelistKey('Giff')
     ]);
 
     const displayKey = normalizeRaceWhitelistKey(raceDisplayName);
