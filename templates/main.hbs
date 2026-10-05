@@ -774,47 +774,64 @@
         <div class="cinematic-nav">
             {{#if (eq currentStep "class")}}
             <div class="nav-track class-nav-track">
-                <section class="class-nav-group class-nav-group-official">
-                    <h3 class="class-nav-heading">Официальные классы</h3>
-                    <div class="class-nav-grid">
-                        {{#each officialClassOptions}}
-                        <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
-                            <div class="nav-icon-wrapper">
-                                {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                <div class="class-nav-left-stack">
+                    <section class="class-nav-group class-nav-group-official">
+                        <h3 class="class-nav-heading">Официальные классы</h3>
+                        <div class="class-nav-grid class-nav-grid-official">
+                            {{#each officialClassOptions}}
+                            <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                <div class="nav-icon-wrapper">
+                                    {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                                </div>
+                                <div class="nav-label class-nav-label">
+                                    {{#if this.classNavLine2}}
+                                    <span>{{this.classNavLine1}}</span>
+                                    <span>{{this.classNavLine2}}</span>
+                                    {{#if this.classNavLine3}}<span>{{this.classNavLine3}}</span>{{/if}}
+                                    {{else}}
+                                    {{this.classNavLabel}}
+                                    {{/if}}
+                                </div>
                             </div>
-                            <div class="nav-label class-nav-label">
-                                {{#if this.classNavLine2}}
-                                <span>{{this.classNavLine1}}</span>
-                                <span>{{this.classNavLine2}}</span>
-                                {{#if this.classNavLine3}}<span>{{this.classNavLine3}}</span>{{/if}}
-                                {{else}}
-                                {{this.classNavLabel}}
-                                {{/if}}
-                            </div>
+                            {{/each}}
                         </div>
-                        {{/each}}
-                    </div>
-                </section>
+                    </section>
 
-                <section class="class-nav-group class-nav-group-alternative">
-                    <h3 class="class-nav-heading">Альтернативные классы</h3>
-                    <div class="class-nav-grid class-nav-grid-alternative">
-                        {{#each alternativeClassOptions}}
+                    <section class="class-nav-group class-nav-group-alternative">
+                        <h3 class="class-nav-heading">Альтернативные классы</h3>
+                        <div class="class-nav-grid class-nav-grid-alternative">
+                            {{#each alternativeClassOptions}}
+                            <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                <div class="nav-icon-wrapper">
+                                    {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                                </div>
+                                <div class="nav-label class-nav-label">
+                                    {{#if this.classNavLine2}}
+                                    <span>{{this.classNavLine1}}</span>
+                                    <span>{{this.classNavLine2}}</span>
+                                    {{#if this.classNavLine3}}<span>{{this.classNavLine3}}</span>{{/if}}
+                                    {{else}}
+                                    {{this.classNavLabel}}
+                                    {{/if}}
+                                </div>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </section>
+                </div>
+
+                <section class="class-nav-group class-nav-group-unofficial">
+                    <h3 class="class-nav-heading">Неофициальные классы</h3>
+                    <div class="class-nav-grid class-nav-grid-unofficial">
+                        {{#each unofficialClassOptions}}
                         <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
                             data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
                             <div class="nav-icon-wrapper">
                                 {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
                             </div>
-                            <div class="nav-label class-nav-label">
-                                {{#if this.classNavLine2}}
-                                <span>{{this.classNavLine1}}</span>
-                                <span>{{this.classNavLine2}}</span>
-                                {{#if this.classNavLine3}}<span>{{this.classNavLine3}}</span>{{/if}}
-                                {{else}}
-                                {{this.classNavLabel}}
-                                {{/if}}
-                            </div>
+                            <div class="nav-label class-nav-label">{{this.classNavLabel}}</div>
                         </div>
                         {{/each}}
                     </div>

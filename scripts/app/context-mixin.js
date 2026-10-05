@@ -239,6 +239,7 @@ export const ContextMixin = (Base) => class extends Base {
             let availableClasses = [];
             let officialClassOptions = [];
             let alternativeClassOptions = [];
+            let unofficialClassOptions = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -275,7 +276,24 @@ export const ContextMixin = (Base) => class extends Base {
                         CHARACTER_FORGE_ALTERNATIVE_CLASS_ORDER,
                         true
                     );
-                    currentOptions = [...officialClassOptions, ...alternativeClassOptions];
+
+                    const catalogIds = new Set([
+                        ...officialClassOptions.map(option => option.id),
+                        ...alternativeClassOptions.map(option => option.id)
+                    ]);
+
+                    unofficialClassOptions = enriched
+                        .filter(option => !catalogIds.has(option.id))
+                        .map(option => ({
+                            ...option,
+                            classNavLabel: String(option.displayName || option.name || '').trim()
+                        }));
+
+                    currentOptions = [
+                        ...officialClassOptions,
+                        ...alternativeClassOptions,
+                        ...unofficialClassOptions
+                    ];
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -358,6 +376,7 @@ export const ContextMixin = (Base) => class extends Base {
                 options: currentOptions,
                 officialClassOptions,
                 alternativeClassOptions,
+                unofficialClassOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
