@@ -216,12 +216,25 @@ function isUndeadRace(option = {}) {
 
 
 function isHiddenRaceAfterDisplayEnhancement(option = {}) {
-    const values = [
+    const baseValues = [
         option.displayName,
         option.name,
         option.label,
         option.title
     ].filter(value => typeof value === 'string' && value.trim());
+
+    const values = new Set(baseValues);
+
+    // В шаблоне имя выводится через {{localize this.name}}.
+    // Повторяем ровно эту операцию здесь, ДО построения групп рас.
+    for (const value of baseValues) {
+        try {
+            const localized = game.i18n.localize(value);
+            if (typeof localized === 'string' && localized.trim()) values.add(localized);
+        } catch (_) {
+            // Оставляем сырой вариант, если ключ локализации некорректен.
+        }
+    }
 
     for (const value of values) {
         const normalized = normalizeRaceCatalogText(value)
@@ -231,7 +244,6 @@ function isHiddenRaceAfterDisplayEnhancement(option = {}) {
             .trim();
         const compact = normalized.replace(/[^a-zа-я0-9]+/giu, '');
 
-        // Главное: метки вырезаются уже по финальному отображаемому имени.
         if (/(?:^|\s)метка(?:\s|$)/iu.test(normalized)
             || /(?:^|\s)mark\s+of(?:\s|$)/iu.test(normalized)) {
             return true;
