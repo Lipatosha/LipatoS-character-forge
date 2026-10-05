@@ -68,6 +68,113 @@ function getDnd5ePackIds() {
 }
 
 
+/**
+ * Список конкретных альтернативных рас, которые не должны отображаться
+ * в пользовательском выборе. Обычные версии одноимённых рас из основного
+ * компендиума races остаются доступны.
+ */
+const HIDDEN_ALTERNATIVE_RACE_ALIASES = Object.freeze([
+    'аасимар', 'асимар',
+    'багбир', 'багбер',
+    'гитзерай',
+    'гитьянки', 'гитъянки', 'гитянки',
+    'гоблин',
+    'голиаф',
+    'дженази воды', 'водный дженази',
+    'дженази воздуха', 'воздушный дженази',
+    'дженази земли', 'земляной дженази',
+    'дженази огня', 'огненный дженази',
+    'драконорожденный металлический', 'металлический драконорожденный',
+    'драконорожденный самоцветный', 'самоцветный драконорожденный',
+    'драконорожденный цветной', 'цветной драконорожденный', 'хроматический драконорожденный',
+    'изменяющийся', 'чейнджлинг', 'чейджлинг', 'changeling',
+    'двергар', 'дуэргар',
+    'кендер', 'кендлер', 'kender',
+    'гифф', 'giff',
+    'кенку',
+    'кентавр',
+    'кобольд',
+    'людоящер',
+    'минотавр',
+    'орк',
+    'плазмоид',
+    'сатир',
+    'совлин', 'owlin',
+    'табакси',
+    'тортл',
+    'три крин', 'три-крин', 'thri kreen', 'thri-kreen',
+    'тритон',
+    'фирболг',
+    'хадози', 'hadozee',
+    'фейри', 'fairy',
+    'харенгон', 'harengon',
+    'хобгоблин',
+    'шадар каи', 'шадар-каи', 'shadar kai', 'shadar-kai',
+    'шифтер', 'shifter',
+    'эладрин',
+    'эльф астральный', 'астральный эльф',
+    'эльф морской', 'морской эльф',
+    'юань ти', 'юань-ти', 'yuan ti', 'yuan-ti'
+]);
+
+const HIDDEN_RACE_NAME_FRAGMENTS = Object.freeze([
+    'кованный мидгарда',
+    'кентавр мидгарда',
+    'кобольд мидгарда',
+    'минотавр мидгарда',
+    'пустотный',
+    'своя раса',
+    'стиктикал'
+]);
+
+function normalizeRaceSelectionName(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/ё/gu, 'е')
+        .replace(/[’']/gu, '')
+        .replace(/[–—]/gu, '-')
+        .replace(/[()\[\]{}]/gu, ' ')
+        .replace(/\s*\/\s*.*/u, '')
+        .replace(/[^a-zа-я0-9-]+/giu, ' ')
+        .replace(/\s+/gu, ' ')
+        .trim();
+}
+
+function matchesHiddenAlternativeRaceName(name) {
+    const normalized = normalizeRaceSelectionName(name);
+    if (!normalized) return false;
+
+    return HIDDEN_ALTERNATIVE_RACE_ALIASES.some(alias => {
+        const candidate = normalizeRaceSelectionName(alias);
+        return normalized === candidate
+            || normalized.startsWith(`${candidate} `)
+            || normalized.startsWith(`${candidate}-`);
+    });
+}
+
+function isHiddenRaceSelectionOption(option) {
+    const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
+    const rawName = option?.name || option?.displayName || '';
+    const normalized = normalizeRaceSelectionName(rawName);
+
+    // Все драконьи метки скрываются независимо от исходного компендиума.
+    if (/\bметк\w*\b/iu.test(String(rawName || '')) || /\bmark\s+of\b/iu.test(String(rawName || ''))) {
+        return true;
+    }
+
+    // Уникальные альтернативные записи из сторонних наборов скрываем по имени,
+    // поскольку они могут находиться не в racesMPMM.
+    if (HIDDEN_RACE_NAME_FRAGMENTS.some(fragment => normalized.includes(normalizeRaceSelectionName(fragment)))) {
+        return true;
+    }
+
+    // Для обычных названий скрываем только альтернативную запись из racesMPMM,
+    // оставляя основную версию той же расы из races.
+    const isMpmm = uuid.includes('.laaru-dnd5-hw.racesmpmm.');
+    return isMpmm && matchesHiddenAlternativeRaceName(rawName);
+}
+
+
 async function mapWithConcurrency(items, limit, worker) {
     const source = Array.from(items || []);
     if (!source.length) return [];
@@ -343,6 +450,10 @@ export class DataManager {
         // Only fall back to loading a document when a third-party pack omitted classIdentifier.
         let candidates = Array.from(candidateMap.values());
 
+        if (type === 'race' && !includeExcluded) {
+            candidates = candidates.filter(option => !isHiddenRaceSelectionOption(option));
+        }
+
         // All class Items from installed source packs are selectable. Do not
         // filter by a hardcoded identifier list: subscribed books add classes.
 
@@ -428,6 +539,7 @@ export class DataManager {
 
         const result = Array.from(optionsMap.values())
             .filter(option => type !== 'feat' || isPlayerFeat(option))
+            .filter(option => type !== 'race' || includeExcluded || !isHiddenRaceSelectionOption(option))
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         this._optionsCache.set(cacheKey, result);
