@@ -760,6 +760,13 @@
                 </div>
                 {{/if}}
                 {{/if}}
+                {{#if (eq currentStep "race")}}
+                {{#if selectedOption.raceIcon}}
+                <div class="race-detail-icon" aria-hidden="true">
+                    <img src="{{selectedOption.raceIcon}}" alt="">
+                </div>
+                {{/if}}
+                {{/if}}
                 <div class="drawer-body">
                     {{{selectedOption.description}}}
                 </div>
