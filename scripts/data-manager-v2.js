@@ -153,18 +153,39 @@ function matchesHiddenVariantRaceName(name) {
     });
 }
 
-function isHiddenRaceSelectionOption(option) {
-    const rawNames = [
+function getRaceNameCandidates(option = {}) {
+    const values = [
         option?.name,
-        option?.displayName
+        option?.displayName,
+        option?.label,
+        option?.title
     ].filter(value => typeof value === 'string' && value.trim());
 
-    const normalizedNames = rawNames.map(normalizeRaceSelectionName);
-    const compactNames = rawNames.map(compactRaceSelectionName);
+    const candidates = new Set(values);
+    const localize = globalThis.game?.i18n?.localize?.bind(globalThis.game.i18n);
 
-    // Драконьи метки в библиотеке могут иметь другое исходное имя,
-    // а в интерфейсе становиться "Метка ...". Поэтому ловим слово "метка"
-    // и английское "Mark of" в любой части любого доступного имени.
+    if (localize) {
+        for (const value of values) {
+            try {
+                const localized = localize(value);
+                if (typeof localized === 'string' && localized.trim()) candidates.add(localized);
+            } catch (_) {
+                // Игнорируем некорректный ключ локализации и продолжаем по сырому имени.
+            }
+        }
+    }
+
+    return Array.from(candidates);
+}
+
+function isHiddenRaceSelectionOption(option) {
+    const names = getRaceNameCandidates(option);
+    const normalizedNames = names.map(normalizeRaceSelectionName);
+    const compactNames = names.map(compactRaceSelectionName);
+
+    // Laaru может хранить в name ключ локализации, например LAARU....MARK_OF_STORM,
+    // а "Метка Бури — Полуэльф" появляется только после game.i18n.localize().
+    // Поэтому проверяем и сырые, и уже локализованные имена.
     if (normalizedNames.some(name =>
         /(?:^|\s)метка(?:\s|$)/iu.test(name)
         || /(?:^|\s)mark\s+of(?:\s|$)/iu.test(name)
@@ -172,21 +193,14 @@ function isHiddenRaceSelectionOption(option) {
         return true;
     }
 
-    // Все варианты Стик'Тик'Кал.
     if (compactNames.some(name => name.includes('стиктиккал') || name.includes('stiktikkal'))) return true;
-
-    // Все гноллы/гнолы, независимо от написания и источника.
     if (compactNames.some(name => name.includes('гнол') || name.includes('gnoll'))) return true;
-
-    // Все расы Мидгарда удаляются из выбора целиком.
     if (normalizedNames.some(name => name.includes('мидгард') || name.includes('midgard'))) return true;
 
-    // Список из 48 вариативных рас скрываем только в отдельном racesMPMM.
-    // Обычные одноимённые версии из races остаются.
     const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
     if (!uuid.includes('.laaru-dnd5-hw.racesmpmm.')) return false;
 
-    return rawNames.some(matchesHiddenVariantRaceName);
+    return names.some(matchesHiddenVariantRaceName);
 }
 
 
