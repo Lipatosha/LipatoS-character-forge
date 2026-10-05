@@ -14150,3 +14150,12 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-race .race-nav-heading {
     margin-bottom: 3px !important;
 }
+
+
+/* ============================================================
+   Character Forge 1.3.40 — десять рас в строке
+   ============================================================ */
+
+.view-selection-root.step-race .race-nav-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+}
