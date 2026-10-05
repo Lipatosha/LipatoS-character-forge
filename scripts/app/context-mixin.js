@@ -225,196 +225,132 @@ function resolveRaceDisplayName(option = {}) {
     return String(values[0] || '').trim();
 }
 
-function getRaceCatalogNames(option = {}) {
-    const values = [
-        resolveRaceDisplayName(option),
-        option.raceDisplayName,
-        option.displayName,
-        option.name,
-        option.label,
-        option.title
-    ].filter(value => typeof value === 'string' && value.trim());
+const RACE_CATEGORY_WHITELIST = Object.freeze({
+    kingdoms: Object.freeze([
+        ['Человек'],
+        ['Полуэльф'],
+        ['Эльф высший'],
+        ['Эльф лесной'],
+        ['Эльф тёмный (дроу)', 'Эльф темный (дроу)'],
+        ['Гном лесной'],
+        ['Гном скальный'],
+        ['Голиаф'],
+        ['Дварф горный'],
+        ['Дварф серый (дуэргар)', 'Дварф серый (двергар)'],
+        ['Дварф холмовой'],
+        ['Полурослик крепкий'],
+        ['Полурослик легконогий'],
+        ['Полурослик лотосденский'],
+        ['Полурослик призрачный'],
+        ['Гоблин'],
+        ['Орк'],
+        ['Полуорк'],
+        ['Драконорождённый', 'Драконорожденный'],
+        ['Кобольд']
+    ]),
+    beast: Object.freeze([
+        ['Ааракокра'],
+        ['Грунг'],
+        ['Кенку'],
+        ['Кицунэ'],
+        ['Котовец — вольные когти', 'Котовец - вольные когти'],
+        ['Леонин'],
+        ['Людоворон'],
+        ['Людокрыс'],
+        ['Людомедведь (Серошкурые)'],
+        ['Людоящер'],
+        ['Мышинец — крыса', 'Мышинец - крыса'],
+        ['Мышинец — полевая мышь', 'Мышинец - полевая мышь'],
+        ['Табакси'],
+        ['Тортл'],
+        ['Юань-ти', 'Юань ти']
+    ]),
+    planar: Object.freeze([
+        ['Аасимар-защитник', 'Аасимар защитник'],
+        ['Аасимар-каратель', 'Аасимар каратель'],
+        ['Аасимар-падший', 'Аасимар падший'],
+        ['Гитзерай'],
+        ['Гитьянки'],
+        ['Дженази воды'],
+        ['Дженази воздуха'],
+        ['Дженази земли'],
+        ['Дженази огня'],
+        ['Калаштар'],
+        ['Тифлинг Асмодея']
+    ]),
+    unusual: Object.freeze([
+        ['Ведалкен'],
+        ['Гибрид Симиков'],
+        ['Грацеза'],
+        ['Древан'],
+        ['Изменяющийся (Чейнджлинг)', 'Изменяющийся (Чейджлинг)'],
+        ['Кентавр'],
+        ['Кованый'],
+        ['Липсик'],
+        ['Локата'],
+        ['Локсодон'],
+        ['Маген воин'],
+        ['Маген мистик'],
+        ['Минотавр'],
+        ['Сатир'],
+        ['Склизыш'],
+        ['Теневые феи'],
+        ['Тритон'],
+        ['Троллеобразные (Каменешкурый)'],
+        ['Фирболг'],
+        ['Фэйри (альт.)', 'Фейри (альт.)', 'Фэйри (альт)', 'Фейри (альт)'],
+        ['Шифтер (Дикий охотник)'],
+        ['Энтлинг']
+    ]),
+    death: Object.freeze([
+        ['Дампир'],
+        ['Кадавр'],
+        ['Нежить: Мумия'],
+        ['Нежить: Призрак'],
+        ['Нежить: Ревенант'],
+        ['Нежить: Скелет'],
+        ['Нежить: Умертвие'],
+        ['Нежить: Упырь'],
+        ['Пустотный']
+    ])
+});
 
-    const names = new Set(values);
+function normalizeRaceWhitelistKey(value) {
+    let text = String(value || '').trim();
 
-    for (const value of values) {
-        try {
-            const localized = game.i18n.localize(value);
-            if (typeof localized === 'string' && localized.trim()) names.add(localized);
-        } catch (_) {
-            // Если это не ключ локализации, достаточно исходного значения.
-        }
-    }
+    // Убираем только книжный код в самом конце: (PHB), (XGE), (AAG) и т.п.
+    // Содержательные скобки вроде "(дроу)" или "(Каменешкурый)" сохраняются.
+    text = text.replace(/\s*\(([A-Z0-9][A-Z0-9&+.'’\- ]{1,24})\)\s*$/u, '');
 
-    return Array.from(names)
-        .map(normalizeRaceCatalogText)
-        .filter(Boolean);
-}
-
-function raceNameIncludes(option, aliases) {
-    const names = getRaceCatalogNames(option);
-    return aliases.some(alias => {
-        const needle = normalizeRaceCatalogText(alias);
-        return names.some(name => name.includes(needle));
-    });
-}
-
-function isUndeadRace(option = {}) {
-    const names = getRaceCatalogNames(option);
-    const label = names.join(' ');
-    const typeValue = normalizeRaceCatalogText(
-        option.coreTraits?.type
-        || option.system?.type?.value
-        || option.system?.type
-        || ''
-    );
-
-    if (typeValue === 'undead' || typeValue.includes('нежить')) return true;
-
-    return /\b(?:undead|skeleton|zombie|mummy|ghost|wight|wraith|lich|revenant|dhampir|reborn)\b/i.test(label)
-        || /\b(?:нежить|скелет|зомби|мумия|призрак|упырь|вурдалак|лич|ревенант|дампир|возрожденн\w*)\b/iu.test(label);
-}
-
-function isMarkRace(option = {}) {
-    const names = getRaceCatalogNames(option);
-
-    const visibleMark = names.some(name => {
-        const normalized = normalizeRaceCatalogText(name)
-            .replace(/<[^>]*>/gu, ' ')
-            .replace(/[\u200B-\u200D\u2060\uFEFF]/gu, '')
-            .replace(/\s+/gu, ' ')
-            .trim();
-
-        return normalized.includes('метка')
-            || normalized.includes('mark of')
-            || normalized.includes('dragonmark');
-    });
-
-    if (visibleMark) return true;
-
-    // Дополнительная проверка внутренних ключей Laaru/UUID.
-    const machine = [
-        option.uuid,
-        option.id,
-        option.identifier,
-        option.system?.identifier,
-        option.name,
-        option.displayName
-    ]
-        .filter(Boolean)
-        .join(' ')
+    return text
         .toLowerCase()
+        .replace(/ё/gu, 'е')
+        .replace(/<[^>]*>/gu, ' ')
+        .replace(/[\u200B-\u200D\u2060\uFEFF]/gu, '')
+        .replace(/[’']/gu, '')
+        .replace(/[–—]/gu, '-')
         .replace(/[^a-zа-я0-9]+/giu, '');
-
-    return machine.includes('markof')
-        || machine.includes('dragonmark')
-        || machine.includes('метка');
 }
 
-function getRaceCatalogCategory(option = {}) {
-    // Метки всегда изолируем раньше всех остальных правил.
-    // Категория существует только внутри данных и никогда не выводится в шаблон.
-    if (isMarkRace(option)) return 'marks';
+const RACE_WHITELIST_INDEX = (() => {
+    const index = new Map();
 
-    // Нежить имеет высший приоритет: дампир/возрождённый не должны
-    // попадать в общие гуманоидные категории.
-    if (isUndeadRace(option)) return 'death';
-
-    // Шадар-кай, эладрины и прочие эльфийские варианты держим вместе,
-    // даже если у них есть выраженная планарная связь.
-    if (raceNameIncludes(option, [
-        'эльф', 'elf', 'дроу', 'drow', 'шадар', 'shadar',
-        'полуэльф', 'half-elf', 'half elf', 'эладрин', 'eladrin'
-    ])) return 'elf';
-
-    if (raceNameIncludes(option, [
-        'дварф', 'dwarf', 'дуэргар', 'duergar', 'полудварф', 'half-dwarf', 'half dwarf',
-        'гном', 'gnome', 'полурослик', 'halfling', 'голиаф', 'goliath'
-    ])) return 'mountain';
-
-    if (raceNameIncludes(option, [
-        'драконорожден', 'dragonborn', 'драконокров', 'dragonkin',
-        'кобольд', 'kobold', 'полудракон', 'half-dragon', 'half dragon'
-    ])) return 'dragon';
-
-    if (raceNameIncludes(option, [
-        'аасимар', 'асимар', 'aasimar', 'тифлинг', 'tiefling',
-        'дженази', 'genasi', 'гитьянки', 'githyanki', 'гитзерай', 'githzerai',
-        'калаштар', 'kalashtar'
-    ])) return 'planar';
-
-    if (raceNameIncludes(option, [
-        'орк', 'orc', 'полуорк', 'half-orc', 'half orc',
-        'гоблин', 'goblin', 'хобгоблин', 'hobgoblin',
-        'багбер', 'багбир', 'bugbear', 'вердан', 'verdan'
-    ])) return 'fang';
-
-    if (raceNameIncludes(option, [
-        'ааракокра', 'aarakocra', 'кенку', 'kenku', 'людоворон', 'crowfolk',
-        'табакси', 'tabaxi', 'леонин', 'leonin', 'локсодонт', 'loxodon',
-        'кицун', 'kitsune', 'котов', 'catfolk', 'мышин', 'mousefolk',
-        'людокрыс', 'ratfolk', 'людомедвед', 'bearfolk',
-        'людоящер', 'lizardfolk', 'тортл', 'tortle', 'грунг', 'grung',
-        'юань-ти', 'юань ти', 'yuan-ti', 'yuan ti'
-    ])) return 'beast';
-
-    if (raceNameIncludes(option, [
-        'человек', 'human', 'получеловек'
-    ])) return 'kingdoms';
-
-    if (raceNameIncludes(option, [
-        'фирболг', 'firbolg', 'сатир', 'satyr', 'фэйри', 'фейри', 'fairy',
-        'кентавр', 'centaur', 'минотавр', 'minotaur',
-        'чейнджлинг', 'чейджлинг', 'changeling', 'изменяющийся',
-        'шифтер', 'shifter', 'гибрид симиков', 'simic hybrid',
-        'кован', 'warforged', 'маген', 'magen', 'ведалкен', 'vedalken',
-        'энтлинг', 'entling'
-    ])) return 'unusual';
-
-    // Всё редкое, искусственное и хоумбрю, которое не совпало с явными
-    // правилами выше, отправляем сюда, чтобы ни одна раса не потерялась.
-    return 'unusual';
-}
-
-
-function isHiddenRaceAfterDisplayEnhancement(option = {}) {
-    const baseValues = [
-        option.raceDisplayName,
-        option.displayName,
-        option.name,
-        option.label,
-        option.title
-    ].filter(value => typeof value === 'string' && value.trim());
-
-    const values = new Set(baseValues);
-
-    // В шаблоне имя выводится через {{localize this.name}}.
-    // Повторяем ровно эту операцию здесь, ДО построения групп рас.
-    for (const value of baseValues) {
-        try {
-            const localized = game.i18n.localize(value);
-            if (typeof localized === 'string' && localized.trim()) values.add(localized);
-        } catch (_) {
-            // Оставляем сырой вариант, если ключ локализации некорректен.
-        }
+    for (const [category, entries] of Object.entries(RACE_CATEGORY_WHITELIST)) {
+        entries.forEach((aliases, order) => {
+            for (const alias of aliases) {
+                const key = normalizeRaceWhitelistKey(alias);
+                if (key) index.set(key, { category, order });
+            }
+        });
     }
 
-    for (const value of values) {
-        const normalized = normalizeRaceCatalogText(value)
-            .replace(/<[^>]*>/gu, ' ')
-            .replace(/[\u200B-\u200D\u2060\uFEFF]/gu, '')
-            .replace(/\s+/gu, ' ')
-            .trim();
-        const compact = normalized.replace(/[^a-zа-я0-9]+/giu, '');
+    return index;
+})();
 
-        // Метки здесь НЕ удаляем: они направляются в отдельную скрытую
-        // категорию marks внутри getRaceCatalogCategory().
-        if (compact.includes('гнол') || compact.includes('gnoll')) return true;
-        if (normalized.includes('мидгард') || normalized.includes('midgard')) return true;
-        if (compact.includes('стиктиккал') || compact.includes('stiktikkal')) return true;
-    }
-
-    return false;
+function getWhitelistedRaceInfo(option = {}) {
+    const displayName = resolveRaceDisplayName(option);
+    const key = normalizeRaceWhitelistKey(displayName);
+    return RACE_WHITELIST_INDEX.get(key) || null;
 }
 
 export const ContextMixin = (Base) => class extends Base {
@@ -495,15 +431,10 @@ export const ContextMixin = (Base) => class extends Base {
             let unofficialClassOptions = [];
             let companionClassOptions = [];
             let raceKingdomOptions = [];
-            let raceElfOptions = [];
-            let raceMountainOptions = [];
-            let raceFangOptions = [];
             let raceBeastOptions = [];
-            let raceDragonOptions = [];
             let racePlanarOptions = [];
             let raceUnusualOptions = [];
             let raceDeathOptions = [];
-            let raceMarkOptions = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -519,16 +450,24 @@ export const ContextMixin = (Base) => class extends Base {
                 // 应用 PHB 图片增强
                 currentOptions = enhanceOptionsWithPHBImages(currentOptions, this.currentStep);
 
-                // Повторная обязательная фильтрация рас уже после формирования
-                // displayName. Это не даёт меткам, гноллам и Мидгарду пройти
-                // через различия между исходным и отображаемым названием.
+                // Для рас действует строгий белый список пользователя.
+                // Всё, чего нет в таблице категорий, полностью исключается
+                // из выбора ещё до построения UI.
                 if (this.currentStep === 'race') {
-                    currentOptions = currentOptions.map(option => ({
-                        ...option,
-                        raceDisplayName: resolveRaceDisplayName(option)
-                    }));
+                    currentOptions = currentOptions
+                        .map(option => {
+                            const raceDisplayName = resolveRaceDisplayName(option);
+                            const normalizedOption = { ...option, raceDisplayName };
+                            const whitelistInfo = getWhitelistedRaceInfo(normalizedOption);
+                            if (!whitelistInfo) return null;
 
-                    currentOptions = currentOptions.filter(option => !isHiddenRaceAfterDisplayEnhancement(option));
+                            return {
+                                ...normalizedOption,
+                                raceCategory: whitelistInfo.category,
+                                raceOrder: whitelistInfo.order
+                            };
+                        })
+                        .filter(Boolean);
                 }
 
                 // Class selector: show only the requested official and alternative catalogs,
@@ -585,32 +524,26 @@ export const ContextMixin = (Base) => class extends Base {
                 if (this.currentStep === 'race') {
                     const raceBuckets = {
                         kingdoms: [],
-                        elf: [],
-                        mountain: [],
-                        fang: [],
                         beast: [],
-                        dragon: [],
                         planar: [],
                         unusual: [],
-                        death: [],
-                        marks: []
+                        death: []
                     };
 
                     for (const option of currentOptions) {
-                        const category = getRaceCatalogCategory(option);
-                        (raceBuckets[category] || raceBuckets.unusual).push(option);
+                        const bucket = raceBuckets[option.raceCategory];
+                        if (bucket) bucket.push(option);
+                    }
+
+                    for (const bucket of Object.values(raceBuckets)) {
+                        bucket.sort((a, b) => (a.raceOrder ?? 999) - (b.raceOrder ?? 999));
                     }
 
                     raceKingdomOptions = raceBuckets.kingdoms;
-                    raceElfOptions = raceBuckets.elf;
-                    raceMountainOptions = raceBuckets.mountain;
-                    raceFangOptions = raceBuckets.fang;
                     raceBeastOptions = raceBuckets.beast;
-                    raceDragonOptions = raceBuckets.dragon;
                     racePlanarOptions = raceBuckets.planar;
                     raceUnusualOptions = raceBuckets.unusual;
                     raceDeathOptions = raceBuckets.death;
-                    raceMarkOptions = raceBuckets.marks;
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -696,15 +629,10 @@ export const ContextMixin = (Base) => class extends Base {
                 unofficialClassOptions,
                 companionClassOptions,
                 raceKingdomOptions,
-                raceElfOptions,
-                raceMountainOptions,
-                raceFangOptions,
                 raceBeastOptions,
-                raceDragonOptions,
                 racePlanarOptions,
                 raceUnusualOptions,
                 raceDeathOptions,
-                raceMarkOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
