@@ -5,25 +5,22 @@ on:
     branches: [main]
     paths:
       - module.json
-      - scripts/**
-      - styles/**
-      - templates/**
-      - lang/**
-      - assets/**
-      - fonts/**
-      - README.md
-      - CHANGELOG.md
-      - .github/workflows/release.yml
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: foundry-release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate JavaScript
         shell: bash
@@ -56,10 +53,26 @@ jobs:
         run: |
           zip -r character-forge.zip module.json scripts styles templates lang assets fonts README.md CHANGELOG.md
 
+      - name: Create and push tag
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on origin."
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "$TAG"
+          fi
+
       - name: Create GitHub Release
         if: steps.existing.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          gh release create "${{ steps.version.outputs.tag }}"             character-forge.zip module.json             --title "Character Forge ${{ steps.version.outputs.version }}"             --generate-notes
+          gh release create "${{ steps.version.outputs.tag }}" \
+            character-forge.zip module.json \
+            --title "Character Forge ${{ steps.version.outputs.version }}" \
+            --generate-notes \
+            --verify-tag

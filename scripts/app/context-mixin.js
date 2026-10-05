@@ -38,6 +38,30 @@ const CHARACTER_FORGE_ALTERNATIVE_CLASS_ORDER = [
     'artificer'
 ];
 
+
+const CHARACTER_FORGE_UNOFFICIAL_CLASS_ORDER = Object.freeze([
+    ['алхимик', 'alchemist'],
+    ['вместилище духа', 'spirit vessel', 'spiritvessel'],
+    ['мистик', 'mystic'],
+    ['дебошир', 'brawler'],
+    ['звездочёт', 'звездочет', 'stargazer'],
+    ['инллриггер', 'иллриггер', 'illrigger'],
+    ['охотник на монстров', 'monster hunter', 'monsterhunter'],
+    ['присон', 'претор', 'praetor'],
+    ['неупоконенная душа', 'неупокоенная душа', 'unquiet soul', 'restless soul'],
+    ['псион', 'psion'],
+    ['предводитель', 'leader'],
+    ['страж', 'warden'],
+    ['военочальник', 'военачальник', 'warlord'],
+    ['магус', 'magus'],
+    ['простолюдин', 'commoner'],
+    ['савант', 'savant'],
+    ['спеллблейд', 'spellblade'],
+    ['шаман', 'shaman'],
+    ['хранитель рун', 'rune keeper', 'runekeeper'],
+    ['оккультист', 'occultist']
+]);
+
 const CHARACTER_FORGE_CLASS_LABELS_RU = Object.freeze({
     fighter: 'Воин',
     barbarian: 'Варвар',
@@ -154,6 +178,35 @@ function isCompanionClass(option = {}) {
         || label.includes('собакен')
         || /(?:^|[-_.])(sidekick|companion)(?:$|[-_.])/i.test(identifier)
         || /(?:mount|dog|hound)/i.test(identifier);
+}
+
+
+function getUnofficialClassSortIndex(option = {}) {
+    const identifier = normalizeClassIdentifier(option);
+    const label = normalizeClassCatalogText(
+        option.classNavLabel
+        || option.displayName
+        || option.name
+        || ''
+    );
+
+    const compactLabel = label.replace(/[^a-zа-я0-9]+/giu, '');
+    const compactIdentifier = identifier.replace(/[^a-zа-я0-9]+/giu, '');
+
+    const index = CHARACTER_FORGE_UNOFFICIAL_CLASS_ORDER.findIndex(aliases =>
+        aliases.some(alias => {
+            const normalizedAlias = normalizeClassCatalogText(alias);
+            const compactAlias = normalizedAlias.replace(/[^a-zа-я0-9]+/giu, '');
+
+            return label === normalizedAlias
+                || label.includes(normalizedAlias)
+                || compactLabel === compactAlias
+                || compactLabel.includes(compactAlias)
+                || compactIdentifier.includes(compactAlias);
+        })
+    );
+
+    return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
 
 function buildClassCatalogGroup(options, order, isAlternative) {
@@ -598,7 +651,16 @@ export const ContextMixin = (Base) => class extends Base {
                     const companionIds = new Set(companionClassOptions.map(option => option.id));
 
                     unofficialClassOptions = residualClassOptions
-                        .filter(option => !companionIds.has(option.id));
+                        .filter(option => !companionIds.has(option.id))
+                        .sort((a, b) => {
+                            const orderDiff = getUnofficialClassSortIndex(a) - getUnofficialClassSortIndex(b);
+                            if (orderDiff !== 0) return orderDiff;
+
+                            return String(a.classNavLabel || '').localeCompare(
+                                String(b.classNavLabel || ''),
+                                'ru'
+                            );
+                        });
 
                     currentOptions = [
                         ...officialClassOptions,

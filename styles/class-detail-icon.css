@@ -340,67 +340,86 @@
   display: none !important;
 }
 
-
-/* Character Forge 1.3.46 — большая иконка выбранной расы в описании. */
+/* Character Forge 1.3.47 — квадратная иконка расы в блоке особенностей 75/25. */
 .view-selection-root.step-race .drawer-content {
   position: relative;
 }
 
-.view-selection-root.step-race .race-detail-icon {
-  position: absolute;
-  top: 105px;
-  right: 86px;
-  width: 160px;
-  height: 160px;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.view-selection-root.step-race .drawer-content > .race-detail-icon {
+  display: none !important;
+}
+
+.view-selection-root.step-race .race-feature-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) !important;
+  align-items: start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  gap: 0 !important;
+  margin: 0 0 12px !important;
+}
+
+.view-selection-root.step-race .race-feature-table-slot {
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.view-selection-root.step-race .race-feature-table-slot > table {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.view-selection-root.step-race .race-feature-layout .race-detail-icon {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  padding: 0 0 0 10px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  z-index: auto !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
   pointer-events: none;
   background: transparent !important;
 }
 
-.view-selection-root.step-race .race-detail-icon img {
-  display: block;
-  width: 160px !important;
-  height: 160px !important;
-  min-width: 160px !important;
-  min-height: 160px !important;
-  max-width: 160px !important;
-  max-height: 160px !important;
+.view-selection-root.step-race .race-feature-layout .race-detail-icon img {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 180px !important;
+  max-height: none !important;
+  aspect-ratio: 1 / 1 !important;
   object-fit: contain !important;
   object-position: center center !important;
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
+  border-radius: 0 !important;
+  clip-path: none !important;
   background: transparent !important;
   box-shadow: none !important;
-  border-radius: 50% !important;
-  clip-path: circle(49% at 50% 50%) !important;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, .45));
-}
-
-/* Как у классов: раскрытое описание освобождает место и прячет иконку. */
-.view-selection-root.step-race
-.drawer-content:has(.drawer-body details[open])
-.race-detail-icon {
-  display: none !important;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .4)) !important;
 }
 
 @media (max-width: 1366px), (max-height: 760px) {
-  .view-selection-root.step-race .race-detail-icon {
-    top: 88px;
-    right: 68px;
-    width: 140px;
-    height: 140px;
+  .view-selection-root.step-race .race-feature-layout .race-detail-icon {
+    padding-left: 8px !important;
   }
 
-  .view-selection-root.step-race .race-detail-icon img {
-    width: 140px !important;
-    height: 140px !important;
-    min-width: 140px !important;
-    min-height: 140px !important;
-    max-width: 140px !important;
-    max-height: 140px !important;
+  .view-selection-root.step-race .race-feature-layout .race-detail-icon img {
+    max-width: 150px !important;
   }
 }

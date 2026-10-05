@@ -419,6 +419,28 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         this._raceMarkObserver?.disconnect?.();
         this._raceMarkObserver = null;
 
+        // Раса: первая таблица особенностей занимает 75% строки,
+        // квадратная иконка выбранной расы — оставшиеся 25%.
+        if (this.currentStep === 'race') {
+            const root = this.element instanceof HTMLElement ? this.element : this.element?.[0];
+            const drawerBody = root?.querySelector?.('.left-sidebar-drawer .drawer-body');
+            const raceIcon = root?.querySelector?.('.race-detail-icon');
+            const featureTable = drawerBody?.querySelector?.('table');
+
+            if (drawerBody && raceIcon && featureTable && !featureTable.closest('.race-feature-layout')) {
+                const layout = document.createElement('div');
+                layout.className = 'race-feature-layout';
+
+                const tableSlot = document.createElement('div');
+                tableSlot.className = 'race-feature-table-slot';
+
+                featureTable.parentNode.insertBefore(layout, featureTable);
+                tableSlot.appendChild(featureTable);
+                layout.appendChild(tableSlot);
+                layout.appendChild(raceIcon);
+            }
+        }
+
         // 添加激活类以隐藏原生 UI
         // 我觉得我的UI好看
         document.body.classList.add("originate-active");
