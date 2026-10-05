@@ -382,7 +382,12 @@ function isVariantRaceOption(option = {}) {
         normalizeRaceWhitelistKey('Глубинный гном (свирфнеблин)'),
         normalizeRaceWhitelistKey('Гифф'),
         normalizeRaceWhitelistKey('Гиффы'),
-        normalizeRaceWhitelistKey('Giff')
+        normalizeRaceWhitelistKey('Giff'),
+        normalizeRaceWhitelistKey('Совлин'),
+        normalizeRaceWhitelistKey('Owlin'),
+        normalizeRaceWhitelistKey('Возрождённый'),
+        normalizeRaceWhitelistKey('Возрожденный'),
+        normalizeRaceWhitelistKey('Reborn')
     ]);
 
     const displayKey = normalizeRaceWhitelistKey(raceDisplayName);
