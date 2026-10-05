@@ -822,20 +822,37 @@
                     </section>
                 </div>
 
-                <section class="class-nav-group class-nav-group-unofficial">
-                    <h3 class="class-nav-heading">Неофициальные классы</h3>
-                    <div class="class-nav-grid class-nav-grid-unofficial">
-                        {{#each unofficialClassOptions}}
-                        <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
-                            <div class="nav-icon-wrapper">
-                                {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                <div class="class-nav-right-stack">
+                    <section class="class-nav-group class-nav-group-unofficial">
+                        <h3 class="class-nav-heading">Неофициальные классы</h3>
+                        <div class="class-nav-grid class-nav-grid-unofficial">
+                            {{#each unofficialClassOptions}}
+                            <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                <div class="nav-icon-wrapper">
+                                    {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                                </div>
+                                <div class="nav-label class-nav-label">{{this.classNavLabel}}</div>
                             </div>
-                            <div class="nav-label class-nav-label">{{this.classNavLabel}}</div>
+                            {{/each}}
                         </div>
-                        {{/each}}
-                    </div>
-                </section>
+                    </section>
+
+                    <section class="class-nav-group class-nav-group-companions">
+                        <h3 class="class-nav-heading">Напарники</h3>
+                        <div class="class-nav-grid class-nav-grid-companions">
+                            {{#each companionClassOptions}}
+                            <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                <div class="nav-icon-wrapper">
+                                    {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                                </div>
+                                <div class="nav-label class-nav-label">{{this.classNavLabel}}</div>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </section>
+                </div>
             </div>
             {{else}}
             <div class="nav-track">

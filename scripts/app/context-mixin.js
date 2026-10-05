@@ -133,6 +133,23 @@ function getClassCatalogInfo(option = {}) {
     };
 }
 
+function isHiddenPsionicClass(option = {}) {
+    const identifier = normalizeClassIdentifier(option);
+    const label = normalizeClassCatalogText(option.displayName || option.name || '');
+    const compact = label.replace(/\s+/g, '');
+    return (
+        (compact.includes('псионик') && compact.includes('ua') && compact.includes('hb'))
+        || (/psionic/i.test(identifier) && /(?:ua|hb)/i.test(identifier))
+    );
+}
+
+function isCompanionClass(option = {}) {
+    const identifier = normalizeClassIdentifier(option);
+    const label = normalizeClassCatalogText(option.displayName || option.name || '');
+    return label.includes('напарник')
+        || /(?:^|[-_.])(sidekick|companion)(?:$|[-_.])/i.test(identifier);
+}
+
 function buildClassCatalogGroup(options, order, isAlternative) {
     const byKey = new Map();
 
@@ -240,6 +257,7 @@ export const ContextMixin = (Base) => class extends Base {
             let officialClassOptions = [];
             let alternativeClassOptions = [];
             let unofficialClassOptions = [];
+            let companionClassOptions = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -282,17 +300,27 @@ export const ContextMixin = (Base) => class extends Base {
                         ...alternativeClassOptions.map(option => option.id)
                     ]);
 
-                    unofficialClassOptions = enriched
+                    const residualClassOptions = enriched
                         .filter(option => !catalogIds.has(option.id))
+                        .filter(option => !isHiddenPsionicClass(option))
                         .map(option => ({
                             ...option,
                             classNavLabel: String(option.displayName || option.name || '').trim()
                         }));
 
+                    companionClassOptions = residualClassOptions
+                        .filter(option => isCompanionClass(option));
+
+                    const companionIds = new Set(companionClassOptions.map(option => option.id));
+
+                    unofficialClassOptions = residualClassOptions
+                        .filter(option => !companionIds.has(option.id));
+
                     currentOptions = [
                         ...officialClassOptions,
                         ...alternativeClassOptions,
-                        ...unofficialClassOptions
+                        ...unofficialClassOptions,
+                        ...companionClassOptions
                     ];
                 }
 
@@ -377,6 +405,7 @@ export const ContextMixin = (Base) => class extends Base {
                 officialClassOptions,
                 alternativeClassOptions,
                 unofficialClassOptions,
+                companionClassOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
