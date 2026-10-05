@@ -416,24 +416,44 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         super._onRender(context, options);
         const html = $(this.element);
 
-        // Финальный DOM-фильтр рас. Он работает по уже отрисованному русскому
-        // тексту карточки, поэтому не зависит от того, каким ключом Laaru
-        // хранит name внутри Item и как именно Foundry его локализует.
+        // Финальная DOM-страховка: все визуально распознанные "Метки"
+        // переносим в скрытую секцию, а не оставляем в видимых категориях.
         if (this.currentStep === 'race') {
             const root = this.element instanceof HTMLElement ? this.element : this.element?.[0];
-            root?.querySelectorAll?.('.race-nav-grid .nav-item, .grid-selector-item').forEach(card => {
-                const visibleText = String(card.textContent || '').replace(/\s+/gu, ' ').trim().toLowerCase();
-                const titleText = String(card.getAttribute?.('title') || '').trim().toLowerCase();
-                const ariaText = String(card.getAttribute?.('aria-label') || '').trim().toLowerCase();
-                const combined = `${visibleText} ${titleText} ${ariaText}`;
 
-                // Пользователь потребовал полностью убрать все драконьи метки.
-                // Проверяем уже видимый DOM: если на карточке написано "Метка" —
-                // карточка физически удаляется до привязки событий.
-                if (combined.includes('метка') || combined.includes('mark of')) {
-                    card.remove();
-                }
+            const segregateMarkCards = () => {
+                if (!root?.isConnected) return;
+                const hiddenGrid = root.querySelector('.race-nav-grid-marks');
+                if (!hiddenGrid) return;
+
+                root.querySelectorAll('.race-nav-grid .nav-item, .grid-selector-item').forEach(card => {
+                    if (card.closest('.race-nav-group-marks')) return;
+
+                    const visibleText = String(card.textContent || '').replace(/\s+/gu, ' ').trim().toLowerCase();
+                    const titleText = String(card.getAttribute?.('title') || '').trim().toLowerCase();
+                    const ariaText = String(card.getAttribute?.('aria-label') || '').trim().toLowerCase();
+                    const combined = `${visibleText} ${titleText} ${ariaText}`;
+
+                    if (combined.includes('метка') || combined.includes('mark of')) {
+                        hiddenGrid.appendChild(card);
+                    }
+                });
+            };
+
+            segregateMarkCards();
+            requestAnimationFrame(() => {
+                segregateMarkCards();
+                requestAnimationFrame(segregateMarkCards);
             });
+
+            this._raceMarkObserver?.disconnect?.();
+            if (root) {
+                this._raceMarkObserver = new MutationObserver(() => segregateMarkCards());
+                this._raceMarkObserver.observe(root, { childList: true, subtree: true });
+            }
+        } else {
+            this._raceMarkObserver?.disconnect?.();
+            this._raceMarkObserver = null;
         }
 
         // 添加激活类以隐藏原生 UI
