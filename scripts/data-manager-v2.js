@@ -73,13 +73,22 @@ function getDnd5ePackIds() {
  * в пользовательском выборе. Обычные версии одноимённых рас из основного
  * компендиума races остаются доступны.
  */
-const HIDDEN_ALTERNATIVE_RACE_ALIASES = Object.freeze([
+const HIDDEN_VARIANT_RACE_ALIASES = Object.freeze([
+    'своя раса', 'custom lineage',
+    'ааракокра',
     'аасимар', 'асимар',
-    'багбир', 'багбер',
+    'автогном', 'autognome',
+    'багбер', 'багбир',
+    'ведьмокровный', 'hexblood',
+    'возрожденный', 'возрождённый', 'reborn',
     'гитзерай',
     'гитьянки', 'гитъянки', 'гитянки',
+    'гифф', 'giff',
+    'глубинный гном', 'свирфнеблин', 'deep gnome',
     'гоблин',
     'голиаф',
+    'дампир', 'dhampir',
+    'двергар', 'дуэргар', 'duergar',
     'дженази воды', 'водный дженази',
     'дженази воздуха', 'воздушный дженази',
     'дженази земли', 'земляной дженази',
@@ -87,10 +96,8 @@ const HIDDEN_ALTERNATIVE_RACE_ALIASES = Object.freeze([
     'драконорожденный металлический', 'металлический драконорожденный',
     'драконорожденный самоцветный', 'самоцветный драконорожденный',
     'драконорожденный цветной', 'цветной драконорожденный', 'хроматический драконорожденный',
-    'изменяющийся', 'чейнджлинг', 'чейджлинг', 'подменыш', 'changeling',
-    'двергар', 'дуэргар',
-    'кендер', 'кендлер', 'kender',
-    'гифф', 'giff',
+    'изменяющийся', 'чейнджлинг', 'чейджлинг', 'changeling',
+    'кендер', 'kender',
     'кенку',
     'кентавр',
     'кобольд',
@@ -102,31 +109,19 @@ const HIDDEN_ALTERNATIVE_RACE_ALIASES = Object.freeze([
     'совлин', 'owlin',
     'табакси',
     'тортл',
-    'три крин', 'три-крин', 'thri kreen', 'thri-kreen',
+    'три-крин', 'три крин', 'thri-kreen', 'thri kreen',
     'тритон',
     'фирболг',
+    'фэйри', 'фейри', 'fairy',
     'хадози', 'hadozee',
-    'фейри', 'фея', 'fairy',
     'харенгон', 'harengon',
     'хобгоблин',
-    'шадар каи', 'шадар-каи', 'shadar kai', 'shadar-kai',
+    'шадар-каи', 'шадар каи', 'shadar-kai', 'shadar kai',
     'шифтер', 'shifter',
     'эладрин',
     'эльф астральный', 'астральный эльф',
     'эльф морской', 'морской эльф',
-    'юань ти', 'юань-ти', 'yuan ti', 'yuan-ti',
-    'custom lineage'
-]);
-
-const HIDDEN_RACE_NAME_FRAGMENTS = Object.freeze([
-    'кованный мидгарда',
-    'кентавр мидгарда',
-    'кобольд мидгарда',
-    'минотавр мидгарда',
-    'пустотный',
-    'своя раса',
-    'стиктикал',
-    'стиктик'
+    'юань-ти', 'юань ти', 'yuan-ti', 'yuan ti'
 ]);
 
 function normalizeRaceSelectionName(value) {
@@ -142,11 +137,11 @@ function normalizeRaceSelectionName(value) {
         .trim();
 }
 
-function matchesHiddenAlternativeRaceName(name) {
+function matchesHiddenVariantRaceName(name) {
     const normalized = normalizeRaceSelectionName(name);
     if (!normalized) return false;
 
-    return HIDDEN_ALTERNATIVE_RACE_ALIASES.some(alias => {
+    return HIDDEN_VARIANT_RACE_ALIASES.some(alias => {
         const candidate = normalizeRaceSelectionName(alias);
         return normalized === candidate
             || normalized.startsWith(`${candidate} `)
@@ -155,23 +150,14 @@ function matchesHiddenAlternativeRaceName(name) {
 }
 
 function isHiddenRaceSelectionOption(option) {
+    const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
+
+    // Скрываем только записи из отдельного вариативного компендиума.
+    // Одноимённые обычные расы из основного races остаются в Character Forge.
+    if (!uuid.includes('.laaru-dnd5-hw.racesmpmm.')) return false;
+
     const rawName = option?.name || option?.displayName || '';
-    const normalized = normalizeRaceSelectionName(rawName);
-
-    // Все драконьи метки скрываются независимо от исходного компендиума.
-    if (/\bметк\w*\b/iu.test(String(rawName || '')) || /\bmark\s+of\b/iu.test(String(rawName || ''))) {
-        return true;
-    }
-
-    // Уникальные альтернативные записи из сторонних наборов скрываем по имени,
-    // поскольку они могут находиться не в racesMPMM.
-    if (HIDDEN_RACE_NAME_FRAGMENTS.some(fragment => normalized.includes(normalizeRaceSelectionName(fragment)))) {
-        return true;
-    }
-
-    // Пользователь задал точный перечень названий, поэтому совпадающие
-    // варианты скрываются независимо от того, в каком компендиуме они лежат.
-    return matchesHiddenAlternativeRaceName(rawName);
+    return matchesHiddenVariantRaceName(rawName);
 }
 
 
