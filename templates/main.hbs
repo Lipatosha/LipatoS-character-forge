@@ -856,18 +856,6 @@
             </div>
             {{else if (eq currentStep "race")}}
             <div class="nav-track race-nav-track">
-                <section class="race-nav-group race-nav-group-marks" hidden aria-hidden="true" style="display:none !important;">
-                    <h3 class="race-nav-heading">Метки</h3>
-                    <div class="race-nav-grid race-nav-grid-marks">
-                        {{#each raceMarkOptions}}
-                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
-                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
-                            <div class="nav-label">{{this.raceDisplayName}}</div>
-                        </div>
-                        {{/each}}
-                    </div>
-                </section>
                 {{#if raceKingdomOptions}}
                 <section class="race-nav-group race-nav-group-kingdoms">
                     <h3 class="race-nav-heading">Народы Королевств</h3>
@@ -883,71 +871,11 @@
                 </section>
                 {{/if}}
 
-                {{#if raceElfOptions}}
-                <section class="race-nav-group race-nav-group-elf">
-                    <h3 class="race-nav-heading">Эльфийская Кровь</h3>
-                    <div class="race-nav-grid">
-                        {{#each raceElfOptions}}
-                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
-                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
-                            <div class="nav-label">{{this.raceDisplayName}}</div>
-                        </div>
-                        {{/each}}
-                    </div>
-                </section>
-                {{/if}}
-
-                {{#if raceMountainOptions}}
-                <section class="race-nav-group race-nav-group-mountain">
-                    <h3 class="race-nav-heading">Народы Гор и Холмов</h3>
-                    <div class="race-nav-grid">
-                        {{#each raceMountainOptions}}
-                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
-                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
-                            <div class="nav-label">{{this.raceDisplayName}}</div>
-                        </div>
-                        {{/each}}
-                    </div>
-                </section>
-                {{/if}}
-
-                {{#if raceFangOptions}}
-                <section class="race-nav-group race-nav-group-fang">
-                    <h3 class="race-nav-heading">Народы Клыка и Железа</h3>
-                    <div class="race-nav-grid">
-                        {{#each raceFangOptions}}
-                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
-                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
-                            <div class="nav-label">{{this.raceDisplayName}}</div>
-                        </div>
-                        {{/each}}
-                    </div>
-                </section>
-                {{/if}}
-
                 {{#if raceBeastOptions}}
                 <section class="race-nav-group race-nav-group-beast">
                     <h3 class="race-nav-heading">Звериные Народы</h3>
                     <div class="race-nav-grid">
                         {{#each raceBeastOptions}}
-                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
-                            <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
-                            <div class="nav-label">{{this.raceDisplayName}}</div>
-                        </div>
-                        {{/each}}
-                    </div>
-                </section>
-                {{/if}}
-
-                {{#if raceDragonOptions}}
-                <section class="race-nav-group race-nav-group-dragon">
-                    <h3 class="race-nav-heading">Драконья Кровь</h3>
-                    <div class="race-nav-grid">
-                        {{#each raceDragonOptions}}
                         <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
                             data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
                             <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
