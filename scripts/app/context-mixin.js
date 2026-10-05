@@ -187,6 +187,38 @@ function stripBookSuffix(name) {
         .trim();
 }
 
+
+function normalizeRaceCatalogText(value) {
+    return String(value || '')
+        .toLowerCase()
+        .replace(/ё/gu, 'е')
+        .replace(/[’']/gu, '')
+        .replace(/[–—]/gu, '-')
+        .replace(/\s+/gu, ' ')
+        .trim();
+}
+
+function isMidgardRace(option = {}) {
+    const label = normalizeRaceCatalogText(option.displayName || option.name || '');
+    return label.includes('мидгард') || label.includes('midgard');
+}
+
+function isUndeadRace(option = {}) {
+    const label = normalizeRaceCatalogText(option.displayName || option.name || '');
+    const typeValue = normalizeRaceCatalogText(
+        option.coreTraits?.type
+        || option.system?.type?.value
+        || option.system?.type
+        || ''
+    );
+
+    if (typeValue === 'undead' || typeValue.includes('нежить')) return true;
+    return label.startsWith('нежить')
+        || label.includes(' нежить')
+        || /\b(?:undead|skeleton|zombie|mummy|ghost|wight|wraith|lich|revenant)\b/i.test(label)
+        || /\b(?:скелет|зомби|мумия|призрак|упырь|вурдалак|лич|ревенант)\b/iu.test(label);
+}
+
 export const ContextMixin = (Base) => class extends Base {
     async _prepareContext(options) {
         try {
@@ -264,6 +296,9 @@ export const ContextMixin = (Base) => class extends Base {
             let alternativeClassOptions = [];
             let unofficialClassOptions = [];
             let companionClassOptions = [];
+            let raceAllOptions = [];
+            let raceMidgardOptions = [];
+            let raceUndeadOptions = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -328,6 +363,16 @@ export const ContextMixin = (Base) => class extends Base {
                         ...unofficialClassOptions,
                         ...companionClassOptions
                     ];
+                }
+
+                if (this.currentStep === 'race') {
+                    raceMidgardOptions = currentOptions.filter(option => isMidgardRace(option));
+                    raceUndeadOptions = currentOptions.filter(option =>
+                        !isMidgardRace(option) && isUndeadRace(option)
+                    );
+                    raceAllOptions = currentOptions.filter(option =>
+                        !isMidgardRace(option) && !isUndeadRace(option)
+                    );
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
@@ -412,6 +457,9 @@ export const ContextMixin = (Base) => class extends Base {
                 alternativeClassOptions,
                 unofficialClassOptions,
                 companionClassOptions,
+                raceAllOptions,
+                raceMidgardOptions,
+                raceUndeadOptions,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
