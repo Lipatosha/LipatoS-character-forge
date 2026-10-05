@@ -14159,3 +14159,74 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-race .race-nav-grid {
     grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
 }
+
+
+/* ============================================================
+   Character Forge 1.3.42 — плотная сетка рас как у классов
+   ============================================================ */
+
+/* Описание занимает 60%, каталог рас — 40%. */
+.view-selection-root.step-race .left-sidebar-drawer {
+    width: 60% !important;
+    min-width: 60% !important;
+    max-width: 60% !important;
+    --left-drawer-min-width: 60% !important;
+    --left-drawer-max-width: 60% !important;
+    --left-drawer-content-width: 60% !important;
+}
+
+.view-selection-root.step-race .cinematic-nav {
+    left: 80% !important;
+    width: calc(40% - 14px) !important;
+    max-width: calc(40% - 14px) !important;
+}
+
+.view-selection-root.step-race .cinematic-actions {
+    left: 80% !important;
+}
+
+/* Каталог плотный, без лишних внутренних полей. */
+.view-selection-root.step-race .cinematic-nav .race-nav-track {
+    padding: 0 2px !important;
+}
+
+/* Сохраняем 10 рас в строке, но убираем растянутые ряды. */
+.view-selection-root.step-race .race-nav-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+    grid-auto-rows: auto !important;
+    column-gap: 1px !important;
+    row-gap: 2px !important;
+}
+
+/* Карточка: 5px сверху + содержимое + 5px снизу. */
+.view-selection-root.step-race .race-nav-grid .nav-item,
+.view-selection-root.step-race .cinematic-nav .nav-item {
+    box-sizing: border-box !important;
+    grid-template-rows: 30px auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 5px 0 !important;
+    gap: 1px !important;
+    align-content: start !important;
+}
+
+/* Иконки рас строго 30x30. */
+.view-selection-root.step-race .cinematic-nav .nav-icon-wrapper,
+.view-selection-root.step-race .cinematic-nav .nav-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 30px !important;
+    max-height: 30px !important;
+}
+
+/* Категории тоже ставим ближе друг к другу. */
+.view-selection-root.step-race .race-nav-group {
+    margin-bottom: 5px !important;
+}
+
+.view-selection-root.step-race .race-nav-heading {
+    margin-bottom: 2px !important;
+}
