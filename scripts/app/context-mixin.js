@@ -145,9 +145,15 @@ function isHiddenPsionicClass(option = {}) {
 
 function isCompanionClass(option = {}) {
     const identifier = normalizeClassIdentifier(option);
-    const label = normalizeClassCatalogText(option.displayName || option.name || '');
+    const displayName = normalizeClassCatalogText(option.displayName || '');
+    const sourceName = normalizeClassCatalogText(option.name || '');
+    const label = `${displayName} ${sourceName}`.trim();
+
     return label.includes('напарник')
-        || /(?:^|[-_.])(sidekick|companion)(?:$|[-_.])/i.test(identifier);
+        || label.includes('скакун')
+        || label.includes('собакен')
+        || /(?:^|[-_.])(sidekick|companion)(?:$|[-_.])/i.test(identifier)
+        || /(?:mount|dog|hound)/i.test(identifier);
 }
 
 function buildClassCatalogGroup(options, order, isAlternative) {
