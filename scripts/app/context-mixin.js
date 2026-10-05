@@ -353,6 +353,37 @@ function getWhitelistedRaceInfo(option = {}) {
     return RACE_WHITELIST_INDEX.get(key) || null;
 }
 
+
+function isVariantRaceOption(option = {}) {
+    const raceDisplayName = String(option.raceDisplayName || resolveRaceDisplayName(option) || '');
+    const machine = [
+        raceDisplayName,
+        option.displayName,
+        option.name,
+        option.uuid,
+        option.identifier,
+        option.system?.identifier
+    ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .replace(/ё/gu, 'е');
+
+    return machine.includes('.racesmpmm.')
+        || /(?:^|[\s(])альт(?:\.|\)|\s|$)/iu.test(machine)
+        || machine.includes('альтернатив')
+        || machine.includes('вариатив')
+        || machine.includes('variant');
+}
+
+function splitRaceDisplayWords(value) {
+    return String(value || '')
+        .trim()
+        .split(/\s+/u)
+        .filter(Boolean)
+        .filter(word => !/^[—–-]+$/u.test(word));
+}
+
 export const ContextMixin = (Base) => class extends Base {
     async _prepareContext(options) {
         try {
@@ -454,6 +485,8 @@ export const ContextMixin = (Base) => class extends Base {
                 // Всё, чего нет в таблице категорий, полностью исключается
                 // из выбора ещё до построения UI.
                 if (this.currentStep === 'race') {
+                    const seenRaceNames = new Set();
+
                     currentOptions = currentOptions
                         .map(option => {
                             const raceDisplayName = resolveRaceDisplayName(option);
@@ -464,10 +497,18 @@ export const ContextMixin = (Base) => class extends Base {
                             return {
                                 ...normalizedOption,
                                 raceCategory: whitelistInfo.category,
-                                raceOrder: whitelistInfo.order
+                                raceOrder: whitelistInfo.order,
+                                raceDisplayWords: splitRaceDisplayWords(raceDisplayName)
                             };
                         })
-                        .filter(Boolean);
+                        .filter(Boolean)
+                        .filter(option => !isVariantRaceOption(option))
+                        .filter(option => {
+                            const key = normalizeRaceWhitelistKey(option.raceDisplayName);
+                            if (!key || seenRaceNames.has(key)) return false;
+                            seenRaceNames.add(key);
+                            return true;
+                        });
                 }
 
                 // Class selector: show only the requested official and alternative catalogs,
