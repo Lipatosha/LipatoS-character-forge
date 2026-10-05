@@ -854,6 +854,60 @@
                     </section>
                 </div>
             </div>
+            {{else if (eq currentStep "race")}}
+            <div class="nav-track race-nav-track">
+                <section class="race-nav-group race-nav-group-all">
+                    <h3 class="race-nav-heading">Все</h3>
+                    <div class="race-nav-grid race-nav-grid-all">
+                        {{#each raceAllOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}"
+                            title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">
+                                {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                            </div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+
+                {{#if raceMidgardOptions.length}}
+                <section class="race-nav-group race-nav-group-midgard">
+                    <h3 class="race-nav-heading">Мидгард</h3>
+                    <div class="race-nav-grid race-nav-grid-midgard">
+                        {{#each raceMidgardOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}"
+                            title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">
+                                {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                            </div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+
+                {{#if raceUndeadOptions.length}}
+                <section class="race-nav-group race-nav-group-undead">
+                    <h3 class="race-nav-heading">Нежить</h3>
+                    <div class="race-nav-grid race-nav-grid-undead">
+                        {{#each raceUndeadOptions}}
+                        <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                            data-action="selectOption" data-id="{{this.id}}"
+                            title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                            <div class="nav-icon-wrapper">
+                                {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                            </div>
+                            <div class="nav-label">{{#if this.displayName}}{{this.displayName}}{{else}}{{localize this.name}}{{/if}}</div>
+                        </div>
+                        {{/each}}
+                    </div>
+                </section>
+                {{/if}}
+            </div>
             {{else}}
             <div class="nav-track">
                 {{#each options}}
