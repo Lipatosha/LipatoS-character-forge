@@ -68,142 +68,6 @@ function getDnd5ePackIds() {
 }
 
 
-/**
- * Список конкретных альтернативных рас, которые не должны отображаться
- * в пользовательском выборе. Обычные версии одноимённых рас из основного
- * компендиума races остаются доступны.
- */
-const HIDDEN_VARIANT_RACE_ALIASES = Object.freeze([
-    'своя раса', 'custom lineage',
-    'ааракокра',
-    'аасимар', 'асимар',
-    'автогном', 'autognome',
-    'багбер', 'багбир',
-    'ведьмокровный', 'hexblood',
-    'возрожденный', 'возрождённый', 'reborn',
-    'гитзерай',
-    'гитьянки', 'гитъянки', 'гитянки',
-    'гифф', 'giff',
-    'глубинный гном', 'свирфнеблин', 'deep gnome',
-    'гоблин',
-    'голиаф',
-    'дампир', 'dhampir',
-    'двергар', 'дуэргар', 'duergar',
-    'дженази воды', 'водный дженази',
-    'дженази воздуха', 'воздушный дженази',
-    'дженази земли', 'земляной дженази',
-    'дженази огня', 'огненный дженази',
-    'драконорожденный металлический', 'металлический драконорожденный',
-    'драконорожденный самоцветный', 'самоцветный драконорожденный',
-    'драконорожденный цветной', 'цветной драконорожденный', 'хроматический драконорожденный',
-    'изменяющийся', 'чейнджлинг', 'чейджлинг', 'changeling',
-    'кендер', 'kender',
-    'кенку',
-    'кентавр',
-    'кобольд',
-    'людоящер',
-    'минотавр',
-    'орк',
-    'плазмоид',
-    'сатир',
-    'совлин', 'owlin',
-    'табакси',
-    'тортл',
-    'три-крин', 'три крин', 'thri-kreen', 'thri kreen',
-    'тритон',
-    'фирболг',
-    'фэйри', 'фейри', 'fairy',
-    'хадози', 'hadozee',
-    'харенгон', 'harengon',
-    'хобгоблин',
-    'шадар-каи', 'шадар каи', 'shadar-kai', 'shadar kai',
-    'шифтер', 'shifter',
-    'эладрин',
-    'эльф астральный', 'астральный эльф',
-    'эльф морской', 'морской эльф',
-    'юань-ти', 'юань ти', 'yuan-ti', 'yuan ti'
-]);
-
-function normalizeRaceSelectionName(value) {
-    return String(value || '')
-        .toLowerCase()
-        .replace(/ё/gu, 'е')
-        .replace(/[’']/gu, '')
-        .replace(/[–—]/gu, '-')
-        .replace(/[()\[\]{}]/gu, ' ')
-        .replace(/\s*\/\s*.*/u, '')
-        .replace(/[^a-zа-я0-9-]+/giu, ' ')
-        .replace(/\s+/gu, ' ')
-        .trim();
-}
-
-function compactRaceSelectionName(value) {
-    return normalizeRaceSelectionName(value).replace(/[^a-zа-я0-9]+/giu, '');
-}
-
-function matchesHiddenVariantRaceName(name) {
-    const normalized = normalizeRaceSelectionName(name);
-    if (!normalized) return false;
-
-    return HIDDEN_VARIANT_RACE_ALIASES.some(alias => {
-        const candidate = normalizeRaceSelectionName(alias);
-        return normalized === candidate
-            || normalized.startsWith(`${candidate} `)
-            || normalized.startsWith(`${candidate}-`);
-    });
-}
-
-function getRaceNameCandidates(option = {}) {
-    const values = [
-        option?.name,
-        option?.displayName,
-        option?.label,
-        option?.title
-    ].filter(value => typeof value === 'string' && value.trim());
-
-    const candidates = new Set(values);
-    const localize = globalThis.game?.i18n?.localize?.bind(globalThis.game.i18n);
-
-    if (localize) {
-        for (const value of values) {
-            try {
-                const localized = localize(value);
-                if (typeof localized === 'string' && localized.trim()) candidates.add(localized);
-            } catch (_) {
-                // Игнорируем некорректный ключ локализации и продолжаем по сырому имени.
-            }
-        }
-    }
-
-    return Array.from(candidates);
-}
-
-function isHiddenRaceSelectionOption(option) {
-    const names = getRaceNameCandidates(option);
-    const normalizedNames = names.map(normalizeRaceSelectionName);
-    const compactNames = names.map(compactRaceSelectionName);
-
-    // Laaru может хранить в name ключ локализации, например LAARU....MARK_OF_STORM,
-    // а "Метка Бури — Полуэльф" появляется только после game.i18n.localize().
-    // Поэтому проверяем и сырые, и уже локализованные имена.
-    if (normalizedNames.some(name =>
-        /(?:^|\s)метка(?:\s|$)/iu.test(name)
-        || /(?:^|\s)mark\s+of(?:\s|$)/iu.test(name)
-    )) {
-        return true;
-    }
-
-    if (compactNames.some(name => name.includes('стиктиккал') || name.includes('stiktikkal'))) return true;
-    if (compactNames.some(name => name.includes('гнол') || name.includes('gnoll'))) return true;
-    if (normalizedNames.some(name => name.includes('мидгард') || name.includes('midgard'))) return true;
-
-    const uuid = String(option?.uuid || option?.id || option || '').toLowerCase();
-    if (!uuid.includes('.laaru-dnd5-hw.racesmpmm.')) return false;
-
-    return names.some(matchesHiddenVariantRaceName);
-}
-
-
 async function mapWithConcurrency(items, limit, worker) {
     const source = Array.from(items || []);
     if (!source.length) return [];
@@ -479,10 +343,6 @@ export class DataManager {
         // Only fall back to loading a document when a third-party pack omitted classIdentifier.
         let candidates = Array.from(candidateMap.values());
 
-        if (type === 'race' && !includeExcluded) {
-            candidates = candidates.filter(option => !isHiddenRaceSelectionOption(option));
-        }
-
         // All class Items from installed source packs are selectable. Do not
         // filter by a hardcoded identifier list: subscribed books add classes.
 
@@ -568,7 +428,6 @@ export class DataManager {
 
         const result = Array.from(optionsMap.values())
             .filter(option => type !== 'feat' || isPlayerFeat(option))
-            .filter(option => type !== 'race' || includeExcluded || !isHiddenRaceSelectionOption(option))
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         this._optionsCache.set(cacheKey, result);
