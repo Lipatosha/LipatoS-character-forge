@@ -229,21 +229,23 @@ const RACE_CATEGORY_WHITELIST = Object.freeze({
     kingdoms: Object.freeze([
         ['Человек'],
         ['Полуэльф'],
-        ['Полуорк'],
-        ['Полурослик крепкий'],
-        ['Полурослик легконогий'],
-        ['Полурослик лотосденский'],
-        ['Полурослик призрачный'],
-        ['Орк'],
-        ['Гном лесной'],
-        ['Гном скальный'],
-        ['Дварф горный'],
-        ['Дварф серый (дуэргар)', 'Дварф серый (двергар)'],
-        ['Дварф холмовой'],
-        ['Тифлинг Асмодея'],
         ['Эльф высший'],
         ['Эльф лесной'],
+        ['Эльф морской', 'Морской эльф'],
         ['Эльф тёмный (дроу)', 'Эльф темный (дроу)'],
+        ['Полурослик крепкий'],
+        ['Полурослик легконогий'],
+        ['Полуорк'],
+        ['Орк'],
+        ['Дварф горный'],
+        ['Дварф холмовой'],
+        ['Дварф серый (двергар)', 'Дварф серый (дуэргар)'],
+        ['Гном скальный'],
+        ['Гном лесной'],
+        ['Гном глубинный', 'Глубинный гном', 'Глубинный гном (свирфнеблин)'],
+        ['Тифлинг Асмодея'],
+        ['Тифлинг Мефистофеля'],
+        ['Тифлинг Зариэль'],
         ['Драконорождённый', 'Драконорожденный']
     ]),
     beast: Object.freeze([
@@ -368,6 +370,17 @@ function isVariantRaceOption(option = {}) {
         .join(' ')
         .toLowerCase()
         .replace(/ё/gu, 'е');
+
+    const approvedVariantFallback = new Set([
+        normalizeRaceWhitelistKey('Эльф морской'),
+        normalizeRaceWhitelistKey('Морской эльф'),
+        normalizeRaceWhitelistKey('Гном глубинный'),
+        normalizeRaceWhitelistKey('Глубинный гном'),
+        normalizeRaceWhitelistKey('Глубинный гном (свирфнеблин)')
+    ]);
+
+    const displayKey = normalizeRaceWhitelistKey(raceDisplayName);
+    if (approvedVariantFallback.has(displayKey)) return false;
 
     return machine.includes('.racesmpmm.')
         || /(?:^|[\s(])альт(?:\.|\)|\s|$)/iu.test(machine)
