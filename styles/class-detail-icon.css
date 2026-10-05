@@ -332,3 +332,10 @@
     max-width: calc(44% - 14px) !important;
   }
 }
+
+/* Character Forge 1.3.21 — class icon follows the collapsible class description state. */
+.view-selection-root.step-class
+.drawer-content:has(.drawer-body details[open])
+.class-detail-icon {
+  display: none !important;
+}
