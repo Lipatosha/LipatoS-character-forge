@@ -144,12 +144,12 @@
 }
 
 .view-selection-root.step-class .class-nav-grid-alternative {
-  row-gap: 3px !important;
+  row-gap: 10px !important;
 }
 
 .view-selection-root.step-class .class-nav-grid-alternative .nav-item {
-  height: 74px !important;
-  min-height: 74px !important;
+  height: 78px !important;
+  min-height: 78px !important;
 }
 
 .view-selection-root.step-class .class-nav-grid .nav-item {
@@ -259,7 +259,7 @@
 @media (max-width: 1500px), (max-height: 800px) {
   .view-selection-root.step-class .class-nav-grid-official,
   .view-selection-root.step-class .class-nav-grid-alternative {
-    grid-template-columns: repeat(7, 54px) !important;
+    grid-template-columns: repeat(7, 49px) !important;
     justify-content: center !important;
     column-gap: 0 !important;
   }
@@ -271,5 +271,64 @@
   .view-selection-root.step-class .class-nav-grid-alternative .nav-item {
     height: 68px !important;
     min-height: 68px !important;
+  }
+}
+
+
+/* Character Forge 1.3.20 — larger description pane, narrower class selector. */
+.view-selection-root.step-class .left-sidebar-drawer {
+  left: 0 !important;
+  right: auto !important;
+  width: 57% !important;
+  min-width: 57% !important;
+  max-width: 57% !important;
+  --left-drawer-min-width: 57% !important;
+  --left-drawer-max-width: 57% !important;
+  --left-drawer-content-width: 57% !important;
+}
+
+.view-selection-root.step-class .cinematic-caption {
+  left: 78.5% !important;
+  width: calc(43% - 54px) !important;
+  max-width: none !important;
+  transform: translateX(-50%) !important;
+}
+
+.view-selection-root.step-class .cinematic-nav {
+  left: 78.5% !important;
+  width: calc(43% - 20px) !important;
+  max-width: calc(43% - 20px) !important;
+  transform: translateX(-50%) !important;
+}
+
+.view-selection-root.step-class .cinematic-actions {
+  left: 78.5% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+@media (max-width: 1500px), (max-height: 800px) {
+  .view-selection-root.step-class .left-sidebar-drawer {
+    width: 56% !important;
+    min-width: 56% !important;
+    max-width: 56% !important;
+    --left-drawer-min-width: 56% !important;
+    --left-drawer-max-width: 56% !important;
+    --left-drawer-content-width: 56% !important;
+  }
+
+  .view-selection-root.step-class .cinematic-caption,
+  .view-selection-root.step-class .cinematic-nav,
+  .view-selection-root.step-class .cinematic-actions {
+    left: 78% !important;
+  }
+
+  .view-selection-root.step-class .cinematic-caption {
+    width: calc(44% - 46px) !important;
+  }
+
+  .view-selection-root.step-class .cinematic-nav {
+    width: calc(44% - 14px) !important;
+    max-width: calc(44% - 14px) !important;
   }
 }
