@@ -753,20 +753,6 @@
             <div class="drawer-content">
                 {{#if selectedOption}}
                 <h2 class="drawer-title">{{#if selectedOption.displayName}}{{selectedOption.displayName}}{{else}}{{localize selectedOption.name}}{{/if}}</h2>
-                {{#if (eq currentStep "class")}}
-                {{#if selectedOption.classIcon}}
-                <div class="class-detail-icon" aria-hidden="true">
-                    <img src="{{selectedOption.classIcon}}" alt="">
-                </div>
-                {{/if}}
-                {{/if}}
-                {{#if (eq currentStep "race")}}
-                {{#if selectedOption.raceIcon}}
-                <div class="race-detail-icon" aria-hidden="true">
-                    <img src="{{selectedOption.raceIcon}}" alt="">
-                </div>
-                {{/if}}
-                {{/if}}
                 <div class="drawer-body">
                     {{{selectedOption.description}}}
                 </div>
@@ -947,6 +933,21 @@
                     </div>
                 </section>
                 {{/if}}
+            </div>
+            {{else if (eq currentStep "background")}}
+            <div class="nav-track background-nav-track">
+                {{#each options}}
+                <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
+                    data-action="selectOption" data-id="{{this.id}}"
+                    title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
+                    <div class="nav-icon-wrapper">
+                        {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
+                    </div>
+                    <div class="nav-label background-nav-label">
+                        {{#each this.backgroundDisplayWords}}<span class="background-label-word">{{this}}</span>{{/each}}
+                    </div>
+                </div>
+                {{/each}}
             </div>
             {{else}}
             <div class="nav-track">
