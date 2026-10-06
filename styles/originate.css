@@ -14244,7 +14244,7 @@ body.originate-active .character-forge-item-sheet-front {
 
 
 /* ============================================================
-   Character Forge 1.3.55 — происхождения в стиле рас
+   Character Forge 1.3.57 — происхождения 50/50
    ============================================================ */
 
 /* Кнопка подтверждения: при hover текст не переносится и геометрия не скачет. */
@@ -14270,16 +14270,16 @@ body.originate-active .character-forge-item-sheet-front {
     flex: 0 0 auto !important;
 }
 
-/* Описание 40%, каталог происхождений 60%. */
+/* Описание и каталог происхождений делят экран поровну: 50/50. */
 .view-selection-root.step-background .left-sidebar-drawer {
     left: 0 !important;
     right: auto !important;
-    width: 40% !important;
-    min-width: 40% !important;
-    max-width: 40% !important;
-    --left-drawer-min-width: 40% !important;
-    --left-drawer-max-width: 40% !important;
-    --left-drawer-content-width: 40% !important;
+    width: 50% !important;
+    min-width: 50% !important;
+    max-width: 50% !important;
+    --left-drawer-min-width: 50% !important;
+    --left-drawer-max-width: 50% !important;
+    --left-drawer-content-width: 50% !important;
     border-left: 0 !important;
     border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
@@ -14291,9 +14291,9 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-background .cinematic-nav {
     top: 14px !important;
     bottom: 72px !important;
-    left: 70% !important;
-    width: calc(60% - 14px) !important;
-    max-width: calc(60% - 14px) !important;
+    left: 75% !important;
+    width: calc(50% - 14px) !important;
+    max-width: calc(50% - 14px) !important;
     height: auto !important;
     transform: translateX(-50%) !important;
     align-items: stretch !important;
@@ -14363,7 +14363,7 @@ body.originate-active .character-forge-item-sheet-front {
     width: 100% !important;
     min-width: 0 !important;
     column-gap: 1px !important;
-    row-gap: 2px !important;
+    row-gap: 0 !important;
 }
 
 /* Геометрия карточек повторяет карточки рас. */
@@ -14435,7 +14435,7 @@ body.originate-active .character-forge-item-sheet-front {
 }
 
 .view-selection-root.step-background .cinematic-actions {
-    left: 70% !important;
+    left: 75% !important;
     right: auto !important;
     bottom: 22px !important;
     transform: translateX(-50%) !important;
@@ -14457,7 +14457,7 @@ body.originate-active .character-forge-item-sheet-front {
     }
 
     .view-selection-root.step-background .background-nav-grid {
-        row-gap: 2px !important;
+        row-gap: 0 !important;
     }
 
     .view-selection-root.step-background .background-nav-grid .nav-item,
