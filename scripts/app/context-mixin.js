@@ -236,8 +236,188 @@ function buildClassCatalogGroup(options, order, isAlternative) {
 
 function stripBookSuffix(name) {
     return String(name || '')
-        .replace(/\s*\(([A-Z0-9][A-Z0-9&+.'’\- ]{1,24})\)\s*$/u, '')
+        .replace(/\s*\([^)]*\)/gu, ' ')
+        .replace(/\s+/gu, ' ')
         .trim();
+}
+
+function normalizeBackgroundCatalogText(value) {
+    return stripBookSuffix(value)
+        .toLowerCase()
+        .replace(/ё/gu, 'е')
+        .replace(/[’']/gu, '')
+        .replace(/[–—]/gu, '-')
+        .replace(/[^a-zа-я0-9]+/giu, ' ')
+        .replace(/\s+/gu, ' ')
+        .trim();
+}
+
+const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
+    {
+        id: 'knowledge-power',
+        title: '👑 Знать и власть',
+        entries: [
+            'Благородный',
+            'Дворянин Вотердипа',
+            'Аристократ Мулмастера',
+            'Дипломат',
+            'Наследник',
+            'Придворный',
+            'Представитель фракции',
+            'Функционер Азориусов'
+        ]
+    },
+    {
+        id: 'military-guard',
+        title: '⚔️ Военные и стража',
+        entries: [
+            'Солдат',
+            'Ветеран-наёмник',
+            'Наёмник-рекрут',
+            'Городской стражник',
+            'Охранник',
+            'Морской пехотинец',
+            'Легионер Боросов',
+            'Соламнийский рыцарь',
+            'Рыцарь ордена',
+            'Всадник Преисподней'
+        ]
+    },
+    {
+        id: 'crime-espionage',
+        title: '🗡️ Преступный мир и шпионаж',
+        entries: [
+            'Преступник',
+            'Шпион',
+            'Двойной агент',
+            'Контрабандист',
+            'Преступник Мириада',
+            'Азартный игрок',
+            'Негодяй',
+            'Ухмылка'
+        ]
+    },
+    {
+        id: 'faith-cults',
+        title: '⛪ Вера и культы',
+        entries: [
+            'Послушник',
+            'Еретик',
+            'Культист Ракдосов',
+            'Исправившийся культист',
+            'Оккультист',
+            'Посвящённый Селезнии',
+            'Фанатик Шейдов'
+        ]
+    },
+    {
+        id: 'magic-supernatural',
+        title: '🔮 Магия и сверхъестественное',
+        entries: [
+            'Астральный скиталец',
+            'Избранный',
+            'Изученный драконом',
+            'Подручный ведьмовства',
+            'Потомок знаменитого авантюриста',
+            'Пламенный Кулак'
+        ]
+    },
+    {
+        id: 'scholars-researchers',
+        title: '📚 Учёные и исследователи',
+        entries: [
+            'Мудрец',
+            'Археолог',
+            'Антрополог',
+            'Исследователь',
+            'Детектив',
+            'Сыщик',
+            'Учёный Симиков',
+            'Учёный-затворник',
+            'Студент Визерблума',
+            'Студент Квандрикса'
+        ]
+    },
+    {
+        id: 'craft-trade',
+        title: '🔨 Ремесло и торговля',
+        entries: [
+            'Клановый ремесленник',
+            'Ремесленник',
+            'Караванщик',
+            'Торговец Хиллсфара',
+            'Трактирщик',
+            'Корабел',
+            'Резчик рун'
+        ]
+    },
+    {
+        id: 'wilderness-travel',
+        title: '🌲 Дикая местность и путешествия',
+        entries: [
+            'Егерь',
+            'Отшельник',
+            'Житель дикого леса',
+            'Житель леса',
+            'Дальний путешественник',
+            'Охотник за головами',
+            'Утгардский соплеменник',
+            'Чужеземец'
+        ]
+    },
+    {
+        id: 'sea-ports',
+        title: '⚓ Море и порты',
+        entries: [
+            'Моряк',
+            'Моряк-пират',
+            'Морской пехотинец',
+            'Рыбак',
+            'Корабел',
+            'Контрабандист',
+            'Человек из гавани'
+        ]
+    },
+    {
+        id: 'society-free-professions',
+        title: '🎭 Общество и свободные профессии',
+        entries: [
+            'Артист',
+            'Атлет',
+            'Народный герой',
+            'Награждённый',
+            'Парфюмер',
+            'Бродяга',
+            'Благородный'
+        ]
+    }
+]);
+
+const BACKGROUND_CATEGORY_INDEX = (() => {
+    const index = new Map();
+
+    for (const category of BACKGROUND_CATEGORY_DEFINITIONS) {
+        category.entries.forEach((name, order) => {
+            const key = normalizeBackgroundCatalogText(name);
+            // Если пользователь назвал предысторию в нескольких группах,
+            // используем первое указанное назначение и не дублируем карточку.
+            if (key && !index.has(key)) index.set(key, { categoryId: category.id, order });
+        });
+    }
+
+    return index;
+})();
+
+function getBackgroundCategoryInfo(option = {}) {
+    const displayName = stripBookSuffix(option.displayName || option.name || '');
+    const key = normalizeBackgroundCatalogText(displayName);
+
+    if (key.startsWith('студент ')) {
+        const category = BACKGROUND_CATEGORY_DEFINITIONS.find(item => item.id === 'scholars-researchers');
+        return { categoryId: 'scholars-researchers', order: category?.entries.length ?? 999 };
+    }
+
+    return BACKGROUND_CATEGORY_INDEX.get(key) || null;
 }
 
 
@@ -574,6 +754,7 @@ export const ContextMixin = (Base) => class extends Base {
             let racePlanarOptions = [];
             let raceUnusualOptions = [];
             let raceDeathOptions = [];
+            let backgroundGroups = [];
 
             if (this.currentStep === 'level') {
                 // 获取所有可用职业供选择
@@ -704,17 +885,50 @@ export const ContextMixin = (Base) => class extends Base {
                     raceDeathOptions = raceBuckets.death;
                 }
 
-                // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
-                // Для компактной сетки каждое слово названия выводится на отдельной строке.
+                // Предыстории: убираем любые книжные/служебные скобки из подписи,
+                // разбиваем название по словам и распределяем карточки по тематическим группам.
                 if (this.currentStep === 'background') {
-                    currentOptions = currentOptions.map(option => {
+                    const preparedBackgrounds = currentOptions.map((option, sourceOrder) => {
                         const displayName = stripBookSuffix(option.name);
+                        const categoryInfo = getBackgroundCategoryInfo({ ...option, displayName });
+
                         return {
                             ...option,
                             displayName,
-                            backgroundDisplayWords: splitBackgroundDisplayWords(displayName)
+                            backgroundDisplayWords: splitBackgroundDisplayWords(displayName),
+                            backgroundCategoryId: categoryInfo?.categoryId || 'other',
+                            backgroundCategoryOrder: categoryInfo?.order ?? sourceOrder,
+                            backgroundSourceOrder: sourceOrder
                         };
                     });
+
+                    const groupedIds = new Set();
+                    backgroundGroups = BACKGROUND_CATEGORY_DEFINITIONS.map(category => {
+                        const options = preparedBackgrounds
+                            .filter(option => option.backgroundCategoryId === category.id)
+                            .sort((a, b) => {
+                                const orderDiff = (a.backgroundCategoryOrder ?? 999) - (b.backgroundCategoryOrder ?? 999);
+                                if (orderDiff !== 0) return orderDiff;
+                                return String(a.displayName || '').localeCompare(String(b.displayName || ''), 'ru');
+                            });
+
+                        options.forEach(option => groupedIds.add(option.id));
+                        return { id: category.id, title: category.title, options };
+                    }).filter(group => group.options.length > 0);
+
+                    const otherOptions = preparedBackgrounds
+                        .filter(option => !groupedIds.has(option.id))
+                        .sort((a, b) => String(a.displayName || '').localeCompare(String(b.displayName || ''), 'ru'));
+
+                    if (otherOptions.length > 0) {
+                        backgroundGroups.push({
+                            id: 'other',
+                            title: 'Прочие',
+                            options: otherOptions
+                        });
+                    }
+
+                    currentOptions = preparedBackgrounds;
                 }
 
                 // 批量检测视频格式
@@ -791,6 +1005,7 @@ export const ContextMixin = (Base) => class extends Base {
                 racePlanarOptions,
                 raceUnusualOptions,
                 raceDeathOptions,
+                backgroundGroups,
                 availableClasses, // 传递给等级选择界面
                 activeStepLabel,
                 selectedOption,
