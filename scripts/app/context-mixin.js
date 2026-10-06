@@ -254,229 +254,238 @@ function normalizeBackgroundCatalogText(value) {
 
 const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     {
-        id: 'knowledge-power',
-        title: '👑 Знать и власть',
+        id: 'status-society-fame',
+        title: '👑 Статус, общество и известность',
         entries: [
             'Благородный',
-            'Дворянин Вотердипа',
-            'Аристократ Мулмастера',
-            'Дипломат',
             'Наследник',
+            'Дипломат',
             'Придворный',
             'Представитель фракции',
-            'Функционер Азориусов',
-            'Представитель Орзовов',
-            'Придворный слуга'
+            'Народный герой',
+            'Награждённый',
+            'Артист',
+            'Атлет'
         ]
     },
     {
-        id: 'military-guard',
-        title: '⚔️ Военные и стража',
+        id: 'war-service-law',
+        title: '⚔️ Война, служба и закон',
         entries: [
             'Солдат',
             'Ветеран-наёмник',
-            'Наёмник-рекрут',
             'Городской стражник',
-            'Охранник',
             'Морской пехотинец',
-            'Легионер Боросов',
-            'Соламнийский рыцарь',
             'Рыцарь ордена',
-            'Всадник Преисподней',
-            'Всадники Преисподней',
-            'Орден Перчатки',
-            'Повстанец Флана',
-            'Стрелковый корпус Уайтстоуна',
-            'Торговый шериф',
-            'Член наёмного отряда'
+            'Городской охотник за головами'
         ]
     },
     {
-        id: 'crime-espionage',
-        title: '🗡️ Преступный мир и шпионаж',
+        id: 'crime-deception',
+        title: '🗡️ Преступный мир и обман',
         entries: [
             'Преступник',
-            'Шпион',
-            'Двойной агент',
-            'Контрабандист',
-            'Преступник Мириада',
-            'Азартный игрок',
-            'Негодяй',
-            'Ухмылка',
-            'Агент Голгари',
-            'Агент-Волстракер',
-            'Безликий',
-            'Городской охотник за головами',
-            'Двойной агент Чёрных Кулаков',
-            'Конспиративная личность',
-            'Контрабандист Хиллсфара',
-            'Оперативник Димиров',
-            'Преступник — Мириадский оперативник',
-            'Разбойник Железного Пути',
-            'Член организации «Хватка»',
             'Шарлатан',
-            'Шпион Вера Авенна'
+            'Контрабандист',
+            'Конспиративная личность',
+            'Безликий',
+            'Азартный игрок'
         ]
     },
     {
-        id: 'faith-cults',
-        title: '⛪ Вера и культы',
+        id: 'faith-magic-occult',
+        title: '🔮 Вера, магия и оккультизм',
         entries: [
             'Послушник',
             'Еретик',
-            'Культист Ракдосов',
             'Исправившийся культист',
             'Оккультист',
-            'Посвящённый Селезнии',
-            'Фанатик Шейдов',
-            'Послушник Лосконорождённый'
-        ]
-    },
-    {
-        id: 'magic-supernatural',
-        title: '🔮 Магия и сверхъестественное',
-        entries: [
-            'Астральный скиталец',
             'Избранный',
-            'Изученный драконом',
-            'Подручный ведьмовства',
-            'Потомок знаменитого авантюриста',
-            'Пламенный Кулак',
-            'Ведун',
-            'Маг Высшего Волшебства',
-            'Хранитель врат'
+            'Хранитель врат',
+            'Резчик рун'
         ]
     },
     {
-        id: 'scholars-researchers',
-        title: '📚 Учёные и исследователи',
+        id: 'knowledge-investigation',
+        title: '📚 Знания и расследования',
         entries: [
             'Мудрец',
-            'Археолог',
             'Антрополог',
-            'Исследователь',
-            'Детектив',
-            'Сыщик',
-            'Учёный Симиков',
-            'Учёный-затворник',
-            'Студент Визерблума',
-            'Студент Квандрикса',
-            'Мудрец — Кобальтовый учёный',
-            'Планарный философ',
+            'Археолог',
             'Следователь',
-            'Учащийся лицея'
+            'Учёный-затворник',
+            'Планарный философ'
         ]
     },
     {
-        id: 'craft-trade',
-        title: '🔨 Ремесло и торговля',
+        id: 'craft-trade-professions',
+        title: '🔨 Ремесло, торговля и профессии',
         entries: [
-            'Клановый ремесленник',
-            'Ремесленник',
             'Караванщик',
-            'Торговец Хиллсфара',
-            'Трактирщик',
+            'Клановый ремесленник',
             'Корабел',
-            'Резчик рун',
-            'Горняк Каменного Шпиля',
-            'Инженер Иззетов',
             'Неудавшийся торговец',
-            'Ремесленник из гильдии'
+            'Парфюмер',
+            'Ремесленник из гильдии',
+            'Рыбак',
+            'Трактирщик'
         ]
     },
     {
-        id: 'wilderness-travel',
-        title: '🌲 Дикая местность и путешествия',
+        id: 'travel-wilderness',
+        title: '🌲 Путешествия и дикая местность',
         entries: [
+            'Бедуин',
+            'Бродяга',
+            'Дальний путешественник',
             'Егерь',
             'Отшельник',
-            'Житель дикого леса',
-            'Житель леса',
-            'Дальний путешественник',
-            'Охотник за головами',
-            'Утгардский соплеменник',
-            'Чужеземец',
-            'Анарх Груулов',
-            'Ашари',
-            'Житель дикого космоса',
-            'Охотник за трофеями'
-        ]
-    },
-    {
-        id: 'sea-ports',
-        title: '⚓ Море и порты',
-        entries: [
+            'Охотник за трофеями',
             'Моряк',
-            'Моряк-пират',
-            'Моряк/Пират',
-            'Рыбак',
-            'Человек из гавани',
-            'Флибустьер'
+            'Чужеземец'
         ]
     },
     {
-        id: 'society-free-professions',
-        title: '🎭 Общество и свободные профессии',
+        id: 'unusual-fate-origin',
+        title: '🕯️ Необычная судьба и происхождение',
         entries: [
-            'Артист',
-            'Атлет',
-            'Народный герой',
-            'Награждённый',
-            'Парфюмер',
-            'Бродяга',
-            'Агент Дома',
             'Бывший искатель приключений',
-            'Истец',
-            'Подручный Ведьмосвета',
-            'Северный менестрель',
-            'Стажёр конкурента'
-        ]
-    },
-    {
-        id: 'outcasts-broken-fates',
-        title: '🕯️ Изгои и сломанные судьбы',
-        entries: [
-            'Беженец из Флана',
-            'Житель у ворот',
+            'Великаний подкидыш',
+            'Воспитанный чудовищами',
             'Изувеченный Драконом',
-            'Корманторский беженец',
+            'Потерявшийся в Царстве Фей',
+            'Потомок знаменитого авантюриста',
             'Преследуемый',
             'Разорённый',
-            'Стояновский заключённый'
+            'Таинственное происхождение',
+            'Чейнджлинг странник'
         ]
-    },
-    {
-        id: 'unusual-origin',
-        title: '🧬 Необычное происхождение',
-        entries: []
     }
 ]);
 
-const BACKGROUND_CATEGORY_INDEX = (() => {
-    const index = new Map();
+const BACKGROUND_PREFER_PHB_NAMES = Object.freeze([
+    'Артист',
+    'Благородный',
+    'Бродяга',
+    'Моряк',
+    'Мудрец',
+    'Народный герой',
+    'Отшельник',
+    'Послушник',
+    'Преступник',
+    'Солдат',
+    'Чужеземец',
+    'Шарлатан'
+]);
+
+const BACKGROUND_PREFER_PHB_KEYS = new Set(
+    BACKGROUND_PREFER_PHB_NAMES.map(normalizeBackgroundCatalogText)
+);
+
+const BACKGROUND_REQUIRED_TOTAL = BACKGROUND_CATEGORY_DEFINITIONS
+    .reduce((sum, category) => sum + category.entries.length, 0);
+
+function extractBackgroundBookCode(rawName) {
+    const matches = Array.from(String(rawName || '').matchAll(/\(([^()]*)\)/gu));
+    return String(matches.at(-1)?.[1] || '').trim();
+}
+
+async function buildExplicitBackgroundSelection(dataManager, options = []) {
+    const candidatesByName = new Map();
+
+    options.forEach((option, sourceOrder) => {
+        const displayName = stripBookSuffix(option.name);
+        const key = normalizeBackgroundCatalogText(displayName);
+        if (!key) return;
+
+        if (!candidatesByName.has(key)) candidatesByName.set(key, []);
+        candidatesByName.get(key).push({
+            ...option,
+            displayName,
+            backgroundDisplayWords: splitBackgroundDisplayWords(displayName),
+            backgroundSourceOrder: sourceOrder
+        });
+    });
+
+    const selectedOptions = [];
+    const selectedIds = new Set();
+    const selectedDisplayNames = new Set();
+    const backgroundIdCategoryMap = new Map();
+    const missingNames = [];
 
     for (const category of BACKGROUND_CATEGORY_DEFINITIONS) {
-        category.entries.forEach((name, order) => {
-            const key = normalizeBackgroundCatalogText(name);
-            // Если пользователь назвал предысторию в нескольких группах,
-            // используем первое указанное назначение и не дублируем карточку.
-            if (key && !index.has(key)) index.set(key, { categoryId: category.id, order });
-        });
+        for (let order = 0; order < category.entries.length; order += 1) {
+            const requiredName = category.entries[order];
+            const key = normalizeBackgroundCatalogText(requiredName);
+            const candidates = [...(candidatesByName.get(key) || [])];
+
+            if (!candidates.length) {
+                missingNames.push(requiredName);
+                continue;
+            }
+
+            if (BACKGROUND_PREFER_PHB_KEYS.has(key) && candidates.length > 1) {
+                await Promise.all(candidates.map(async candidate => {
+                    try {
+                        const doc = candidate.uuid ? await dataManager.getDocument(candidate.uuid) : null;
+                        candidate._backgroundRawName = doc?.name || candidate.name || '';
+                    } catch (_) {
+                        candidate._backgroundRawName = candidate.name || '';
+                    }
+                }));
+
+                candidates.sort((a, b) => {
+                    const sourceRank = candidate => {
+                        const code = extractBackgroundBookCode(candidate._backgroundRawName);
+                        if (/PHB/iu.test(code)) return 0;
+                        if (/BGDIA/iu.test(code)) return 100;
+                        return 20;
+                    };
+
+                    return sourceRank(a) - sourceRank(b)
+                        || (a.backgroundSourceOrder ?? 9999) - (b.backgroundSourceOrder ?? 9999);
+                });
+            } else {
+                candidates.sort((a, b) =>
+                    (a.backgroundSourceOrder ?? 9999) - (b.backgroundSourceOrder ?? 9999)
+                );
+            }
+
+            const chosen = candidates.find(candidate =>
+                !selectedIds.has(candidate.id)
+                && !selectedDisplayNames.has(key)
+            );
+
+            if (!chosen) {
+                missingNames.push(requiredName);
+                continue;
+            }
+
+            selectedIds.add(chosen.id);
+            selectedDisplayNames.add(key);
+
+            const prepared = {
+                ...chosen,
+                displayName: requiredName,
+                backgroundDisplayWords: splitBackgroundDisplayWords(requiredName),
+                backgroundCategoryId: category.id,
+                backgroundCategoryOrder: order
+            };
+
+            selectedOptions.push(prepared);
+            backgroundIdCategoryMap.set(chosen.id, {
+                categoryId: category.id,
+                order,
+                displayName: requiredName
+            });
+        }
     }
 
-    return index;
-})();
-
-function getBackgroundCategoryInfo(option = {}) {
-    const displayName = stripBookSuffix(option.displayName || option.name || '');
-    const key = normalizeBackgroundCatalogText(displayName);
-
-    if (key.startsWith('студент ')) {
-        const category = BACKGROUND_CATEGORY_DEFINITIONS.find(item => item.id === 'scholars-researchers');
-        return { categoryId: 'scholars-researchers', order: category?.entries.length ?? 999 };
-    }
-
-    return BACKGROUND_CATEGORY_INDEX.get(key) || null;
+    return {
+        selectedOptions,
+        backgroundIdCategoryMap,
+        missingNames
+    };
 }
 
 
@@ -944,36 +953,37 @@ export const ContextMixin = (Base) => class extends Base {
                     raceDeathOptions = raceBuckets.death;
                 }
 
-                // Предыстории: убираем любые книжные/служебные скобки из подписи,
-                // разбиваем название по словам и распределяем карточки по тематическим группам.
+                // Предыстории: строгий белый список из 60 записей.
+                // Категория не выводится из названия/книги/ID — она задана явно выше.
+                // После выбора конкретного Item строится реальная карта Item ID -> категория.
                 if (this.currentStep === 'background') {
-                    const preparedBackgrounds = currentOptions.map((option, sourceOrder) => {
-                        const displayName = stripBookSuffix(option.name);
-                        const categoryInfo = getBackgroundCategoryInfo({ ...option, displayName });
+                    const {
+                        selectedOptions,
+                        backgroundIdCategoryMap,
+                        missingNames
+                    } = await buildExplicitBackgroundSelection(this.dataManager, currentOptions);
 
-                        return {
-                            ...option,
-                            displayName,
-                            backgroundDisplayWords: splitBackgroundDisplayWords(displayName),
-                            backgroundCategoryId: categoryInfo?.categoryId || 'unusual-origin',
-                            backgroundCategoryOrder: categoryInfo?.order ?? sourceOrder,
-                            backgroundSourceOrder: sourceOrder
-                        };
-                    });
+                    if (missingNames.length > 0 || selectedOptions.length !== BACKGROUND_REQUIRED_TOTAL) {
+                        console.warn(
+                            `Character Forge | Ожидалось ${BACKGROUND_REQUIRED_TOTAL} происхождений, найдено ${selectedOptions.length}. Отсутствуют:`,
+                            missingNames
+                        );
+                    }
 
-                    backgroundGroups = BACKGROUND_CATEGORY_DEFINITIONS.map(category => {
-                        const options = preparedBackgrounds
-                            .filter(option => option.backgroundCategoryId === category.id)
-                            .sort((a, b) => {
-                                const orderDiff = (a.backgroundCategoryOrder ?? 999) - (b.backgroundCategoryOrder ?? 999);
-                                if (orderDiff !== 0) return orderDiff;
-                                return String(a.displayName || '').localeCompare(String(b.displayName || ''), 'ru');
-                            });
+                    this._backgroundIdCategoryMap = backgroundIdCategoryMap;
 
-                        return { id: category.id, title: category.title, options };
-                    }).filter(group => group.options.length > 0);
+                    backgroundGroups = BACKGROUND_CATEGORY_DEFINITIONS.map(category => ({
+                        id: category.id,
+                        title: category.title,
+                        options: selectedOptions
+                            .filter(option => backgroundIdCategoryMap.get(option.id)?.categoryId === category.id)
+                            .sort((a, b) =>
+                                (backgroundIdCategoryMap.get(a.id)?.order ?? 999)
+                                - (backgroundIdCategoryMap.get(b.id)?.order ?? 999)
+                            )
+                    }));
 
-                    currentOptions = preparedBackgrounds;
+                    currentOptions = selectedOptions;
                 }
 
                 // 批量检测视频格式
