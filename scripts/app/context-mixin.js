@@ -733,8 +733,14 @@ function splitRaceDisplayWords(value) {
 
 
 function splitBackgroundDisplayWords(value) {
-    return String(value || '')
-        .trim()
+    const raw = String(value || '').trim();
+    const key = normalizeBackgroundCatalogText(raw);
+
+    if (key === normalizeBackgroundCatalogText('Потерявшийся в Царстве Фей')) {
+        return ['Потерявшийся в', 'Царстве', 'Фей'];
+    }
+
+    return raw
         .split(/\s+/u)
         .filter(Boolean)
         .filter(word => !/^[—–-]+$/u.test(word));
