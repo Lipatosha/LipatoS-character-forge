@@ -14244,35 +14244,35 @@ body.originate-active .character-forge-item-sheet-front {
 
 
 /* ============================================================
-   Character Forge 1.3.49 — предыстории по сетке рас
+   Character Forge 1.3.50 — группы предысторий 40/60
    ============================================================ */
 
-/* Описание слева 60%, единый каталог предысторий справа 40%. */
+/* Описание слева 40%, каталог предысторий справа 60%. */
 .view-selection-root.step-background .left-sidebar-drawer {
     left: 0 !important;
     right: auto !important;
-    width: 60% !important;
-    min-width: 60% !important;
-    max-width: 60% !important;
-    --left-drawer-min-width: 60% !important;
-    --left-drawer-max-width: 60% !important;
-    --left-drawer-content-width: 60% !important;
+    width: 40% !important;
+    min-width: 40% !important;
+    max-width: 40% !important;
+    --left-drawer-min-width: 40% !important;
+    --left-drawer-max-width: 40% !important;
+    --left-drawer-content-width: 40% !important;
     border-left: 0 !important;
     border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Как на расах: большое название над каталогом не показываем. */
+/* Большой заголовок над каталогом не нужен: как на экране рас. */
 .view-selection-root.step-background .cinematic-caption {
     display: none !important;
 }
 
-/* Единая правая область выбора без подкатегорий. */
+/* Правая область каталога занимает 60% экрана. */
 .view-selection-root.step-background .cinematic-nav {
     top: 14px !important;
     bottom: 72px !important;
-    left: 80% !important;
-    width: calc(40% - 14px) !important;
-    max-width: calc(40% - 14px) !important;
+    left: 70% !important;
+    width: calc(60% - 14px) !important;
+    max-width: calc(60% - 14px) !important;
     height: auto !important;
     transform: translateX(-50%) !important;
     align-items: stretch !important;
@@ -14286,20 +14286,13 @@ body.originate-active .character-forge-item-sheet-front {
 
 .view-selection-root.step-background .cinematic-nav .background-nav-track {
     box-sizing: border-box !important;
-    display: grid !important;
-    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
-    grid-auto-rows: auto !important;
-    align-content: start !important;
-    align-items: start !important;
-    justify-content: stretch !important;
-    column-gap: 1px !important;
-    row-gap: 2px !important;
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     height: 100% !important;
     max-height: none !important;
     min-width: 0 !important;
-    padding: 0 2px !important;
+    padding: 0 3px 8px !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     overscroll-behavior: contain !important;
@@ -14311,6 +14304,46 @@ body.originate-active .character-forge-item-sheet-front {
     background: transparent !important;
 }
 
+/* Тематические блоки построены по тому же принципу, что категории рас. */
+.view-selection-root.step-background .background-nav-group {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 8px !important;
+}
+
+.view-selection-root.step-background .background-nav-group:last-child {
+    margin-bottom: 2px !important;
+}
+
+.view-selection-root.step-background .background-nav-heading {
+    margin: 0 0 3px !important;
+    padding: 0 0 3px !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .28) !important;
+    color: var(--originate-accent, #c8a35f) !important;
+    font-family: var(--originate-font-display, "Cinzel"), serif !important;
+    font-size: clamp(.78rem, .9vw, 1rem) !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: .025em !important;
+    text-align: left !important;
+}
+
+/* Десять карточек в строке, как на расах. */
+.view-selection-root.step-background .background-nav-grid {
+    display: grid !important;
+    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+    grid-auto-rows: auto !important;
+    align-items: start !important;
+    justify-content: stretch !important;
+    column-gap: 1px !important;
+    row-gap: 2px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+.view-selection-root.step-background .background-nav-grid .nav-item,
 .view-selection-root.step-background .cinematic-nav .nav-item {
     box-sizing: border-box !important;
     display: grid !important;
@@ -14373,13 +14406,13 @@ body.originate-active .character-forge-item-sheet-front {
     text-align: center !important;
 }
 
-/* Основная сетка уже показывает все предыстории; отдельное раскрытие не нужно. */
+/* Основная сетка уже показывает весь каталог. */
 .view-selection-root.step-background .nav-grid-expand-btn {
     display: none !important;
 }
 
 .view-selection-root.step-background .cinematic-actions {
-    left: 80% !important;
+    left: 70% !important;
     right: auto !important;
     bottom: 22px !important;
     transform: translateX(-50%) !important;
@@ -14393,9 +14426,23 @@ body.originate-active .character-forge-item-sheet-front {
 
     .view-selection-root.step-background .cinematic-nav .background-nav-track {
         padding: 0 2px 4px !important;
+    }
+
+    .view-selection-root.step-background .background-nav-group {
+        margin-bottom: 6px !important;
+    }
+
+    .view-selection-root.step-background .background-nav-heading {
+        margin-bottom: 2px !important;
+        padding-bottom: 2px !important;
+        font-size: .72rem !important;
+    }
+
+    .view-selection-root.step-background .background-nav-grid {
         row-gap: 1px !important;
     }
 
+    .view-selection-root.step-background .background-nav-grid .nav-item,
     .view-selection-root.step-background .cinematic-nav .nav-item {
         grid-template-rows: 27px auto !important;
         padding: 4px 0 !important;
