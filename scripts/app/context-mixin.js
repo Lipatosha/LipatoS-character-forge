@@ -483,6 +483,15 @@ function splitRaceDisplayWords(value) {
         .filter(word => !/^[—–-]+$/u.test(word));
 }
 
+
+function splitBackgroundDisplayWords(value) {
+    return String(value || '')
+        .trim()
+        .split(/\s+/u)
+        .filter(Boolean)
+        .filter(word => !/^[—–-]+$/u.test(word));
+}
+
 export const ContextMixin = (Base) => class extends Base {
     async _prepareContext(options) {
         try {
@@ -696,11 +705,16 @@ export const ContextMixin = (Base) => class extends Base {
                 }
 
                 // У предысторий скрываем книжные суффиксы вроде "(EGW)", но не меняем сам Item.
+                // Для компактной сетки каждое слово названия выводится на отдельной строке.
                 if (this.currentStep === 'background') {
-                    currentOptions = currentOptions.map(option => ({
-                        ...option,
-                        displayName: stripBookSuffix(option.name)
-                    }));
+                    currentOptions = currentOptions.map(option => {
+                        const displayName = stripBookSuffix(option.name);
+                        return {
+                            ...option,
+                            displayName,
+                            backgroundDisplayWords: splitBackgroundDisplayWords(displayName)
+                        };
+                    });
                 }
 
                 // 批量检测视频格式
@@ -736,16 +750,6 @@ export const ContextMixin = (Base) => class extends Base {
                         };
                         // 确保 PHB 图片已应用
                         selectedOption = enhanceOptionWithPHBImage(selectedOption, this.currentStep);
-
-                        if (this.currentStep === 'class') {
-                            // The class detail icon comes from the installed Laaru compendium.
-                            selectedOption.classIcon = selectedOption.classIcon || selectedOption.img || null;
-                        }
-
-                        if (this.currentStep === 'race') {
-                            // Иконка выбранной расы в описании работает так же, как у классов.
-                            selectedOption.raceIcon = selectedOption.raceIcon || selectedOption.img || null;
-                        }
 
                         // 如果没有特定的背景图，使用默认背景
 
