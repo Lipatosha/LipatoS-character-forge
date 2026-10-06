@@ -264,7 +264,9 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Наследник',
             'Придворный',
             'Представитель фракции',
-            'Функционер Азориусов'
+            'Функционер Азориусов',
+            'Представитель Орзовов',
+            'Придворный слуга'
         ]
     },
     {
@@ -280,7 +282,13 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Легионер Боросов',
             'Соламнийский рыцарь',
             'Рыцарь ордена',
-            'Всадник Преисподней'
+            'Всадник Преисподней',
+            'Всадники Преисподней',
+            'Орден Перчатки',
+            'Повстанец Флана',
+            'Стрелковый корпус Уайтстоуна',
+            'Торговый шериф',
+            'Член наёмного отряда'
         ]
     },
     {
@@ -294,7 +302,20 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Преступник Мириада',
             'Азартный игрок',
             'Негодяй',
-            'Ухмылка'
+            'Ухмылка',
+            'Агент Голгари',
+            'Агент-Волстракер',
+            'Безликий',
+            'Городской охотник за головами',
+            'Двойной агент Чёрных Кулаков',
+            'Конспиративная личность',
+            'Контрабандист Хиллсфара',
+            'Оперативник Димиров',
+            'Преступник — Мириадский оперативник',
+            'Разбойник Железного Пути',
+            'Член организации «Хватка»',
+            'Шарлатан',
+            'Шпион Вера Авенна'
         ]
     },
     {
@@ -307,7 +328,8 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Исправившийся культист',
             'Оккультист',
             'Посвящённый Селезнии',
-            'Фанатик Шейдов'
+            'Фанатик Шейдов',
+            'Послушник Лосконорождённый'
         ]
     },
     {
@@ -319,7 +341,10 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Изученный драконом',
             'Подручный ведьмовства',
             'Потомок знаменитого авантюриста',
-            'Пламенный Кулак'
+            'Пламенный Кулак',
+            'Ведун',
+            'Маг Высшего Волшебства',
+            'Хранитель врат'
         ]
     },
     {
@@ -335,7 +360,11 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Учёный Симиков',
             'Учёный-затворник',
             'Студент Визерблума',
-            'Студент Квандрикса'
+            'Студент Квандрикса',
+            'Мудрец — Кобальтовый учёный',
+            'Планарный философ',
+            'Следователь',
+            'Учащийся лицея'
         ]
     },
     {
@@ -348,7 +377,11 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Торговец Хиллсфара',
             'Трактирщик',
             'Корабел',
-            'Резчик рун'
+            'Резчик рун',
+            'Горняк Каменного Шпиля',
+            'Инженер Иззетов',
+            'Неудавшийся торговец',
+            'Ремесленник из гильдии'
         ]
     },
     {
@@ -362,7 +395,11 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Дальний путешественник',
             'Охотник за головами',
             'Утгардский соплеменник',
-            'Чужеземец'
+            'Чужеземец',
+            'Анарх Груулов',
+            'Ашари',
+            'Житель дикого космоса',
+            'Охотник за трофеями'
         ]
     },
     {
@@ -371,11 +408,10 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
         entries: [
             'Моряк',
             'Моряк-пират',
-            'Морской пехотинец',
+            'Моряк/Пират',
             'Рыбак',
-            'Корабел',
-            'Контрабандист',
-            'Человек из гавани'
+            'Человек из гавани',
+            'Флибустьер'
         ]
     },
     {
@@ -388,8 +424,31 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
             'Награждённый',
             'Парфюмер',
             'Бродяга',
-            'Благородный'
+            'Агент Дома',
+            'Бывший искатель приключений',
+            'Истец',
+            'Подручный Ведьмосвета',
+            'Северный менестрель',
+            'Стажёр конкурента'
         ]
+    },
+    {
+        id: 'outcasts-broken-fates',
+        title: '🕯️ Изгои и сломанные судьбы',
+        entries: [
+            'Беженец из Флана',
+            'Житель у ворот',
+            'Изувеченный Драконом',
+            'Корманторский беженец',
+            'Преследуемый',
+            'Разорённый',
+            'Стояновский заключённый'
+        ]
+    },
+    {
+        id: 'unusual-origin',
+        title: '🧬 Необычное происхождение',
+        entries: []
     }
 ]);
 
@@ -896,13 +955,12 @@ export const ContextMixin = (Base) => class extends Base {
                             ...option,
                             displayName,
                             backgroundDisplayWords: splitBackgroundDisplayWords(displayName),
-                            backgroundCategoryId: categoryInfo?.categoryId || 'other',
+                            backgroundCategoryId: categoryInfo?.categoryId || 'unusual-origin',
                             backgroundCategoryOrder: categoryInfo?.order ?? sourceOrder,
                             backgroundSourceOrder: sourceOrder
                         };
                     });
 
-                    const groupedIds = new Set();
                     backgroundGroups = BACKGROUND_CATEGORY_DEFINITIONS.map(category => {
                         const options = preparedBackgrounds
                             .filter(option => option.backgroundCategoryId === category.id)
@@ -912,21 +970,8 @@ export const ContextMixin = (Base) => class extends Base {
                                 return String(a.displayName || '').localeCompare(String(b.displayName || ''), 'ru');
                             });
 
-                        options.forEach(option => groupedIds.add(option.id));
                         return { id: category.id, title: category.title, options };
                     }).filter(group => group.options.length > 0);
-
-                    const otherOptions = preparedBackgrounds
-                        .filter(option => !groupedIds.has(option.id))
-                        .sort((a, b) => String(a.displayName || '').localeCompare(String(b.displayName || ''), 'ru'));
-
-                    if (otherOptions.length > 0) {
-                        backgroundGroups.push({
-                            id: 'other',
-                            title: 'Прочие',
-                            options: otherOptions
-                        });
-                    }
 
                     currentOptions = preparedBackgrounds;
                 }
