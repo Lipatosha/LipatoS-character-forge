@@ -11476,12 +11476,12 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-background .left-sidebar-drawer {
     left: auto !important;
     right: 0 !important;
-    width: 50% !important;
-    min-width: 50% !important;
-    max-width: 50% !important;
-    --left-drawer-min-width: 50% !important;
-    --left-drawer-max-width: 50% !important;
-    --left-drawer-content-width: 50% !important;
+    width: 55% !important;
+    min-width: 55% !important;
+    max-width: 55% !important;
+    --left-drawer-min-width: 55% !important;
+    --left-drawer-max-width: 55% !important;
+    --left-drawer-content-width: 55% !important;
     border-right: 0 !important;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -11694,7 +11694,7 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-class .cinematic-actions,
 .view-selection-root.step-race .cinematic-actions,
 .view-selection-root.step-background .cinematic-actions {
-    left: 75% !important;
+    left: 77.5% !important;
     right: auto !important;
     transform: translateX(-50%) !important;
 }
@@ -14244,7 +14244,7 @@ body.originate-active .character-forge-item-sheet-front {
 
 
 /* ============================================================
-   Character Forge 1.3.61 — все 8 категорий без вертикального скролла
+   Character Forge 1.3.63 — происхождения 55/45 и отступ иконок
    ============================================================ */
 
 /* Кнопка подтверждения: при hover текст не переносится и геометрия не скачет. */
@@ -14270,7 +14270,7 @@ body.originate-active .character-forge-item-sheet-front {
     flex: 0 0 auto !important;
 }
 
-/* Описание и каталог происхождений делят экран поровну: 50/50. */
+/* Описание 55%, каталог происхождений 45%. */
 .view-selection-root.step-background .left-sidebar-drawer {
     left: 0 !important;
     right: auto !important;
@@ -14291,9 +14291,9 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-background .cinematic-nav {
     top: 4px !important;
     bottom: 52px !important;
-    left: 75% !important;
-    width: calc(50% - 14px) !important;
-    max-width: calc(50% - 14px) !important;
+    left: 77.5% !important;
+    width: calc(45% - 14px) !important;
+    max-width: calc(45% - 14px) !important;
     height: auto !important;
     transform: translateX(-50%) !important;
     align-items: stretch !important;
@@ -14371,6 +14371,7 @@ body.originate-active .character-forge-item-sheet-front {
     justify-content: stretch !important;
     width: 100% !important;
     min-width: 0 !important;
+    padding-top: 3px !important;
     column-gap: 1px !important;
     row-gap: 0 !important;
 }
@@ -14474,6 +14475,7 @@ body.originate-active .character-forge-item-sheet-front {
     }
 
     .view-selection-root.step-background .background-nav-grid {
+        padding-top: 3px !important;
         row-gap: 0 !important;
     }
 
