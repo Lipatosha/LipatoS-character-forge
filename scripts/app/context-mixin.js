@@ -255,7 +255,7 @@ function normalizeBackgroundCatalogText(value) {
 const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     {
         id: 'status-society-fame',
-        title: '👑 Статус, общество и известность',
+        title: 'Статус, общество и известность',
         entries: [
             'Благородный',
             'Наследник',
@@ -270,7 +270,7 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     },
     {
         id: 'war-service-law',
-        title: '⚔️ Война, служба и закон',
+        title: 'Война, служба и закон',
         entries: [
             'Солдат',
             'Ветеран-наёмник',
@@ -282,7 +282,7 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     },
     {
         id: 'crime-deception',
-        title: '🗡️ Преступный мир и обман',
+        title: 'Преступный мир и обман',
         entries: [
             'Преступник',
             'Шарлатан',
@@ -294,7 +294,7 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     },
     {
         id: 'faith-magic-occult',
-        title: '🔮 Вера, магия и оккультизм',
+        title: 'Вера, магия и оккультизм',
         entries: [
             'Послушник',
             'Еретик',
@@ -307,7 +307,7 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     },
     {
         id: 'knowledge-investigation',
-        title: '📚 Знания и расследования',
+        title: 'Знания и расследования',
         entries: [
             'Мудрец',
             'Антрополог',
@@ -319,7 +319,7 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     },
     {
         id: 'craft-trade-professions',
-        title: '🔨 Ремесло, торговля и профессии',
+        title: 'Ремесло, торговля и профессии',
         entries: [
             'Караванщик',
             'Клановый ремесленник',
@@ -333,7 +333,7 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     },
     {
         id: 'travel-wilderness',
-        title: '🌲 Путешествия и дикая местность',
+        title: 'Путешествия и дикая местность',
         entries: [
             'Бедуин',
             'Бродяга',
@@ -347,7 +347,7 @@ const BACKGROUND_CATEGORY_DEFINITIONS = Object.freeze([
     },
     {
         id: 'unusual-fate-origin',
-        title: '🕯️ Необычная судьба и происхождение',
+        title: 'Необычная судьба и происхождение',
         entries: [
             'Бывший искатель приключений',
             'Великаний подкидыш',
