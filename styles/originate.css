@@ -14241,3 +14241,178 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-race .cinematic-nav .nav-item {
     gap: 3px !important;
 }
+
+
+/* ============================================================
+   Character Forge 1.3.49 — предыстории по сетке рас
+   ============================================================ */
+
+/* Описание слева 60%, единый каталог предысторий справа 40%. */
+.view-selection-root.step-background .left-sidebar-drawer {
+    left: 0 !important;
+    right: auto !important;
+    width: 60% !important;
+    min-width: 60% !important;
+    max-width: 60% !important;
+    --left-drawer-min-width: 60% !important;
+    --left-drawer-max-width: 60% !important;
+    --left-drawer-content-width: 60% !important;
+    border-left: 0 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Как на расах: большое название над каталогом не показываем. */
+.view-selection-root.step-background .cinematic-caption {
+    display: none !important;
+}
+
+/* Единая правая область выбора без подкатегорий. */
+.view-selection-root.step-background .cinematic-nav {
+    top: 14px !important;
+    bottom: 72px !important;
+    left: 80% !important;
+    width: calc(40% - 14px) !important;
+    max-width: calc(40% - 14px) !important;
+    height: auto !important;
+    transform: translateX(-50%) !important;
+    align-items: stretch !important;
+    overflow: visible !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+.view-selection-root.step-background .cinematic-nav .background-nav-track {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+    grid-auto-rows: auto !important;
+    align-content: start !important;
+    align-items: start !important;
+    justify-content: stretch !important;
+    column-gap: 1px !important;
+    row-gap: 2px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    padding: 0 2px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .4) transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.view-selection-root.step-background .cinematic-nav .nav-item {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-rows: 30px auto !important;
+    align-content: start !important;
+    justify-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+    gap: 3px !important;
+}
+
+.view-selection-root.step-background .cinematic-nav .nav-icon-wrapper,
+.view-selection-root.step-background .cinematic-nav .nav-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 30px !important;
+    max-height: 30px !important;
+}
+
+.view-selection-root.step-background .cinematic-nav .nav-icon {
+    display: block !important;
+    object-fit: cover !important;
+}
+
+/* Каждое слово названия предыстории идёт с новой строки. */
+.view-selection-root.step-background .background-nav-label {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 1px !important;
+    overflow: visible !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.02 !important;
+    font-size: clamp(.42rem, .48vw, .56rem) !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: initial !important;
+}
+
+.view-selection-root.step-background .background-label-word {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    text-align: center !important;
+}
+
+/* Основная сетка уже показывает все предыстории; отдельное раскрытие не нужно. */
+.view-selection-root.step-background .nav-grid-expand-btn {
+    display: none !important;
+}
+
+.view-selection-root.step-background .cinematic-actions {
+    left: 80% !important;
+    right: auto !important;
+    bottom: 22px !important;
+    transform: translateX(-50%) !important;
+}
+
+@media (max-height: 760px), (max-width: 1200px) {
+    .view-selection-root.step-background .cinematic-nav {
+        top: 10px !important;
+        bottom: 68px !important;
+    }
+
+    .view-selection-root.step-background .cinematic-nav .background-nav-track {
+        padding: 0 2px 4px !important;
+        row-gap: 1px !important;
+    }
+
+    .view-selection-root.step-background .cinematic-nav .nav-item {
+        grid-template-rows: 27px auto !important;
+        padding: 4px 0 !important;
+        gap: 2px !important;
+    }
+
+    .view-selection-root.step-background .cinematic-nav .nav-icon-wrapper,
+    .view-selection-root.step-background .cinematic-nav .nav-icon {
+        width: 27px !important;
+        height: 27px !important;
+        min-width: 27px !important;
+        min-height: 27px !important;
+        max-width: 27px !important;
+        max-height: 27px !important;
+    }
+
+    .view-selection-root.step-background .background-nav-label {
+        font-size: .40rem !important;
+    }
+}
