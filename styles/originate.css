@@ -13630,8 +13630,8 @@ body.originate-active .character-forge-item-sheet-front {
     min-width: 0 !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    scrollbar-width: none !important;
-    scrollbar-color: transparent transparent !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .4) transparent !important;
     overscroll-behavior: contain;
 }
 
@@ -13838,7 +13838,7 @@ body.originate-active .character-forge-item-sheet-front {
     padding: 0 1px !important;
     overflow: hidden !important;
     font-size: clamp(.42rem, .48vw, .56rem) !important;
-    line-height: .96 !important;
+    line-height: 1.02 !important;
     text-align: center !important;
     white-space: normal !important;
     overflow-wrap: anywhere !important;
@@ -13858,7 +13858,7 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-race .cinematic-actions {
     left: 78.5% !important;
     right: auto !important;
-    bottom: 14px !important;
+    bottom: 22px !important;
     transform: translateX(-50%) !important;
 }
 
@@ -14112,8 +14112,8 @@ body.originate-active .character-forge-item-sheet-front {
 
 /* После удаления заголовка каталог рас поднимается почти к верхней границе. */
 .view-selection-root.step-race .cinematic-nav {
-    top: 6px !important;
-    bottom: 56px !important;
+    top: 14px !important;
+    bottom: 72px !important;
     left: 75% !important;
     width: calc(50% - 18px) !important;
     max-width: calc(50% - 18px) !important;
@@ -14289,8 +14289,8 @@ body.originate-active .character-forge-item-sheet-front {
 }
 
 .view-selection-root.step-background .cinematic-nav {
-    top: 14px !important;
-    bottom: 72px !important;
+    top: 4px !important;
+    bottom: 52px !important;
     left: 75% !important;
     width: calc(50% - 14px) !important;
     max-width: calc(50% - 14px) !important;
@@ -14318,14 +14318,21 @@ body.originate-active .character-forge-item-sheet-front {
     overflow-x: hidden !important;
     overflow-y: hidden !important;
     overscroll-behavior: contain !important;
-    scrollbar-width: thin !important;
-    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .4) transparent !important;
+    scrollbar-width: none !important;
+    scrollbar-color: transparent transparent !important;
     border: 0 !important;
     border-radius: 0 !important;
     outline: 0 !important;
     box-shadow: none !important;
     clip-path: none !important;
     background: transparent !important;
+}
+
+
+.view-selection-root.step-background .cinematic-nav .background-nav-track::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
 .view-selection-root.step-background .background-nav-group {
@@ -14337,7 +14344,7 @@ body.originate-active .character-forge-item-sheet-front {
 }
 
 .view-selection-root.step-background .background-nav-group:last-child {
-    margin-bottom: 2px !important;
+    margin-bottom: 0 !important;
 }
 
 /* Заголовки категорий повторяют стиль заголовков рас. */
@@ -14419,7 +14426,7 @@ body.originate-active .character-forge-item-sheet-front {
     overflow: visible !important;
     white-space: normal !important;
     text-align: center !important;
-    line-height: 1.02 !important;
+    line-height: .96 !important;
     font-size: clamp(.42rem, .48vw, .56rem) !important;
     -webkit-line-clamp: unset !important;
     -webkit-box-orient: initial !important;
@@ -14439,7 +14446,7 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-background .cinematic-actions {
     left: 75% !important;
     right: auto !important;
-    bottom: 22px !important;
+    bottom: 10px !important;
     transform: translateX(-50%) !important;
 }
 
