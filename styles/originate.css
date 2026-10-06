@@ -14274,12 +14274,12 @@ body.originate-active .character-forge-item-sheet-front {
 .view-selection-root.step-background .left-sidebar-drawer {
     left: 0 !important;
     right: auto !important;
-    width: 50% !important;
-    min-width: 50% !important;
-    max-width: 50% !important;
-    --left-drawer-min-width: 50% !important;
-    --left-drawer-max-width: 50% !important;
-    --left-drawer-content-width: 50% !important;
+    width: 55% !important;
+    min-width: 55% !important;
+    max-width: 55% !important;
+    --left-drawer-min-width: 55% !important;
+    --left-drawer-max-width: 55% !important;
+    --left-drawer-content-width: 55% !important;
     border-left: 0 !important;
     border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
@@ -14445,7 +14445,7 @@ body.originate-active .character-forge-item-sheet-front {
 }
 
 .view-selection-root.step-background .cinematic-actions {
-    left: 75% !important;
+    left: 77.5% !important;
     right: auto !important;
     bottom: 10px !important;
     transform: translateX(-50%) !important;
