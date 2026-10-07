@@ -3965,6 +3965,141 @@ export class LevelUpManager {
         return resolvedItems;
     }
 
+    async _enforceExactSubclassSelection(normalizedInput = {}, createdItems = []) {
+        const context = normalizedInput?.context || {};
+        const pendingSubclassEntries = [
+            ...(normalizedInput?.itemChanges?.pendingItems || []),
+            ...(normalizedInput?.manualItems || [])
+        ].filter(entry => entry?.isSubclass && entry?.itemData?.type === 'subclass');
+
+        const expectedEntry = pendingSubclassEntries.find(entry => {
+            const sourceUuid = this._normalizeResolutionSourceUuid(entry.itemData);
+            return context.subclassUuid && this._sameSourceUuid(sourceUuid, context.subclassUuid);
+        }) || pendingSubclassEntries[0] || null;
+
+        const expectedSourceUuid = context.subclassUuid
+            || this._normalizeResolutionSourceUuid(expectedEntry?.itemData)
+            || null;
+        const expectedIdentifier = context.subclassIdentifier
+            || expectedEntry?.itemData?.system?.identifier
+            || null;
+        const classIdentifier = context.classIdentifier
+            || this._getResolutionClassIdentifier(this.actor, context)
+            || expectedEntry?.itemData?.system?.classIdentifier
+            || null;
+
+        if (!expectedSourceUuid && !expectedIdentifier && !expectedEntry) return null;
+
+        const belongsToTargetClass = item => {
+            if (item?.type !== 'subclass') return false;
+            if (!classIdentifier) return true;
+            const itemClassIdentifier = item.system?.classIdentifier || null;
+            return !itemClassIdentifier || itemClassIdentifier === classIdentifier;
+        };
+
+        const isExpected = item => {
+            if (!belongsToTargetClass(item)) return false;
+            const itemSourceUuid = resolveItemSourceUuid(item);
+            if (expectedSourceUuid && this._sameSourceUuid(itemSourceUuid, expectedSourceUuid)) return true;
+            if (expectedIdentifier && item.system?.identifier === expectedIdentifier) return true;
+            return false;
+        };
+
+        let selectedItem = this.actor.items.find(isExpected)
+            || createdItems.find(isExpected)
+            || null;
+
+        // Если системный Subclass advancement успел создать старое значение из
+        // исходного класса, а выбранный подкласс ещё не записался, создаём именно
+        // выбранный Item из pending-входа.
+        if (!selectedItem && expectedEntry?.itemData) {
+            const exactData = foundry.utils.deepClone(expectedEntry.itemData);
+            if (classIdentifier) {
+                foundry.utils.setProperty(exactData, 'system.classIdentifier', classIdentifier);
+            }
+
+            const sourceUuid = expectedSourceUuid || this._normalizeResolutionSourceUuid(exactData);
+            if (sourceUuid) {
+                foundry.utils.setProperty(exactData, 'flags.hero-genesis.sourceUuid', sourceUuid);
+                foundry.utils.setProperty(exactData, 'flags.originate.sourceUuid', sourceUuid);
+            }
+
+            const [created] = await this._createItems([exactData]);
+            selectedItem = created || null;
+        }
+
+        if (!selectedItem) {
+            console.warn('Character Forge | Не удалось закрепить выбранный подкласс.', {
+                expectedSourceUuid,
+                expectedIdentifier,
+                classIdentifier
+            });
+            return null;
+        }
+
+        // Подкласс обязан принадлежать именно выбранному классу. У сторонних книг
+        // это поле иногда отсутствует или скопировано от другого класса.
+        if (classIdentifier && selectedItem.system?.classIdentifier !== classIdentifier) {
+            await selectedItem.update({ 'system.classIdentifier': classIdentifier });
+            selectedItem = this.actor.items.get(selectedItem.id) || selectedItem;
+        }
+
+        // Удаляем только лишние подклассы ЭТОГО класса. Подклассы других классов
+        // мультиклассового персонажа не трогаем.
+        const wrongSubclassIds = this.actor.items
+            .filter(item => {
+                if (item.type !== 'subclass' || item.id === selectedItem.id) return false;
+                const itemClassIdentifier = item.system?.classIdentifier || null;
+                if (classIdentifier && itemClassIdentifier && itemClassIdentifier !== classIdentifier) return false;
+
+                // При отсутствии classIdentifier удаляем запись только если она явно
+                // конкурирует за тот же класс: это типичный мусор от Subclass advancement.
+                if (!classIdentifier) return false;
+                return true;
+            })
+            .map(item => item.id);
+
+        if (wrongSubclassIds.length) {
+            await this.actor.deleteEmbeddedDocuments('Item', wrongSubclassIds);
+        }
+
+        // И наконец жёстко переписываем value у Advancement класса на фактически
+        // выбранный документ, а не на старое значение, которое могло лежать в книге.
+        const classItem = this._findResolutionParentItem('class', { actor: this.actor, context });
+        const subclassAdvancement = classItem?.advancement?.byType?.Subclass?.[0];
+        if (subclassAdvancement) {
+            const sourceUuid = resolveItemSourceUuid(selectedItem)
+                || expectedSourceUuid
+                || selectedItem.flags?.['hero-genesis']?.sourceUuid
+                || selectedItem.flags?.originate?.sourceUuid
+                || null;
+            const nextValue = foundry.utils.deepClone(subclassAdvancement.value || {});
+            nextValue.document = selectedItem.id;
+            if (sourceUuid) nextValue.uuid = sourceUuid;
+
+            try {
+                if (subclassAdvancement.update instanceof Function) {
+                    await subclassAdvancement.update({ value: nextValue });
+                }
+            } catch (error) {
+                console.warn('Character Forge | Не удалось обновить Subclass advancement выбранным подклассом:', error);
+            }
+        }
+
+        this._subclassItem = null;
+        this._subclassUuid = null;
+
+        window.OriginateLog('Originate | [Subclass] закреплён точный выбранный подкласс:', {
+            name: selectedItem.name,
+            id: selectedItem.id,
+            sourceUuid: resolveItemSourceUuid(selectedItem) || expectedSourceUuid,
+            identifier: selectedItem.system?.identifier || expectedIdentifier,
+            classIdentifier
+        });
+
+        return selectedItem;
+    }
+
     async applyPendingReplacements(pendingReplacements = []) {
         const replacedItems = [];
         const handledOldItemIds = new Set();
@@ -4008,6 +4143,7 @@ export class LevelUpManager {
         } = manualInput.itemChanges || {};
 
         const createdOrUpdatedItems = await this.applyPendingItems(pendingItems);
+        await this._enforceExactSubclassSelection(normalizedInput, createdOrUpdatedItems);
 
         let updatedExistingItems = [];
         if (pendingItemUpdates.length > 0) {
@@ -4051,6 +4187,7 @@ export class LevelUpManager {
         const pendingReplacements = manualInput.itemChanges?.pendingReplacements || [];
 
         const createdOrUpdatedItems = await this.applyPendingItems(pendingItems);
+        await this._enforceExactSubclassSelection(normalizedInput, createdOrUpdatedItems);
 
         let updatedExistingItems = [];
         if (pendingItemUpdates.length > 0) {
