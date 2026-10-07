@@ -53,6 +53,7 @@ import {
     bindSubclassSelectionPanel,
     renderSubclassSelectionPanel
 } from './progression-renderer.js';
+import { prepareSubclassOptions } from './subclass-description.js';
 import { getThemeClassList } from '../theme-registry.js';
 import { SpellRules } from '../spell-rules.js';
 import { collectWeaponProficiencyKeys } from './advancement-rule-utils.js';
@@ -1595,36 +1596,12 @@ export class WizardUIMixin {
 
     async _renderSubclassSelection(step, level) {
         const classIdentifier = this.levelUpManager.getClassIdentifier();
-        const subclassOptions = await this.dataManager.getOptions('subclass', { classIdentifier });
+        const rawSubclassOptions = await this.dataManager.getOptions('subclass', { classIdentifier });
         const selectedUuid = this._state.stepData[step.id]?.selectedSubclass || null;
 
-        // Описание подкласса приходит из Compendium сырым HTML. На этом шаге оно
-        // раньше вставлялось напрямую, поэтому @UUID[...] оставались обычным текстом.
-        // Обогащаем описание один раз перед рендером, с relativeTo исходного Item.
-        const TE = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
-        const preparedSubclassOptions = await Promise.all(
-            (subclassOptions || []).map(async option => {
-                const rawDescription = String(option?.description || '');
-                if (!rawDescription || !TE?.enrichHTML) return option;
-
-                try {
-                    const doc = option.uuid
-                        ? await this.dataManager.getDocument(option.uuid)
-                        : null;
-                    const description = await TE.enrichHTML(rawDescription, {
-                        async: true,
-                        relativeTo: doc || undefined
-                    });
-                    return { ...option, description };
-                } catch (error) {
-                    console.warn(
-                        `Character Forge | Не удалось обогатить описание подкласса "${option?.name || option?.uuid || ''}":`,
-                        error
-                    );
-                    return option;
-                }
-            })
-        );
+        // Один общий рендер для всех подклассов. Он обогащает Foundry-ссылки
+        // и заменяет оставшиеся технические @UUID/@Compendium на нормальные подписи.
+        const preparedSubclassOptions = await prepareSubclassOptions(rawSubclassOptions, this.dataManager);
 
         step.subclassOptions = preparedSubclassOptions;
         return renderSubclassSelectionPanel(preparedSubclassOptions, { selectedUuid });
