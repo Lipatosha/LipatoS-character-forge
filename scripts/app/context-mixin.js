@@ -1023,6 +1023,12 @@ export const ContextMixin = (Base) => class extends Base {
                 const currentSelectedUuid = this.context[`${this.currentStep}Uuid`] || null;
                 window.OriginateLog(`_prepareContext: currentStep=${this.currentStep}, selectedId=${currentSelectedId}, selectedUuid=${currentSelectedUuid}`);
 
+                currentOptions.forEach(option => {
+                    option.isCurrentSelection = currentSelectedUuid
+                        ? option.uuid === currentSelectedUuid
+                        : option.id === currentSelectedId;
+                });
+
                 if (currentSelectedId || currentSelectedUuid) {
                     let optionSummary = (currentSelectedUuid
                         ? currentOptions.find(o => o.uuid === currentSelectedUuid)
