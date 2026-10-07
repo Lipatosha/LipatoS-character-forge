@@ -399,7 +399,7 @@ function spellCard(entry) {
             <button type="button"
                     class="character-forge-book-prepare-toggle ${entry.prepared ? 'is-selected' : ''}"
                     data-prepare-action="${entry.prepared ? 'remove' : 'add'}"
-                    data-uuid="${esc(entry.uuid)}"
+                    data-spell-uuid="${esc(entry.uuid)}"
                     ${entry.toggleable ? '' : 'disabled'}
                     title="${esc(prepareTitle)}"
                     aria-label="${esc(prepareTitle)}">
@@ -598,12 +598,12 @@ function bindSpellPreparationControls(overlay, actor) {
         void setSpellPrepared(actor, payload.uuid, false);
     });
 
-    overlay.querySelectorAll('[data-prepare-action][data-uuid]').forEach(button => {
+    overlay.querySelectorAll('[data-prepare-action][data-spell-uuid]').forEach(button => {
         button.addEventListener('click', event => {
             event.preventDefault();
             event.stopPropagation();
             const shouldPrepare = button.dataset.prepareAction === 'add';
-            void setSpellPrepared(actor, button.dataset.uuid, shouldPrepare);
+            void setSpellPrepared(actor, button.dataset.spellUuid, shouldPrepare);
         });
     });
 
