@@ -940,6 +940,7 @@ export function renderSubclassCards(options, { selectedUuid = null } = {}) {
                     <img src="${escapeSubclassText(opt.img || 'icons/svg/mystery-man.svg')}"
                         class="subclass-choice-icon" alt="">
                 </span>
+                <span class="subclass-choice-label">${escapeSubclassText(opt.name)}</span>
             </button>
         `;
     }).join('');
