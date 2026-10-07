@@ -150,12 +150,27 @@ function preparationState(item) {
 }
 
 function featureUsage(item) {
-    const uses = item.system?.uses;
-    if (!uses) return '';
-    const max = Number(uses.max ?? 0);
-    const value = Number(uses.value ?? 0);
-    if (!Number.isFinite(max) || max <= 0) return '';
-    return `Использования: ${Number.isFinite(value) ? value : 0}/${max}`;
+    const candidates = [];
+    if (item.system?.uses) candidates.push(item.system.uses);
+
+    const activities = item.system?.activities;
+    if (activities?.values instanceof Function) {
+        for (const activity of activities.values()) {
+            if (activity?.uses) candidates.push(activity.uses);
+        }
+    } else if (Array.isArray(activities)) {
+        for (const activity of activities) if (activity?.uses) candidates.push(activity.uses);
+    } else if (activities && typeof activities === 'object') {
+        for (const activity of Object.values(activities)) if (activity?.uses) candidates.push(activity.uses);
+    }
+
+    for (const uses of candidates) {
+        const max = Number(uses.max ?? uses.maxValue ?? 0);
+        const value = Number(uses.value ?? uses.remaining ?? 0);
+        if (!Number.isFinite(max) || max <= 0) continue;
+        return `Использования: ${Number.isFinite(value) ? value : 0}/${max}`;
+    }
+    return '';
 }
 
 function findPane(root, actor, type) {
@@ -644,12 +659,12 @@ async function renderBook(actor, kind, dataManager, overlay) {
     `;
 
     overlay.querySelector('.character-forge-book-close')?.addEventListener('click', () => closeBook(actor.id));
-    overlay.addEventListener('click', event => {
+    overlay.onclick = event => {
         if (event.target === overlay) closeBook(actor.id);
-    });
-    overlay.addEventListener('keydown', event => {
+    };
+    overlay.onkeydown = event => {
         if (event.key === 'Escape') closeBook(actor.id);
-    });
+    };
 
     overlay.querySelectorAll('.character-forge-book-card[data-owned="true"]').forEach(card => {
         card.addEventListener('dblclick', () => void openOwnedItem(card.dataset.uuid));
