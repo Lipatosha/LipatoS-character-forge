@@ -773,7 +773,7 @@
                         <div class="class-nav-grid class-nav-grid-official">
                             {{#each officialClassOptions}}
                             <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.classNavLabel}}">
                                 <div class="nav-icon-wrapper">
                                     {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
                                 </div>
@@ -796,7 +796,7 @@
                         <div class="class-nav-grid class-nav-grid-alternative">
                             {{#each alternativeClassOptions}}
                             <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.classNavLabel}}">
                                 <div class="nav-icon-wrapper">
                                     {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
                                 </div>
@@ -821,7 +821,7 @@
                         <div class="class-nav-grid class-nav-grid-unofficial">
                             {{#each unofficialClassOptions}}
                             <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.classNavLabel}}">
                                 <div class="nav-icon-wrapper">
                                     {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
                                 </div>
@@ -836,7 +836,7 @@
                         <div class="class-nav-grid class-nav-grid-companions">
                             {{#each companionClassOptions}}
                             <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                                data-action="selectOption" data-id="{{this.id}}" title="{{this.classNavLabel}}">
+                                data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.classNavLabel}}">
                                 <div class="nav-icon-wrapper">
                                     {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
                                 </div>
@@ -855,7 +855,7 @@
                     <div class="race-nav-grid">
                         {{#each raceKingdomOptions}}
                         <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
+                            data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.raceDisplayName}}">
                             <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
                             <div class="nav-label race-nav-label">
                                 {{#each this.raceDisplayWords}}<span class="race-label-word">{{this}}</span>{{/each}}
@@ -872,7 +872,7 @@
                     <div class="race-nav-grid">
                         {{#each raceBeastOptions}}
                         <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
+                            data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.raceDisplayName}}">
                             <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
                             <div class="nav-label race-nav-label">
                                 {{#each this.raceDisplayWords}}<span class="race-label-word">{{this}}</span>{{/each}}
@@ -889,7 +889,7 @@
                     <div class="race-nav-grid">
                         {{#each racePlanarOptions}}
                         <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
+                            data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.raceDisplayName}}">
                             <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
                             <div class="nav-label race-nav-label">
                                 {{#each this.raceDisplayWords}}<span class="race-label-word">{{this}}</span>{{/each}}
@@ -906,7 +906,7 @@
                     <div class="race-nav-grid">
                         {{#each raceUnusualOptions}}
                         <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
+                            data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.raceDisplayName}}">
                             <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
                             <div class="nav-label race-nav-label">
                                 {{#each this.raceDisplayWords}}<span class="race-label-word">{{this}}</span>{{/each}}
@@ -923,7 +923,7 @@
                     <div class="race-nav-grid">
                         {{#each raceDeathOptions}}
                         <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}" title="{{this.raceDisplayName}}">
+                            data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}" title="{{this.raceDisplayName}}">
                             <div class="nav-icon-wrapper">{{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}</div>
                             <div class="nav-label race-nav-label">
                                 {{#each this.raceDisplayWords}}<span class="race-label-word">{{this}}</span>{{/each}}
@@ -942,7 +942,7 @@
                     <div class="background-nav-grid">
                         {{#each this.options}}
                         <div class="nav-item {{#if (eq this.id ../../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                            data-action="selectOption" data-id="{{this.id}}"
+                            data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}"
                             title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
                             <div class="nav-icon-wrapper">
                                 {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
@@ -960,7 +960,7 @@
             <div class="nav-track">
                 {{#each options}}
                 <div class="nav-item {{#if (eq this.id ../currentSelectedId)}}selected{{/if}} type-{{this.type}}"
-                    data-action="selectOption" data-id="{{this.id}}"
+                    data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}"
                     title="{{#if this.displayName}}{{this.displayName}}{{else}}{{this.name}}{{/if}}">
                     <div class="nav-icon-wrapper">
                         {{#if this.img}}<img src="{{this.img}}" class="nav-icon">{{/if}}
@@ -999,7 +999,7 @@
             <div class="subclass-cards-wrapper">
                 {{#each options}}
                 <figure class="subclass-anchor-unit {{#if (eq this.id ../currentSelectedId)}}selected{{/if}}"
-                    data-action="selectOption" data-id="{{this.id}}">
+                    data-action="selectOption" data-id="{{this.id}}" data-uuid="{{this.uuid}}">
                     <div class="subclass-image-wrapper">
                         {{#if this.heroImageIsVideo}}
                         <video class="subclass-standing-art" autoplay muted loop playsinline>
