@@ -15169,3 +15169,179 @@ body.originate-active .character-forge-item-sheet-front {
         max-height: 64px !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.69 — подклассы 30x30 с подписями
+   ============================================================ */
+
+/* Убираем отдельный крупный заголовок справа. */
+.originate-progression-wizard .subclass-progression-selection .subclass-stage-title,
+.originate-progression-wizard .subclass-progression-selection [data-subclass-stage-title] {
+    display: none !important;
+}
+
+/* Сетка центрируется по всей правой половине. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-panel {
+    top: 1rem !important;
+    right: 14px !important;
+    bottom: 1rem !important;
+    left: 14px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    pointer-events: auto !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 96px) !important;
+    grid-auto-rows: 62px !important;
+    justify-content: center !important;
+    align-content: start !important;
+    justify-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    margin: 0 auto !important;
+    padding: 8px !important;
+    column-gap: 10px !important;
+    row-gap: 8px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-gutter: stable !important;
+    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200,163,95), .65) rgba(255,255,255,.03) !important;
+}
+
+/* Карточка: иконка 30x30 + подпись снизу. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card {
+    display: grid !important;
+    grid-template-rows: 30px auto !important;
+    align-content: start !important;
+    justify-items: center !important;
+    width: 96px !important;
+    min-width: 96px !important;
+    max-width: 96px !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    max-height: 62px !important;
+    margin: 0 !important;
+    padding: 2px 2px 0 !important;
+    gap: 4px !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transform: none !important;
+}
+
+/* Иконка ровно 30x30 и без собственной рамки. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-icon-wrap,
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected .subclass-choice-icon-wrap {
+    display: block !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 30px !important;
+    max-height: 30px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-icon {
+    display: block !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 30px !important;
+    max-height: 30px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    object-fit: cover !important;
+    filter: grayscale(100%) brightness(.72) !important;
+}
+
+/* Название располагается строго под иконкой. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-label {
+    display: -webkit-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    max-height: 2.1em !important;
+    margin: 0 !important;
+    padding: 0 2px !important;
+    overflow: hidden !important;
+    color: rgba(220,220,220,.86) !important;
+    font-size: .52rem !important;
+    font-weight: 400 !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+/* Hover/selected — по принципу выбора класса, без рамки вокруг самой иконки. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card:hover {
+    transform: translateY(-1px) !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: 0 0 0 1px rgba(var(--originate-theme-accent-rgb, 200,163,95), .28) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected {
+    transform: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: 0 0 0 1px var(--originate-accent) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card:hover .subclass-choice-icon,
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected .subclass-choice-icon {
+    filter: grayscale(0%) brightness(1) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected .subclass-choice-label {
+    color: var(--originate-accent) !important;
+}
+
+@media (max-height: 760px) {
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+        grid-template-columns: repeat(5, 88px) !important;
+        grid-auto-rows: 56px !important;
+        column-gap: 8px !important;
+        row-gap: 6px !important;
+        padding: 6px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-card {
+        width: 88px !important;
+        min-width: 88px !important;
+        max-width: 88px !important;
+        height: 56px !important;
+        min-height: 56px !important;
+        max-height: 56px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-label {
+        font-size: .48rem !important;
+    }
+}
