@@ -794,3 +794,13 @@
   padding: 0 0 6px !important;
   text-align: center !important;
 }
+
+
+/* ============================================================
+   Character Forge 1.3.84 — class category headings left
+   ============================================================ */
+
+.view-selection-root.step-class .cinematic-nav .class-nav-group > .class-nav-heading,
+.view-selection-root.step-class .class-nav-heading {
+  text-align: left !important;
+}
