@@ -3896,6 +3896,7 @@ export class LevelUpManager {
 
         for (const group of groupedItems) {
             let itemsData = group.itemsData;
+            let existingExactSubclass = null;
 
             if (group.isSubclass) {
                 const classIdentifier = this.classItem?.system?.identifier
@@ -3910,12 +3911,49 @@ export class LevelUpManager {
                     }
                     return exact;
                 });
+
+                const selectedSource = resolveItemSourceUuid(itemsData[0])
+                    || itemsData[0]?._sourceUuid
+                    || itemsData[0]?.uuid
+                    || itemsData[0]?.flags?.['hero-genesis']?.sourceUuid
+                    || null;
+                const selectedKey = String(selectedSource || '').replace('.Item.', '.');
+
+                const sameClassSubclasses = this.actor.items.filter(item =>
+                    item.type === 'subclass'
+                    && (!classIdentifier || item.system?.classIdentifier === classIdentifier)
+                );
+
+                existingExactSubclass = sameClassSubclasses.find(item => {
+                    const source = resolveItemSourceUuid(item)
+                        || item.flags?.['hero-genesis']?.sourceUuid
+                        || item.flags?.originate?.sourceUuid
+                        || '';
+                    return selectedKey && String(source).replace('.Item.', '.') === selectedKey;
+                }) || null;
+
+                // Если от старой версии уже остался НЕ тот подкласс этого же класса,
+                // удаляем только его. Подклассы других классов при мультиклассе не трогаем.
+                const wrongIds = sameClassSubclasses
+                    .filter(item => item.id !== existingExactSubclass?.id)
+                    .map(item => item.id);
+
+                if (wrongIds.length) {
+                    await this.actor.deleteEmbeddedDocuments('Item', wrongIds);
+                }
             }
 
-            const createdOrUpdated = await this.addItems(itemsData, group.advancementId, group.level, {
-                stepType: group.stepType,
-                sourceClass: group.sourceClass
-            });
+            let createdOrUpdated;
+            if (group.isSubclass && existingExactSubclass) {
+                createdOrUpdated = [existingExactSubclass];
+                await this._updateAdvancementValue(group.advancementId, createdOrUpdated, group.stepType);
+            } else {
+                createdOrUpdated = await this.addItems(itemsData, group.advancementId, group.level, {
+                    stepType: group.stepType,
+                    sourceClass: group.sourceClass
+                });
+            }
+
             resolvedItems.push(...createdOrUpdated);
 
             if (group.isSubclass) {
