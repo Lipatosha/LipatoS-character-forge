@@ -1,6 +1,4 @@
 import { acquireForgeStyles, releaseForgeStyles } from './runtime-style.js';
-import { SpellRules } from './spell-rules.js';
-import { normalizeSpellListId, normalizeSpellListIds } from './shared/spell-list-filters.js';
 import { bindTooltips } from './shared/progression-renderer.js';
 import { resolveItemSourceUuid } from './shared/resolution-core.js';
 
@@ -43,71 +41,6 @@ function labelValue(entry, fallback = '') {
     }
 }
 
-function actorClassProfiles(actor, dataManager) {
-    const classes = Array.from(actor.items || []).filter(item => item.type === 'class');
-    const subclasses = Array.from(actor.items || []).filter(item => item.type === 'subclass');
-    const classById = new Map();
-    const profiles = [];
-
-    for (const item of classes) {
-        const id = normalizeSpellListId(item.system?.identifier || item.name);
-        if (!id) continue;
-        const level = Math.max(1, Number(item.system?.levels ?? item.system?.level ?? 1) || 1);
-        const rules = SpellRules.getRules(id);
-        const progression = rules?.progression || item.system?.spellcasting?.progression || null;
-        const lists = normalizeSpellListIds(rules?.list?.length ? rules.list : [id]);
-        let maxSpellLevel = null;
-        if (progression) {
-            const computed = dataManager?.getMaxSpellLevel?.(progression, level);
-            if (Number.isFinite(computed)) maxSpellLevel = computed;
-        }
-        classById.set(id, { id, level, item, progression, maxSpellLevel, lists });
-        profiles.push({ id, level, item, progression, maxSpellLevel, lists });
-    }
-
-    for (const item of subclasses) {
-        const id = normalizeSpellListId(item.system?.identifier || item.name);
-        if (!id) continue;
-        const classId = normalizeSpellListId(item.system?.classIdentifier || '');
-        const parent = classById.get(classId);
-        const rules = SpellRules.getRules(id);
-        if (!rules && !item.system?.spellcasting?.progression) continue;
-        const level = parent?.level || Math.max(1, Number(item.system?.levels ?? 1) || 1);
-        const progression = rules?.progression || item.system?.spellcasting?.progression || parent?.progression || null;
-        const lists = normalizeSpellListIds(rules?.list?.length ? rules.list : [id]);
-        let maxSpellLevel = parent?.maxSpellLevel ?? null;
-        if (progression) {
-            const computed = dataManager?.getMaxSpellLevel?.(progression, level);
-            if (Number.isFinite(computed)) maxSpellLevel = computed;
-        }
-        profiles.push({ id, level, item, progression, maxSpellLevel, lists });
-    }
-
-    return { profiles, classById };
-}
-
-function actorSourceIdentifiers(actor) {
-    const result = {
-        class: new Map(),
-        race: new Map(),
-        background: new Map()
-    };
-
-    for (const item of actor.items || []) {
-        if (item.type === 'class') {
-            const id = norm(item.system?.identifier || item.name);
-            if (id) result.class.set(id, Math.max(1, Number(item.system?.levels ?? item.system?.level ?? 1) || 1));
-        } else if (item.type === 'race') {
-            const id = norm(item.system?.identifier || item.name);
-            if (id) result.race.set(id, 20);
-        } else if (item.type === 'background') {
-            const id = norm(item.system?.identifier || item.name);
-            if (id) result.background.set(id, 20);
-        }
-    }
-    return result;
-}
-
 function readSpellSlots(actor) {
     const spells = actor.system?.spells || {};
     const slots = [];
@@ -140,13 +73,136 @@ function readSpellSlots(actor) {
     return slots.sort((a, b) => a.level - b.level || a.label.localeCompare(b.label, game.i18n.lang));
 }
 
+function spellPreparationValues() {
+    const states = CONFIG.DND5E?.spellPreparationStates || {};
+    const read = (keys, fallback) => {
+        for (const key of keys) {
+            const entry = states[key];
+            const value = Number(typeof entry === 'object' ? entry?.value : entry);
+            if (Number.isFinite(value)) return value;
+        }
+        return fallback;
+    };
+    return {
+        unprepared: read(['unprepared', 'none'], 0),
+        prepared: read(['prepared'], 1),
+        always: read(['always', 'alwaysPrepared'], 2)
+    };
+}
+
+function spellClassIdentifier(item) {
+    const direct = norm(item.system?.classIdentifier || item.system?.sourceClass || '');
+    if (direct) return direct;
+
+    const sourceItem = String(item.system?.sourceItem || '');
+    const typed = /^(?:class|subclass):(.+)$/i.exec(sourceItem);
+    if (typed) return norm(typed[1]);
+    return '';
+}
+
+function spellPreparationInfo(item) {
+    const values = spellPreparationValues();
+    const legacyPrep = item.system?.preparation || {};
+    const method = String(item.system?.method || legacyPrep.mode || '');
+
+    let state = Number(item.system?.prepared);
+    if (!Number.isFinite(state)) {
+        if (legacyPrep.mode === 'always') state = values.always;
+        else if (legacyPrep.prepared) state = values.prepared;
+        else state = values.unprepared;
+    }
+
+    const level = Number(item.system?.level ?? 0);
+    const model = CONFIG.DND5E?.spellcasting?.[method];
+    const canPrepare = !!model?.prepares;
+    const always = state === values.always;
+    const prepared = state === values.prepared;
+    const toggleable = canPrepare && level > 0 && !always;
+
+    return {
+        values,
+        method,
+        level,
+        classIdentifier: spellClassIdentifier(item),
+        canPrepare,
+        toggleable,
+        prepared,
+        always,
+        active: prepared || always
+    };
+}
+
 function preparationState(item) {
-    const prep = item.system?.preparation || {};
-    if (prep.mode === 'always') return 'Всегда подготовлено';
-    if (prep.prepared) return 'Подготовлено';
-    if (prep.mode === 'prepared') return 'В книге';
-    if (prep.mode === 'known') return 'Изучено';
-    return 'Выбрано';
+    const info = spellPreparationInfo(item);
+    if (info.always) return 'Всегда подготовлено';
+    if (info.prepared) return 'Подготовлено';
+    if (info.toggleable) return 'Не подготовлено';
+
+    const method = CONFIG.DND5E?.spellcasting?.[info.method];
+    const methodLabel = labelValue(method, '');
+    return methodLabel || 'Изучено';
+}
+
+function readPreparationSummary(actor) {
+    const classes = Array.from(actor.items || []).filter(item => item.type === 'class');
+    const byClass = new Map();
+    let value = 0;
+    let max = 0;
+
+    for (const cls of classes) {
+        const id = norm(cls.system?.identifier || cls.name);
+        if (!id) continue;
+        const prep = cls.system?.spellcasting?.preparation || {};
+        const clsValue = Math.max(0, Number(prep.value ?? 0) || 0);
+        const clsMax = Math.max(0, Number(prep.max ?? 0) || 0);
+        byClass.set(id, {
+            id,
+            name: cls.name,
+            value: clsValue,
+            max: clsMax
+        });
+        value += clsValue;
+        max += clsMax;
+    }
+
+    return { value, max, byClass };
+}
+
+async function setSpellPrepared(actor, uuid, prepared) {
+    if (!uuid) return false;
+
+    let item = null;
+    try {
+        item = await fromUuid(uuid);
+    } catch {
+        item = null;
+    }
+    if (!item || item.type !== 'spell' || item.parent?.id !== actor.id) return false;
+
+    const info = spellPreparationInfo(item);
+    if (!info.toggleable) {
+        if (info.always) ui.notifications.info('Это заклинание подготовлено всегда.');
+        else ui.notifications.warn('Это заклинание нельзя подготавливать вручную.');
+        return false;
+    }
+
+    if (prepared && !info.prepared) {
+        const summary = readPreparationSummary(actor);
+        const classCap = info.classIdentifier ? summary.byClass.get(info.classIdentifier) : null;
+
+        if (classCap?.max > 0 && classCap.value >= classCap.max) {
+            ui.notifications.warn(`Достигнут предел подготовленных заклинаний: ${classCap.value} / ${classCap.max}.`);
+            return false;
+        }
+        if (!classCap && summary.max > 0 && summary.value >= summary.max) {
+            ui.notifications.warn(`Достигнут предел подготовленных заклинаний: ${summary.value} / ${summary.max}.`);
+            return false;
+        }
+    }
+
+    const next = prepared ? info.values.prepared : info.values.unprepared;
+    await item.update({ 'system.prepared': next });
+    return true;
 }
 
 function featureUsage(item) {
@@ -242,157 +298,52 @@ export function injectActorBookButtons(application, dataManager) {
     }
 }
 
-async function buildSpellEntries(actor, dataManager) {
-    const ownedItems = Array.from(actor.items || []).filter(item => item.type === 'spell');
-    const ownedBySource = new Map();
-    const ownedByName = new Map();
-    for (const item of ownedItems) {
-        const src = sourceUuid(item);
-        if (src) ownedBySource.set(src, item);
-        ownedByName.set(item.name.toLowerCase(), item);
-    }
-
-    const { profiles } = actorClassProfiles(actor, dataManager);
-    const availableMap = new Map();
-
-    for (const profile of profiles) {
-        if (!profile.lists.length) continue;
-        const restriction = { list: profile.lists.map(id => `class:${id}`) };
-        let spells = [];
-        try {
-            spells = await dataManager.getSpellsByRestriction(restriction, '', profile.maxSpellLevel);
-        } catch (error) {
-            console.warn('Character Forge | Не удалось загрузить список заклинаний персонажа', error);
-        }
-        for (const spell of spells) {
-            const key = spell.uuid || spell.name.toLowerCase();
-            const existing = availableMap.get(key);
-            if (!existing) {
-                availableMap.set(key, { ...spell, sourceClasses: new Set([profile.id]) });
-            } else {
-                existing.sourceClasses.add(profile.id);
-            }
-        }
-    }
-
-    const entries = [];
-    const seenOwned = new Set();
-
-    for (const spell of availableMap.values()) {
-        const owned = ownedBySource.get(spell.uuid) || ownedByName.get(spell.name.toLowerCase()) || null;
-        if (owned) seenOwned.add(owned.id);
-        entries.push({
-            uuid: owned?.uuid || spell.uuid,
-            sourceUuid: spell.uuid,
-            name: owned?.name || spell.name,
-            img: owned?.img || spell.img,
-            level: Number(owned?.system?.level ?? spell.level ?? 0),
-            school: owned?.system?.school ?? spell.school ?? '',
-            owned: !!owned,
-            prepared: !!owned?.system?.preparation?.prepared || owned?.system?.preparation?.mode === 'always',
-            state: owned ? preparationState(owned) : 'Доступно',
-            classes: Array.from(spell.sourceClasses || [])
+async function buildSpellEntries(actor) {
+    const entries = Array.from(actor.items || [])
+        .filter(item => item.type === 'spell')
+        .map(item => {
+            const info = spellPreparationInfo(item);
+            return {
+                uuid: item.uuid,
+                sourceUuid: sourceUuid(item),
+                name: item.name,
+                img: item.img,
+                level: Number(item.system?.level ?? 0),
+                school: item.system?.school || '',
+                owned: true,
+                prepared: info.prepared,
+                alwaysPrepared: info.always,
+                activePrepared: info.active,
+                toggleable: info.toggleable,
+                classIdentifier: info.classIdentifier,
+                state: preparationState(item),
+                method: info.method
+            };
         });
-    }
-
-    for (const item of ownedItems) {
-        if (seenOwned.has(item.id)) continue;
-        entries.push({
-            uuid: item.uuid,
-            sourceUuid: sourceUuid(item),
-            name: item.name,
-            img: item.img,
-            level: Number(item.system?.level ?? 0),
-            school: item.system?.school || '',
-            owned: true,
-            prepared: !!item.system?.preparation?.prepared || item.system?.preparation?.mode === 'always',
-            state: preparationState(item),
-            classes: normalizeSpellListIds(item.system?.sourceClass)
-        });
-    }
 
     return entries.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name, game.i18n.lang));
 }
 
-async function buildFeatureEntries(actor, dataManager) {
-    const ownedItems = Array.from(actor.items || []).filter(item => item.type === 'feat');
-    const ownedBySource = new Map();
-    const ownedByName = new Map();
-    for (const item of ownedItems) {
-        const src = sourceUuid(item);
-        if (src) ownedBySource.set(src, item);
-        ownedByName.set(item.name.toLowerCase(), item);
-    }
-
-    const sources = actorSourceIdentifiers(actor);
-    let options = [];
-    try {
-        options = await dataManager.getOptions('feature', {}, { indexOnly: true });
-    } catch (error) {
-        console.warn('Character Forge | Не удалось загрузить доступные особенности', error);
-    }
-
-    const entries = [];
-    const seenOwned = new Set();
-
-    for (const option of options) {
-        const system = option.system || {};
-        const sourceType = norm(system.type?.value);
-        const subtype = norm(system.type?.subtype || system.sourceClass || option.classIdentifier || '');
-        const requiredLevel = Number(system.prerequisites?.level ?? option.prerequisites?.level ?? 0) || 0;
-
-        let available = false;
-        let sourceLabel = '';
-
-        if (sourceType === 'class') {
-            const classLevel = sources.class.get(subtype);
-            available = Number.isFinite(classLevel) && classLevel >= requiredLevel;
-            sourceLabel = subtype;
-        } else if (sourceType === 'race') {
-            available = sources.race.has(subtype);
-            sourceLabel = subtype;
-        } else if (sourceType === 'background') {
-            available = sources.background.has(subtype);
-            sourceLabel = subtype;
-        }
-
-        if (!available) continue;
-
-        const owned = ownedBySource.get(option.uuid) || ownedByName.get(option.name.toLowerCase()) || null;
-        if (owned) seenOwned.add(owned.id);
-
-        entries.push({
-            uuid: owned?.uuid || option.uuid,
-            sourceUuid: option.uuid,
-            name: owned?.name || option.name,
-            img: owned?.img || option.img,
-            owned: !!owned,
-            state: owned ? 'Получено' : 'Доступно',
-            sourceType: sourceType || 'feature',
-            sourceLabel,
-            uses: owned ? featureUsage(owned) : ''
+async function buildFeatureEntries(actor) {
+    const entries = Array.from(actor.items || [])
+        .filter(item => item.type === 'feat')
+        .map(item => {
+            const sourceType = norm(item.system?.type?.value) || 'feature';
+            const sourceLabel = norm(item.system?.type?.subtype || item.system?.sourceClass || '');
+            return {
+                uuid: item.uuid,
+                sourceUuid: sourceUuid(item),
+                name: item.name,
+                img: item.img,
+                owned: true,
+                state: 'Получено',
+                sourceType,
+                sourceLabel,
+                uses: featureUsage(item)
+            };
         });
-    }
 
-    for (const item of ownedItems) {
-        if (seenOwned.has(item.id)) continue;
-        entries.push({
-            uuid: item.uuid,
-            sourceUuid: sourceUuid(item),
-            name: item.name,
-            img: item.img,
-            owned: true,
-            state: 'Получено',
-            sourceType: norm(item.system?.type?.value) || 'feature',
-            sourceLabel: norm(item.system?.type?.subtype || ''),
-            uses: featureUsage(item)
-        });
-    }
-
-    return entries.sort((a, b) => {
-        if (a.owned !== b.owned) return a.owned ? -1 : 1;
-        return a.name.localeCompare(b.name, game.i18n.lang);
-    });
+    return entries.sort((a, b) => a.name.localeCompare(b.name, game.i18n.lang));
 }
 
 function renderSlots(slots) {
@@ -418,19 +369,25 @@ function renderSlots(slots) {
 function spellCard(entry) {
     const school = labelValue(CONFIG.DND5E?.spellSchools?.[entry.school], entry.school);
     const level = entry.level === 0 ? 'Фокус' : labelValue(CONFIG.DND5E?.spellLevels?.[entry.level], `${entry.level}-й круг`);
-    const badges = [
-        entry.state,
-        entry.prepared ? 'Подготовлено' : '',
-        entry.classes.length ? entry.classes.join(', ') : ''
-    ].filter(Boolean);
+    const badges = [entry.state, entry.classIdentifier].filter(Boolean);
+    const prepareIcon = entry.alwaysPrepared
+        ? 'fa-lock'
+        : (entry.prepared ? 'fa-check' : (entry.toggleable ? 'fa-plus' : 'fa-bookmark'));
+    const prepareTitle = entry.alwaysPrepared
+        ? 'Всегда подготовлено'
+        : (entry.prepared ? 'Убрать из подготовленных' : (entry.toggleable ? 'Подготовить заклинание' : entry.state));
 
     return `
-        <article class="character-forge-book-card spell-card ${entry.owned ? 'is-owned' : 'is-available'} ${entry.prepared ? 'is-prepared' : ''}"
+        <article class="character-forge-book-card spell-card is-owned ${entry.activePrepared ? 'is-prepared' : ''} ${entry.alwaysPrepared ? 'is-always-prepared' : ''}"
                  data-uuid="${esc(entry.uuid)}"
                  data-name="${esc(entry.name.toLowerCase())}"
                  data-level="${entry.level}"
                  data-school="${esc(entry.school)}"
-                 data-owned="${entry.owned ? 'true' : 'false'}">
+                 data-owned="true"
+                 data-prepared="${entry.prepared ? 'true' : 'false'}"
+                 data-active-prepared="${entry.activePrepared ? 'true' : 'false'}"
+                 data-toggleable="${entry.toggleable ? 'true' : 'false'}"
+                 ${entry.toggleable ? 'draggable="true"' : ''}>
             <img src="${esc(entry.img || 'icons/svg/book.svg')}" alt="">
             <div class="character-forge-book-card-main">
                 <div class="character-forge-book-card-name">${esc(entry.name)}</div>
@@ -439,7 +396,15 @@ function spellCard(entry) {
                     ${badges.map(text => `<span>${esc(text)}</span>`).join('')}
                 </div>
             </div>
-            <i class="fas ${entry.owned ? 'fa-bookmark' : 'fa-book-open'} character-forge-book-card-state" aria-hidden="true"></i>
+            <button type="button"
+                    class="character-forge-book-prepare-toggle ${entry.prepared ? 'is-selected' : ''}"
+                    data-prepare-action="${entry.prepared ? 'remove' : 'add'}"
+                    data-uuid="${esc(entry.uuid)}"
+                    ${entry.toggleable ? '' : 'disabled'}
+                    title="${esc(prepareTitle)}"
+                    aria-label="${esc(prepareTitle)}">
+                <i class="fas ${prepareIcon}" aria-hidden="true"></i>
+            </button>
         </article>
     `;
 }
@@ -499,8 +464,9 @@ function mountFilters(overlay, kind) {
         for (const card of cards) {
             const matchesSearch = !query || card.dataset.name.includes(query);
             const matchesState = state === 'all'
-                || (state === 'owned' && card.dataset.owned === 'true')
-                || (state === 'available' && card.dataset.owned !== 'true');
+                || (kind === 'spell' && state === 'prepared' && card.dataset.activePrepared === 'true')
+                || (kind === 'spell' && state === 'unprepared' && card.dataset.activePrepared !== 'true')
+                || (kind !== 'spell' && state === 'owned' && card.dataset.owned === 'true');
             const matchesLevel = kind !== 'spell' || level === 'all' || card.dataset.level === level;
             const matchesSchool = kind !== 'spell' || school === 'all' || card.dataset.school === school;
             const matchesSource = kind !== 'feature' || source === 'all' || card.dataset.source === source;
@@ -537,6 +503,119 @@ function mountFilters(overlay, kind) {
     apply();
 }
 
+function renderPreparedZone(entries, summary) {
+    const prepared = entries.filter(entry => entry.activePrepared && entry.level > 0);
+    const countText = summary.max > 0 ? `${summary.value} / ${summary.max}` : String(summary.value);
+
+    return `
+        <section class="character-forge-book-prepared-panel">
+            <div class="character-forge-book-prepared-header">
+                <span><i class="fas fa-bookmark"></i> Подготовленные</span>
+                <strong>${esc(countText)}</strong>
+            </div>
+            <div class="character-forge-book-prepared-zone" data-prepared-dropzone="true">
+                ${prepared.length ? prepared.map(entry => `
+                    <div class="character-forge-book-prepared-item ${entry.alwaysPrepared ? 'is-locked' : ''}"
+                         data-uuid="${esc(entry.uuid)}"
+                         ${entry.toggleable ? 'draggable="true"' : ''}>
+                        <img src="${esc(entry.img || 'icons/svg/book.svg')}" alt="">
+                        <span title="${esc(entry.name)}">${esc(entry.name)}</span>
+                        ${entry.toggleable ? `
+                            <button type="button" data-unprepare-uuid="${esc(entry.uuid)}" title="Убрать из подготовленных" aria-label="Убрать из подготовленных">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : '<i class="fas fa-lock" title="Всегда подготовлено"></i>'}
+                    </div>
+                `).join('') : `
+                    <div class="character-forge-book-prepared-empty">
+                        <i class="fas fa-hand-pointer"></i>
+                        <span>Перетащите сюда заклинание или нажмите <b>+</b> на его карточке</span>
+                    </div>
+                `}
+            </div>
+        </section>
+    `;
+}
+
+function bindSpellPreparationControls(overlay, actor) {
+    const zone = overlay.querySelector('[data-prepared-dropzone]');
+    const grid = overlay.querySelector('.character-forge-book-grid');
+    if (!zone || !grid) return;
+
+    const readPayload = event => {
+        try {
+            return JSON.parse(event.dataTransfer?.getData('application/x-character-forge-spell')
+                || event.dataTransfer?.getData('text/plain') || 'null');
+        } catch {
+            return null;
+        }
+    };
+
+    const writePayload = (event, uuid, prepared) => {
+        const payload = JSON.stringify({ characterForgeSpell: true, uuid, prepared: !!prepared });
+        event.dataTransfer?.setData('application/x-character-forge-spell', payload);
+        event.dataTransfer?.setData('text/plain', payload);
+        if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    };
+
+    overlay.querySelectorAll('.spell-card[draggable="true"]').forEach(card => {
+        card.addEventListener('dragstart', event => {
+            writePayload(event, card.dataset.uuid, card.dataset.prepared === 'true');
+        });
+    });
+
+    overlay.querySelectorAll('.character-forge-book-prepared-item[draggable="true"]').forEach(item => {
+        item.addEventListener('dragstart', event => {
+            writePayload(event, item.dataset.uuid, true);
+        });
+    });
+
+    zone.addEventListener('dragover', event => {
+        event.preventDefault();
+        zone.classList.add('is-drag-over');
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    });
+    zone.addEventListener('dragleave', event => {
+        if (!zone.contains(event.relatedTarget)) zone.classList.remove('is-drag-over');
+    });
+    zone.addEventListener('drop', event => {
+        event.preventDefault();
+        zone.classList.remove('is-drag-over');
+        const payload = readPayload(event);
+        if (payload?.characterForgeSpell && payload.uuid) {
+            void setSpellPrepared(actor, payload.uuid, true);
+        }
+    });
+
+    grid.addEventListener('dragover', event => {
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    });
+    grid.addEventListener('drop', event => {
+        const payload = readPayload(event);
+        if (!payload?.characterForgeSpell || !payload.uuid || !payload.prepared) return;
+        event.preventDefault();
+        void setSpellPrepared(actor, payload.uuid, false);
+    });
+
+    overlay.querySelectorAll('[data-prepare-action][data-uuid]').forEach(button => {
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            const shouldPrepare = button.dataset.prepareAction === 'add';
+            void setSpellPrepared(actor, button.dataset.uuid, shouldPrepare);
+        });
+    });
+
+    overlay.querySelectorAll('[data-unprepare-uuid]').forEach(button => {
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            void setSpellPrepared(actor, button.dataset.unprepareUuid, false);
+        });
+    });
+}
+
 async function openOwnedItem(uuid) {
     if (!uuid) return;
     try {
@@ -560,8 +639,8 @@ async function renderBook(actor, kind, dataManager, overlay) {
     overlay.classList.add('is-loading');
     const slots = kind === 'spell' ? readSpellSlots(actor) : [];
     const entries = kind === 'spell'
-        ? await buildSpellEntries(actor, dataManager)
-        : await buildFeatureEntries(actor, dataManager);
+        ? await buildSpellEntries(actor)
+        : await buildFeatureEntries(actor);
 
     const spellLevels = kind === 'spell'
         ? Array.from(new Set(entries.map(entry => entry.level))).sort((a, b) => a - b)
@@ -572,6 +651,8 @@ async function renderBook(actor, kind, dataManager, overlay) {
     const featureSources = kind === 'feature'
         ? Array.from(new Set(entries.map(entry => entry.sourceType).filter(Boolean))).sort()
         : [];
+
+    const preparationSummary = kind === 'spell' ? readPreparationSummary(actor) : null;
 
     const title = kind === 'spell' ? 'Книга заклинаний' : 'Книга особенностей';
     const icon = kind === 'spell' ? 'fa-hat-wizard' : 'fa-shield-halved';
@@ -607,8 +688,10 @@ async function renderBook(actor, kind, dataManager, overlay) {
                         <div class="character-forge-book-filter-label">Показать</div>
                         <div class="character-forge-book-filter-buttons">
                             <button type="button" class="active" data-book-state="all">Все</button>
-                            <button type="button" data-book-state="owned">${kind === 'spell' ? 'Выбранные' : 'Полученные'}</button>
-                            <button type="button" data-book-state="available">Доступные</button>
+                            ${kind === 'spell' ? `
+                                <button type="button" data-book-state="prepared">Подготовленные</button>
+                                <button type="button" data-book-state="unprepared">Неподготовленные</button>
+                            ` : '<button type="button" data-book-state="owned">Полученные</button>'}
                         </div>
                     </div>
 
@@ -641,11 +724,13 @@ async function renderBook(actor, kind, dataManager, overlay) {
                             </div>
                         </div>
                     ` : ''}
+
+                    ${kind === 'spell' ? renderPreparedZone(entries, preparationSummary) : ''}
                 </aside>
 
                 <main class="character-forge-book-main">
                     <div class="character-forge-book-main-head">
-                        <div><i class="fas ${icon}"></i> ${kind === 'spell' ? 'Заклинания и фокусы' : 'Особенности персонажа'}</div>
+                        <div><i class="fas ${icon}"></i> ${kind === 'spell' ? 'Заклинания и фокусы персонажа' : 'Особенности персонажа'}</div>
                         <div>Показано: <span data-book-count>${entries.length}</span></div>
                     </div>
                     <div class="character-forge-book-grid">
@@ -671,6 +756,7 @@ async function renderBook(actor, kind, dataManager, overlay) {
     });
 
     mountFilters(overlay, kind);
+    if (kind === 'spell') bindSpellPreparationControls(overlay, actor);
     bindTooltips(overlay.querySelector('.character-forge-book-grid'), dataManager);
     overlay.classList.remove('is-loading');
 }
