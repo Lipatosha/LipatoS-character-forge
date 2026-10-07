@@ -2112,10 +2112,44 @@ export class WizardUIMixin {
                     });
                 });
             } else {
-                const max = parseInt(section.dataset.count);
-                const checkboxes = section.querySelectorAll('.item-choices-list input[type="checkbox"]');
+                const max = Math.max(0, parseInt(section.dataset.count) || 0);
+                const checkboxes = Array.from(section.querySelectorAll('.item-choices-list input[type="checkbox"]'));
                 const replacementToggle = section.querySelector('.enable-replacement');
                 const replacementSelection = section.querySelector('.replacement-selection');
+
+                const getAllowedMax = () => max + (replacementToggle?.checked ? 1 : 0);
+                const syncItemChoiceCards = () => {
+                    checkboxes.forEach(input => {
+                        input.closest('.option-card')?.classList.toggle('selected', !!input.checked);
+                    });
+                };
+                const enforceItemChoiceLimit = (changedCheckbox = null, notify = true) => {
+                    const allowed = getAllowedMax();
+                    let checkedBoxes = checkboxes.filter(input => input.checked);
+                    if (checkedBoxes.length <= allowed) {
+                        syncItemChoiceCards();
+                        return;
+                    }
+
+                    // При лимите 1 новый клик именно заменяет старый выбор.
+                    if (allowed === 1 && changedCheckbox?.checked) {
+                        checkedBoxes.forEach(input => {
+                            if (input !== changedCheckbox) input.checked = false;
+                        });
+                    } else if (changedCheckbox?.checked) {
+                        changedCheckbox.checked = false;
+                    }
+
+                    checkedBoxes = checkboxes.filter(input => input.checked);
+                    while (checkedBoxes.length > allowed) {
+                        checkedBoxes.pop().checked = false;
+                    }
+
+                    syncItemChoiceCards();
+                    if (notify) {
+                        ui.notifications.warn(game.i18n.format('ORIGINATE.UI.Progression.MaxSelectWarn', { count: allowed }));
+                    }
+                };
 
                 section.querySelectorAll('.item-choices-list .option-card').forEach(card => {
                     const cb = card.querySelector('input[type="checkbox"]');
@@ -2131,13 +2165,14 @@ export class WizardUIMixin {
 
                         cb.checked = !cb.checked;
                         cb.dispatchEvent(new Event('change', { bubbles: true }));
-                        card.classList.toggle('selected', cb.checked);
+                        syncItemChoiceCards();
                     });
                 });
 
                 if (replacementToggle) {
                     replacementToggle.addEventListener('change', () => {
                         if (replacementSelection) replacementSelection.style.display = replacementToggle.checked ? 'block' : 'none';
+                        enforceItemChoiceLimit(null, false);
                         syncDraft();
                         this._checkProgressionCanProceed(overlay);
                     });
@@ -2153,20 +2188,14 @@ export class WizardUIMixin {
 
                 checkboxes.forEach(cb => {
                     cb.addEventListener('change', () => {
-                        const checked = section.querySelectorAll('.item-choices-list input[type="checkbox"]:checked').length;
-                        let allowed = max;
-                        if (replacementToggle?.checked) allowed += 1;
-                        if (checked > allowed) {
-                            cb.checked = false;
-                            ui.notifications.warn(game.i18n.format('ORIGINATE.UI.Progression.MaxSelectWarn', { count: allowed }));
-                        } else {
-                            if (cb.checked) cb.closest('.option-card')?.classList.add('selected');
-                            else cb.closest('.option-card')?.classList.remove('selected');
-                        }
+                        enforceItemChoiceLimit(cb, true);
                         syncDraft();
                         this._checkProgressionCanProceed(overlay);
                     });
                 });
+
+                // Старые черновики тоже не могут восстановить больше пунктов, чем разрешено.
+                enforceItemChoiceLimit(null, false);
             }
 
             syncDraft();
