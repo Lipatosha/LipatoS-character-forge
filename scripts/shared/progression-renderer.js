@@ -1032,14 +1032,24 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         return option;
     };
 
-    for (const card of cards) {
-        card.addEventListener('click', () => selectCard(card));
-        card.addEventListener('keydown', event => {
-            if (event.key !== 'Enter' && event.key !== ' ') return;
-            event.preventDefault();
-            selectCard(card);
-        });
-    }
+    // Делегируем события самой сетке: так выбор не ломается при
+    // повторном рендере карточек и не зависит от индивидуальных listeners.
+    track?.addEventListener('click', event => {
+        const card = event.target.closest('.subclass-choice-card');
+        if (!card || !track.contains(card)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        selectCard(card);
+    });
+
+    track?.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const card = event.target.closest('.subclass-choice-card');
+        if (!card || !track.contains(card)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        selectCard(card);
+    });
 
     const updateOverflowButton = () => {
         if (!track) return;
