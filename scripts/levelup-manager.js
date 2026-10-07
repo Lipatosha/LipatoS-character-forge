@@ -4046,16 +4046,22 @@ export class LevelUpManager {
 
         // Удаляем только лишние подклассы ЭТОГО класса. Подклассы других классов
         // мультиклассового персонажа не трогаем.
+        const actorClassItems = this.actor.items.filter(item => item.type === 'class');
+        const singleClassActor = actorClassItems.length <= 1;
         const wrongSubclassIds = this.actor.items
             .filter(item => {
                 if (item.type !== 'subclass' || item.id === selectedItem.id) return false;
                 const itemClassIdentifier = item.system?.classIdentifier || null;
+
+                // Явно чужой класс никогда не трогаем.
                 if (classIdentifier && itemClassIdentifier && itemClassIdentifier !== classIdentifier) return false;
 
-                // При отсутствии classIdentifier удаляем запись только если она явно
-                // конкурирует за тот же класс: это типичный мусор от Subclass advancement.
-                if (!classIdentifier) return false;
-                return true;
+                // Подкласс без classIdentifier можно считать мусорным конкурентом только
+                // у персонажа с одним классом. У мультикласса такая запись может относиться
+                // к другому стороннему классу, поэтому её безопаснее оставить.
+                if (!itemClassIdentifier && !singleClassActor) return false;
+
+                return !!classIdentifier;
             })
             .map(item => item.id);
 
