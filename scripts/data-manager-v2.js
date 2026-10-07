@@ -878,20 +878,80 @@ export class DataManager {
      * @returns {Promise<Item|null>}
      */
     async getDocument(uuid, fallbackName = null) {
-        // 首先尝试直接通过 UUID 获取
-        try {
-            const doc = await fromUuid(uuid);
-            if (doc) return doc;
-        } catch (e) {
-            console.warn(`Originate | Direct UUID lookup failed: ${uuid}`);
+        const rawUuid = String(uuid || '').trim();
+        const directCandidates = [];
+
+        if (rawUuid) {
+            directCandidates.push(rawUuid);
+
+            // Встречаются обе формы Compendium UUID:
+            // Compendium.module.pack.Item.id и Compendium.module.pack.id.
+            // Сначала пробуем обе формы ТОГО ЖЕ пакета, а не ищем голый _id
+            // по всем compendium — именно такой глобальный fallback мог вернуть
+            // совершенно другой класс/подкласс при совпадающих _id.
+            if (rawUuid.startsWith('Compendium.')) {
+                const parts = rawUuid.split('.');
+                if (!rawUuid.includes('.Item.') && parts.length >= 4) {
+                    directCandidates.push([...parts.slice(0, -1), 'Item', parts.at(-1)].join('.'));
+                } else {
+                    const itemPos = parts.lastIndexOf('Item');
+                    if (itemPos >= 3 && itemPos === parts.length - 2) {
+                        directCandidates.push([...parts.slice(0, itemPos), parts.at(-1)].join('.'));
+                    }
+                }
+            }
         }
 
-        // UUID 失败，尝试从 UUID 中提取 ID
-        if (uuid && uuid.includes('.')) {
-            const parts = uuid.split('.');
-            const itemId = parts[parts.length - 1];
+        for (const candidate of [...new Set(directCandidates)]) {
+            try {
+                const doc = await fromUuid(candidate);
+                if (doc) return doc;
+            } catch (e) {
+                window.OriginateLog(`Originate | Direct UUID lookup failed: ${candidate}`);
+            }
+        }
 
-            // 尝试在数据源中按 ID 查找
+        // Для Compendium UUID fallback всегда остаётся внутри исходного пакета.
+        // Никогда не ищем один и тот же _id глобально: в купленных/сторонних
+        // библиотеках скопированные Item нередко сохраняют одинаковые _id.
+        if (rawUuid.startsWith('Compendium.')) {
+            const parts = rawUuid.split('.');
+            const itemPos = parts.indexOf('Item');
+            const packParts = itemPos >= 0 ? parts.slice(1, itemPos) : parts.slice(1, -1);
+            const itemId = parts.at(-1);
+            const packKey = packParts.join('.');
+            const pack = game.packs.get(packKey);
+
+            if (pack && itemId) {
+                try {
+                    const doc = await pack.getDocument(itemId);
+                    if (doc) return doc;
+                } catch (e) {
+                    console.warn(`Originate | Exact pack lookup failed: ${packKey} / ${itemId}`, e);
+                }
+
+                if (fallbackName) {
+                    try {
+                        const index = pack.index?.size ? pack.index : await pack.getIndex({ fields: ['name', 'type', 'system.identifier', 'system.classIdentifier'] });
+                        const entry = Array.from(index || []).find(row => row.name === fallbackName);
+                        if (entry?._id) {
+                            const doc = await pack.getDocument(entry._id);
+                            if (doc) return doc;
+                        }
+                    } catch (e) {
+                        console.warn(`Originate | Exact pack name fallback failed: ${packKey} / ${fallbackName}`, e);
+                    }
+                }
+            }
+
+            console.error(`Originate | Unable to get exact compendium document: ${rawUuid}${fallbackName ? ` (fallback name: ${fallbackName})` : ''}`);
+            return null;
+        }
+
+        // Для не-compendium ссылок сохраняем старые fallback-механизмы.
+        if (rawUuid && rawUuid.includes('.')) {
+            const parts = rawUuid.split('.');
+            const itemId = parts[parts.length - 1];
             const byIdMatch = await this.findById(itemId);
             if (byIdMatch) {
                 window.OriginateLog(`Fallback lookup by ID successful: ${itemId} -> ${byIdMatch.uuid}`);
@@ -903,7 +963,6 @@ export class DataManager {
             }
         }
 
-        // 如果有后备名称，尝试按名称查找
         if (fallbackName) {
             const byNameMatch = await this.findByName(fallbackName);
             if (byNameMatch) {
@@ -916,7 +975,7 @@ export class DataManager {
             }
         }
 
-        console.error(`Originate | Unable to get document: ${uuid}${fallbackName ? ` (fallback name: ${fallbackName})` : ''}`);
+        console.error(`Originate | Unable to get document: ${rawUuid}${fallbackName ? ` (fallback name: ${fallbackName})` : ''}`);
         return null;
     }
 
