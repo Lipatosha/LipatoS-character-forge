@@ -7,6 +7,7 @@ import { isSpellChoiceEvent } from './shared/advancement-choice-rules.js';
 import { hasOriginateActorMarkers, resolveItemSourceUuid } from './shared/resolution-core.js';
 import { registerTheme as registerOriginateTheme } from './theme-registry.js';
 import { acquireForgeStyles, forceUnloadForgeStyles } from './runtime-style.js';
+import { injectActorBookButtons, refreshOpenActorBook } from './actor-books.js';
 import {
     applyCreationGrantSelection,
     applyLevelUpGrantSelection,
@@ -1272,12 +1273,38 @@ function _injectGrantedLevelUpSheetButton(application) {
 // Кнопку рисуем прямо рядом с кнопками отдыха, чтобы она была видна без меню «⋮».
 Hooks.on('renderCharacterActorSheet', application => {
     _injectGrantedLevelUpSheetButton(application);
+    injectActorBookButtons(application, globalDataManager);
 });
 
 // Резерв для сборок Foundry, где система не вызывает именованный render-hook.
 Hooks.on('renderApplicationV2', application => {
     if (application?.constructor?.name !== 'CharacterActorSheet') return;
     _injectGrantedLevelUpSheetButton(application);
+    injectActorBookButtons(application, globalDataManager);
+});
+
+// Открытая книга должна сразу отражать расход ячеек, подготовку заклинаний,
+ // использования особенностей и изменения состава предметов персонажа.
+Hooks.on('updateActor', actor => {
+    if (actor?.type === 'character') refreshOpenActorBook(actor, globalDataManager);
+});
+Hooks.on('createItem', item => {
+    const actor = item?.parent;
+    if (actor?.documentName === 'Actor' && actor.type === 'character') {
+        refreshOpenActorBook(actor, globalDataManager);
+    }
+});
+Hooks.on('updateItem', item => {
+    const actor = item?.parent;
+    if (actor?.documentName === 'Actor' && actor.type === 'character') {
+        refreshOpenActorBook(actor, globalDataManager);
+    }
+});
+Hooks.on('deleteItem', item => {
+    const actor = item?.parent;
+    if (actor?.documentName === 'Actor' && actor.type === 'character') {
+        refreshOpenActorBook(actor, globalDataManager);
+    }
 });
 
 Hooks.on('getActorDirectoryEntryContext', (_html, options) => {
