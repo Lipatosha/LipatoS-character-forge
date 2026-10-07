@@ -12,7 +12,17 @@
     </div>
 
     <div class="originate-title">
-        <h2>{{localize "ORIGINATE.UI.Welcome.Title"}}</h2>
+        <h2>
+            {{#if (eq currentStep "class")}}
+            Выбор класса
+            {{else if (eq currentStep "race")}}
+            Выбор расы
+            {{else if (eq currentStep "background")}}
+            Выбор предыстории
+            {{else}}
+            {{localize "ORIGINATE.UI.Welcome.Title"}}
+            {{/if}}
+        </h2>
     </div>
 
     <div class="originate-controls">
