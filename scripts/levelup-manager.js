@@ -4086,8 +4086,14 @@ export class LevelUpManager {
                 || selectedItem.flags?.['hero-genesis']?.sourceUuid
                 || selectedItem.flags?.originate?.sourceUuid
                 || null;
-            const nextValue = foundry.utils.deepClone(subclassAdvancement.value || {});
-            nextValue.document = selectedItem.id;
+            const currentValue = subclassAdvancement.value;
+            const plainValue = currentValue?.toObject instanceof Function
+                ? currentValue.toObject()
+                : foundry.utils.deepClone(currentValue || {});
+            const nextValue = {
+                ...foundry.utils.deepClone(plainValue || {}),
+                document: selectedItem.id
+            };
             if (sourceUuid) nextValue.uuid = sourceUuid;
 
             try {
