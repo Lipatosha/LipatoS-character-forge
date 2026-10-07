@@ -2167,10 +2167,12 @@ export const UIMixin = (Base) => class extends Base {
                 this.context[stepType] = optionId;
                 this.context[`${stepType}Name`] = context.option.name;
                 this.context[`${stepType}Identifier`] = identifier;
+                if (context.option.uuid) this.context[`${stepType}Uuid`] = context.option.uuid;
             } else {
                 this.context.subclass = optionId;
                 this.context.subclassName = context.option.name;
                 this.context.subclassIdentifier = identifier;
+                if (context.option.uuid) this.context.subclassUuid = context.option.uuid;
                 // 子职特性归类为职业特性，需要确保 classIdentifier 存在
                 if (!this.context.classIdentifier && this.context.class) {
                     const configData = game.settings.get('character-forge', 'data');
@@ -2193,6 +2195,23 @@ export const UIMixin = (Base) => class extends Base {
                 if (context.option.uuid) {
                     stampSourceTracking(mainItemData, context.option.uuid);
                 }
+
+                if (stepType === 'subclass') {
+                    // Подкласс в blueprint должен быть только один и ровно тот,
+                    // который выбрал пользователь. Это защищает от коллизий _id
+                    // между разными compendium и от старого выбора при перерисовке.
+                    currentBlueprint.items = currentBlueprint.items.filter(item => item?.type !== 'subclass');
+                    if (this.context.classIdentifier) {
+                        foundry.utils.setProperty(mainItemData, 'system.classIdentifier', this.context.classIdentifier);
+                    }
+                    this.context.subclassUuid = context.option.uuid || resolveItemSourceUuid(mainItemData) || null;
+                    this.context.subclassName = context.option.name || mainItemData.name;
+                    this.context.subclassIdentifier = mainItemData.system?.identifier
+                        || context.option.identifier
+                        || this.context.subclassIdentifier
+                        || null;
+                }
+
                 this._stampCharacterFinalizeItemMeta?.(mainItemData, {
                     sourceUuid: context.option.uuid,
                     level: this._resolveWizardSourceLevel(stepType, null),
