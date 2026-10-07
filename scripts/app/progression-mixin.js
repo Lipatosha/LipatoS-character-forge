@@ -25,7 +25,8 @@ import {
     findAdvancementEntry,
     getAdvancementEntries,
     getAdvancementCount,
-    hasAdvancementEntries
+    hasAdvancementEntries,
+    setAdvancementSource
 } from '../utils/advancement-utils.js';
 import { normalizeToolId } from '../mapping.js';
 import { resolveItemSourceUuid, stampSourceTracking } from '../shared/resolution-core.js';
@@ -3638,6 +3639,24 @@ export const ProgressionMixin = (Base) => {
                 if (!item.system.hd) item.system.hd = {};
                 item.system.hd.denomination = `d${hitDie}`;
                 item.system.levels = this.characterLevel;
+
+                // Сторонние классы иногда поставляются со скопированным
+                // SubclassAdvancement.value от другого класса. Перед финализацией
+                // всегда очищаем это значение: ниже Character Forge запишет туда
+                // ровно выбранный пользователем подкласс.
+                if (this.context.subclassUuid && item.system?.advancement) {
+                    const advancements = getAdvancementEntries(item.system.advancement);
+                    let changed = false;
+                    for (const advancement of advancements) {
+                        if (advancement?.type !== 'Subclass') continue;
+                        advancement.value = {};
+                        changed = true;
+                    }
+                    if (changed) {
+                        item.system.advancement = setAdvancementSource(item.system.advancement, advancements);
+                    }
+                }
+
                 window.OriginateLog(`Originate | 设置职业 ${item.name} 的生命骰为 d${hitDie}，等级为 ${this.characterLevel}`);
                 break;
             }
