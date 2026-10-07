@@ -78,6 +78,71 @@ export const UIMixin = (Base) => class extends Base {
         return this._getCurrentClassPrimaryAbilityKey() === ability ? ' primary-ability' : '';
     }
 
+    _getEmbeddedSpellChoiceClassIds(stepData, context, restriction = {}) {
+        const restricted = normalizeSpellListIds(restriction?.list);
+        if (restricted.length) return restricted;
+
+        const stepLists = normalizeSpellListIds(stepData?.list);
+        if (stepLists.length) return stepLists;
+
+        const classItem = this.blueprintData?.class?.items?.find(item => item?.type === 'class');
+        const ruleId = normalizeSpellListId(
+            stepData?.classIdentifier
+            || context?.classIdentifier
+            || this.context?.classIdentifier
+            || classItem?.system?.identifier
+            || context?.option?.system?.identifier
+            || context?.option?.identifier
+            || ''
+        );
+        if (!ruleId) return [];
+
+        const rules = SpellRules.getRules(ruleId);
+        const ruleLists = normalizeSpellListIds(rules?.list);
+        return ruleLists.length ? ruleLists : [ruleId];
+    }
+
+    _getEmbeddedSpellChoiceMaxLevel(stepData, context, restriction = {}, classIds = []) {
+        const restrictedLevel = restriction?.level;
+        if (restrictedLevel !== undefined
+            && restrictedLevel !== null
+            && restrictedLevel !== ''
+            && !isAvailableSpellLevel(restrictedLevel)) {
+            const numeric = Number.parseInt(restrictedLevel, 10);
+            return Number.isFinite(numeric) ? numeric : null;
+        }
+
+        const configured = Number(stepData?.event?._maxLevel ?? stepData?._maxLevel);
+        if (Number.isFinite(configured)) return configured;
+
+        const classItem = this.blueprintData?.class?.items?.find(item => item?.type === 'class');
+        const ruleId = normalizeSpellListId(
+            stepData?.classIdentifier
+            || context?.classIdentifier
+            || this.context?.classIdentifier
+            || classItem?.system?.identifier
+            || classIds?.[0]
+            || ''
+        );
+        const rules = ruleId ? SpellRules.getRules(ruleId) : null;
+        const progression = rules?.progression
+            || classItem?.system?.spellcasting?.progression
+            || context?.option?.coreTraits?.spellcastingType;
+        const classLevel = Math.max(1, Number(
+            stepData?.event?.sourceLevel
+            ?? stepData?.sourceLevel
+            ?? context?.sourceLevel
+            ?? 1
+        ) || 1);
+
+        if (progression) {
+            const maxLevel = this.dataManager?.getMaxSpellLevel?.(progression, classLevel);
+            if (Number.isFinite(maxLevel)) return maxLevel;
+        }
+
+        return 1;
+    }
+
     /**
      * 显示自定义确认弹窗
      * 
@@ -684,18 +749,33 @@ export const UIMixin = (Base) => class extends Base {
                     window.OriginateLog(`Originate | 渲染法术浏览器: ${event.title}, restriction:`, event.restriction);
                     const count = event.count || 1;
                     const advId = event._original?._id || event.id || event.title;
-                    const restrictedLevel = event.restriction?.level;
+                    const restriction = foundry.utils.deepClone(getSpellRestriction(event) || {});
+                    const restrictedLevel = restriction?.level ?? '';
+                    const browserStep = {
+                        ...currentStepData,
+                        event,
+                        classIdentifier: currentStepData.classIdentifier
+                            || context.classIdentifier
+                            || this.context?.classIdentifier
+                            || null
+                    };
+                    const classIds = this._getEmbeddedSpellChoiceClassIds(browserStep, context, restriction);
+                    restriction.list = classIds.map(id => `class:${id}`);
+                    const maxSpellLevel = this._getEmbeddedSpellChoiceMaxLevel(browserStep, context, restriction, classIds);
 
                     // 构建过滤器选项
                     const schools = Object.entries(CONFIG.DND5E.spellSchools).map(([k, v]) => ({ key: k, label: v.label }));
 
-                    // 注意：DnD5e 系统中法术没有 sourceClass 字段
-                    // 因此移除职业筛选功能，只保留搜索和学派筛选
-                    const restriction = event.restriction || {};
-
                     choiceHtml += `
-                        <div class="page-wrapper spell-browser-section" data-type="spell_choice" data-count="${count}" data-adv-id="${advId}" data-step-type="background" data-idx="${idx}" data-restriction-level="${restrictedLevel || ''}">
-                            <h4><i class="fas fa-magic"></i> ${event.title || game.i18n.localize('ORIGINATE.UI.SelectSpells')} (${game.i18n.format('ORIGINATE.UI.Hint.SelectCount', { count: count })})</h4>
+                        <div class="page-wrapper spell-browser-section"
+                             data-type="spell_choice"
+                             data-count="${count}"
+                             data-adv-id="${advId}"
+                             data-step-type="${currentStepData.stepType || context.type || 'class'}"
+                             data-idx="${idx}"
+                             data-restriction-level="${restrictedLevel}"
+                             data-class-lists="${classIds.join('|')}"
+                             data-max-spell-level="${maxSpellLevel ?? ''}">
                             ${spellSchoolHint(restriction) ? `<p class="selection-hint">${spellSchoolHint(restriction)}</p><p data-school-error role="alert" hidden>${game.i18n.localize('ORIGINATE.UI.Progression.InvalidSpellSchool')}</p>` : ''}
                             <div class="spell-browser-container">
                                 <!-- 侧边栏过滤器 -->
@@ -712,29 +792,6 @@ export const UIMixin = (Base) => class extends Base {
                                         </div>
                                     </div>
 
-                                    <div class="filter-group class-filter-group">
-                                        <label>${game.i18n.localize('ORIGINATE.UI.ClassSpellList')}</label>
-                                        <div class="class-filter-container">
-                                            <!-- 主职业列表 -->
-                                            <div class="spell-filter-list primary-classes">
-                                                <div class="loading-placeholder-small"><i class="fas fa-spinner fa-spin"></i></div>
-                                            </div>
-                                            
-                                            <!-- 子职业列表 (折叠) -->
-                                            <div class="subclass-section collapsed">
-                                                <div class="subclass-toggle">
-                                                    <i class="fas fa-caret-right"></i>
-                                                    <span>${game.i18n.localize('ORIGINATE.UI.SubclassSpellList')}</span>
-                                                </div>
-                                                <div class="spell-filter-list subclass-classes" style="display: none;"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="drag-drop-hint">
-                                        <i class="fas fa-hand-pointer"></i>
-                                        <span>${game.i18n.localize('ORIGINATE.UI.DragDropHint')}</span>
-                                    </div>
                                 </div>
                                 
                                 <!-- 主列表区域 -->
@@ -3510,155 +3567,31 @@ export const UIMixin = (Base) => class extends Base {
 
         const searchInput = section.querySelector('.spell-search-input');
         const schoolButtons = section.querySelectorAll('.school-btn');
-        // const classFilter = section.querySelector('.spell-class-filter'); // Removed
-        const classFilterContainer = section.querySelector('.class-filter-container');
         const resultsList = section.querySelector('.spell-results-list');
         const selectedList = section.querySelector('.selected-spells-list');
         const selectionCount = section.querySelector('.selection-count');
         const maxCount = parseInt(section.dataset.count);
         const restrictedLevel = section.dataset.restrictionLevel || '';
 
-        // 获取 restriction 从 stepData.event
         const event = stepData.event;
-        // Fix: restriction may be in event.restriction OR event._original.configuration.restriction
-        // Adrian: 增强获取逻辑，确保万无一失
-        let restriction = event?.restriction;
-        if (!restriction && event?._original?.configuration?.restriction) {
-            restriction = event._original.configuration.restriction;
-        }
-        // 某些旧数据结构可能在 data 下
-        if (!restriction && event?._original?.data?.configuration?.restriction) {
-            restriction = event._original.data.configuration.restriction;
-        }
-        restriction = restriction || {};
-
-        // 旧入口也统一成同一套法表 key，避免创角和升级筛选口径分叉。
-        if (restriction?.list) {
-            restriction.list = normalizeSpellListIds(restriction.list).map(id => `class:${id}`);
-        }
+        const restriction = foundry.utils.deepClone(getSpellRestriction(event) || {});
+        const context = this._activeSubInterfaceContext || {};
+        const datasetClassIds = normalizeSpellListIds(section.dataset.classLists);
+        const fixedClassIds = datasetClassIds.length
+            ? datasetClassIds
+            : this._getEmbeddedSpellChoiceClassIds(stepData, context, restriction);
+        restriction.list = fixedClassIds.map(id => `class:${id}`);
 
         if (window.OriginateDebug) {
             console.log("Originate | Spell Browser Restriction:", restriction);
         }
 
-        // 当前筛选状态
+        // Профессия/список заклинаний задаются текущим шагом и не меняются вручную.
         let currentSchool = '';
-        let currentClassFilters = new Set(); // Stores selected class IDs
+        const currentClassFilters = new Set(fixedClassIds);
 
-        // 加载职业法表列表并填充 (Checkbox Version)
-        if (classFilterContainer) {
-            (async () => {
-                try {
-                    const primaryContainer = classFilterContainer.querySelector('.primary-classes');
-                    const subclassContainer = classFilterContainer.querySelector('.subclass-classes');
-                    const subclassSection = classFilterContainer.querySelector('.subclass-section');
-                    const subclassToggle = classFilterContainer.querySelector('.subclass-toggle');
-
-                    // 1. 获取所有数据
-                    const [spellClasses, classOptions, subclassOptions] = await Promise.all([
-                        this.dataManager.getAvailableSpellClasses(),
-                        this.dataManager.getOptions('class', {}, { indexOnly: true }),
-                        this.dataManager.getOptions('subclass', {}, { indexOnly: true })
-                    ]);
-
-                    if (!spellClasses || spellClasses.length === 0) {
-                        primaryContainer.innerHTML = `<div class="empty-hint">${game.i18n.localize('ORIGINATE.UI.NoSpellLists')}</div>`;
-                        return;
-                    }
-
-                    // 2. 分类
-                    const primaryMap = new Map(classOptions.map(c => [c.identifier, c]));
-                    const subclassMap = new Map(subclassOptions.map(c => [c.identifier, c]));
-
-                    const primaryList = [];
-                    const subclassList = [];
-
-                    for (const cls of spellClasses) {
-                        if (primaryMap.has(cls.id)) {
-                            primaryList.push(cls);
-                        } else {
-                            subclassList.push(cls); // 默认为子职业或其他
-                        }
-                    }
-
-                    // 3. 渲染辅助函数
-
-                    const renderCheckbox = (cls) => {
-                        // Strict Restriction Logic
-                        const isRestricted = restriction.list && restriction.list.length > 0;
-                        const filterId = normalizeSpellListId(cls.id);
-                        const cleanList = isRestricted ? normalizeSpellListIds(restriction.list) : [];
-                        const isInList = isRestricted ? cleanList.includes(filterId) : false;
-
-                        let isChecked = currentClassFilters.has(filterId);
-
-                        if (isInList) {
-                            isChecked = true;
-                            currentClassFilters.add(filterId);
-                        }
-
-                        return `
-                        <label class="spell-filter-checkbox">
-                            <input type="checkbox" value="${filterId}" ${isChecked ? 'checked' : ''}>
-                            <span style="display:flex; flex-direction:column; line-height:1.2;">
-                                <span>${cls.name}</span>
-                                <span style="font-size: 0.7em; color: #888; font-family: monospace;">ID: ${filterId}</span>
-                            </span>
-                        </label>`;
-                    };
-
-
-                    // 3.5 Initialize Default Selection (Only if restricted)
-                    // Adrian: 确保在渲染前初始化过滤器，这样 refreshResults 才能正确工作
-                    if (restriction.list && restriction.list.length > 0) {
-                        normalizeSpellListIds(restriction.list).forEach(id => currentClassFilters.add(id));
-                        window.OriginateLog(`Originate | Initialized class filters from restriction:`, Array.from(currentClassFilters));
-                    }
-
-                    // 4. 填充 DOM
-                    primaryContainer.innerHTML = primaryList.map(renderCheckbox).join('');
-                    subclassContainer.innerHTML = subclassList.map(renderCheckbox).join('');
-
-
-
-                    // 5. 处理子职业显示
-                    if (subclassList.length === 0) {
-                        subclassSection.style.display = 'none';
-                    } else {
-                        // Toggle Logic
-                        subclassToggle.addEventListener('click', () => {
-                            const isCollapsed = subclassSection.classList.contains('collapsed');
-                            if (isCollapsed) {
-                                subclassSection.classList.remove('collapsed');
-                                subclassContainer.style.display = 'flex'; // grid or flex
-                                subclassToggle.querySelector('i').className = 'fas fa-caret-down';
-                            } else {
-                                subclassSection.classList.add('collapsed');
-                                subclassContainer.style.display = 'none';
-                                subclassToggle.querySelector('i').className = 'fas fa-caret-right';
-                            }
-                        });
-                    }
-
-                    // 6. 绑定事件
-                    classFilterContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                        cb.addEventListener('change', (e) => {
-                            if (e.target.checked) {
-                                currentClassFilters.add(e.target.value);
-                            } else {
-                                currentClassFilters.delete(e.target.value);
-                            }
-                            refreshResults();
-                        });
-                    });
-
-                    // Initial Refresh if we define defaults
-                    if (currentClassFilters.size > 0) refreshResults();
-
-                } catch (e) {
-                    console.error("Originate | Failed to load spell class list:", e);
-                }
-            })();
+        if (currentClassFilters.size === 0) {
+            console.warn('Character Forge | Embedded spell choice has no resolved class spell list', stepData);
         }
 
         let currentSpells = [];
@@ -3687,7 +3620,7 @@ export const UIMixin = (Base) => class extends Base {
                 }
 
                 return `
-                <div class="spell-card" data-uuid="${spell.uuid}" draggable="true">
+                <div class="spell-card" data-uuid="${spell.uuid}">
                     <img src="${spell.img}" class="spell-icon">
                     <div class="spell-info">
                         <div class="spell-name" title="${spell.name}">${spell.name}</div>
@@ -3713,35 +3646,28 @@ export const UIMixin = (Base) => class extends Base {
             // 'available' 是 DnD5e 的 "任意可使用等级" 特殊值，不应作为具体环阶传递
             const isNumericLevel = restrictedLevel && !isAvailableSpellLevel(restrictedLevel);
 
-            // 当 restriction.level 未指定或为 'available' 时，自动推断最大可学环阶
-            let computedMaxLevel = null;
-            if (!isNumericLevel && (searchRestriction.level === undefined || isAvailableSpellLevel(searchRestriction.level))) {
-                try {
-                    const classOptions = await this.dataManager.getOptions('class', {}, { indexOnly: true });
-                    const selectedClass = classOptions?.find(o => o.id === this.context?.class);
-                    const spellcastingType = selectedClass?.coreTraits?.spellcastingType;
-                    // Phase 1 基础选择（职业/种族/背景）固定使用等级 1
-                    // 不能用 this.characterLevel，它是目标总等级（如创建5级角色时=5）
-                    // 基础选择只包含 Level 0-1 的 Advancement，法术环阶应按 1 级计算
-                    const charLevel = 1;
-                    console.log(`Originate | [ui-mixin] 基础选择法术环推断: charLevel=${charLevel} (固定1级), spellcastingType="${spellcastingType}"`);
-                    if (spellcastingType) {
-                        computedMaxLevel = this.dataManager.getMaxSpellLevel(spellcastingType, charLevel);
-                        console.log(`Originate | [ui-mixin] Auto-detected maxLevel=${computedMaxLevel}`);
-                    } else {
-                        console.log(`Originate | [ui-mixin] spellcastingType is falsy, defaulting to full caster`);
-                        computedMaxLevel = this.dataManager.getMaxSpellLevel('full', charLevel);
-                        console.log(`Originate | [ui-mixin] Fallback maxLevel=${computedMaxLevel} (full caster at level ${charLevel})`);
-                    }
-                } catch (e) {
-                    console.warn("Originate | [ui-mixin] Failed to auto-detect max spell level:", e);
-                }
+            // Фиксируем максимально доступный круг по текущему шагу.
+            let computedMaxLevel = Number.parseInt(section.dataset.maxSpellLevel ?? '', 10);
+            if (!Number.isFinite(computedMaxLevel)) {
+                computedMaxLevel = this._getEmbeddedSpellChoiceMaxLevel(
+                    stepData,
+                    context,
+                    restriction,
+                    Array.from(currentClassFilters)
+                );
             }
 
             const searchText = searchInput.value;
 
             try {
                 let results = await this.dataManager.getSpellsByRestriction(searchRestriction, searchText, computedMaxLevel);
+
+                // Фокусы — только 0 круг; обычный выбор заклинаний не смешиваем с фокусами.
+                const isCantrip = restriction.level === 0 || restriction.level === '0' || restrictedLevel === '0';
+                results = results.filter(spell => {
+                    const level = Number(spell.system?.level ?? spell.level ?? 0);
+                    return isCantrip ? level === 0 : level > 0;
+                });
 
                 if (currentSchool) {
                     results = results.filter(s => s.school === currentSchool);
@@ -3769,13 +3695,6 @@ export const UIMixin = (Base) => class extends Base {
         // 绑定卡片事件
         const bindCardEvents = () => {
             resultsList.querySelectorAll('.spell-card').forEach(card => {
-                card.addEventListener('dragstart', (ev) => {
-                    ev.dataTransfer.setData("text/plain", JSON.stringify({
-                        uuid: card.dataset.uuid,
-                        type: "Item"
-                    }));
-                });
-
                 card.addEventListener('click', () => {
                     addSelection(card.dataset.uuid);
                 });
