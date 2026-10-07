@@ -264,8 +264,15 @@ function makeSheetButton(kind) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = `character-forge-sheet-book-button character-forge-sheet-book-button-${kind}`;
-    button.innerHTML = `<i class="fas fa-book-open" aria-hidden="true"></i><span>${kind === 'spell' ? 'Книга заклинаний' : 'Книга особенностей'}</span>`;
-    button.title = kind === 'spell' ? 'Книга заклинаний' : 'Книга особенностей';
+
+    if (kind === 'spell') {
+        button.innerHTML = '<i class="fas fa-book-open" aria-hidden="true"></i><span>Книга заклинаний</span>';
+        button.title = 'Книга заклинаний';
+    } else {
+        button.innerHTML = '<span>Особенности</span>';
+        button.title = 'Особенности';
+    }
+
     return button;
 }
 
@@ -627,15 +634,38 @@ async function openOwnedItem(uuid) {
     }
 }
 
+function removeBookTooltips(overlay) {
+    if (!overlay) return;
+
+    const ownerIds = new Set(
+        Array.from(overlay.querySelectorAll('[data-character-forge-tooltip-owner]'))
+            .map(node => node.dataset.characterForgeTooltipOwner)
+            .filter(Boolean)
+    );
+
+    for (const ownerId of ownerIds) {
+        document.querySelectorAll('.originate-spell-tooltip').forEach(tooltip => {
+            if (tooltip.dataset.characterForgeTooltipOwner === ownerId) tooltip.remove();
+        });
+    }
+
+    // Вложенная подсказка тоже живёт в body, а не внутри окна книги.
+    document.querySelectorAll('.originate-nested-tooltip').forEach(tooltip => tooltip.remove());
+}
+
 function closeBook(actorId) {
     const state = OPEN_BOOKS.get(actorId);
     if (!state) return;
+    removeBookTooltips(state.overlay);
     state.overlay?.remove();
     releaseForgeStyles(state.ownerKey);
     OPEN_BOOKS.delete(actorId);
 }
 
 async function renderBook(actor, kind, dataManager, overlay) {
+    // При updateItem книга перерисовывается целиком, а tooltip находится в document.body.
+    // Удаляем tooltip старой сетки до перерендера, иначе закреплённое/открытое окно остаётся висеть.
+    removeBookTooltips(overlay);
     overlay.classList.add('is-loading');
     const slots = kind === 'spell' ? readSpellSlots(actor) : [];
     const entries = kind === 'spell'
@@ -654,7 +684,7 @@ async function renderBook(actor, kind, dataManager, overlay) {
 
     const preparationSummary = kind === 'spell' ? readPreparationSummary(actor) : null;
 
-    const title = kind === 'spell' ? 'Книга заклинаний' : 'Книга особенностей';
+    const title = kind === 'spell' ? 'Книга заклинаний' : 'Особенности';
     const icon = kind === 'spell' ? 'fa-hat-wizard' : 'fa-shield-halved';
 
     overlay.innerHTML = `
