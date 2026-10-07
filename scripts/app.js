@@ -129,6 +129,7 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
             || new DataManager();
         this.currentStep = 'welcome'; // 从欢迎界面开始
         this._scrollPos = 0;
+        this._scrollTop = 0;
         this._currentFolder = null; // 当前浏览的文件夹 ID
         this._leftDrawerExpanded = false;
         this._leftDrawerSwitching = false;
@@ -449,23 +450,39 @@ export class OriginateApp extends HandlebarsApplicationMixin(OriginateAppMixin(A
         // 有些 UI 就像顽固的污渍，必须用力擦才能去掉
         this._hideConflictingUI();
 
-        // 初始化滚动位置
-        if (this._scrollPos) {
-            html.find('.nav-track').scrollLeft(this._scrollPos);
-        } else {
-            // 初始加载时滚动到选中项，贴心吧？
-            this._scrollToSelected();
+        // В классах/расах/предысториях каталог теперь вертикальный.
+        // Сохраняем обе координаты, чтобы при выборе карточки повторный render()
+        // не возвращал пользователя в начало длинного списка.
+        const navTrack = this.element.querySelector('.nav-track');
+        const isVerticalSelectionCatalog = ['class', 'race', 'background'].includes(this.currentStep);
+
+        if (navTrack) {
+            navTrack.scrollLeft = Number(this._scrollPos || 0);
+            navTrack.scrollTop = Number(this._scrollTop || 0);
+
+            // Старый интерфейс использовал колесо как горизонтальный скролл.
+            // Для новых вертикальных каталогов это блокировало обычную прокрутку мышью.
+            if (!isVerticalSelectionCatalog) {
+                navTrack.addEventListener('wheel', (e) => {
+                    if (e.deltaY !== 0) {
+                        e.preventDefault();
+                        navTrack.scrollLeft += e.deltaY;
+                    }
+                }, { passive: false });
+            } else {
+                // После layout/шрифтов браузер может ещё раз пересчитать высоту.
+                // Повторяем восстановление в следующий кадр, не двигая выбранную карточку.
+                requestAnimationFrame(() => {
+                    if (!navTrack.isConnected) return;
+                    navTrack.scrollLeft = Number(this._scrollPos || 0);
+                    navTrack.scrollTop = Number(this._scrollTop || 0);
+                });
+            }
         }
 
-        // 添加横向滚轮支持
-        const navTrack = this.element.querySelector('.nav-track');
-        if (navTrack) {
-            navTrack.addEventListener('wheel', (e) => {
-                if (e.deltaY !== 0) {
-                    e.preventDefault();
-                    navTrack.scrollLeft += e.deltaY;
-                }
-            }, { passive: false });
+        if (!isVerticalSelectionCatalog && !this._scrollPos) {
+            // Для старых горизонтальных шагов оставляем прежнее центрирование выбранного пункта.
+            this._scrollToSelected();
         }
 
         // Сохраняем прогресс игрока с одноразовым разрешением после каждого
