@@ -16706,3 +16706,391 @@ body.originate-active .character-forge-item-sheet-front {
         flex-basis: 210px;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.80 — class/race/background selectors like level-3 subclass
+   ============================================================ */
+
+/*
+ * Основные выборы класса / расы / предыстории теперь повторяют
+ * геометрию выбора подкласса на 3-м уровне:
+ *   - описание слева 60%;
+ *   - каталог справа 40%;
+ *   - карточка 82x100;
+ *   - иконка 64x64;
+ *   - подпись .62rem;
+ *   - до 8 карточек в ряд с теми же адаптивными 6/4 колонками.
+ */
+.view-selection-root.step-class .left-sidebar-drawer,
+.view-selection-root.step-race .left-sidebar-drawer,
+.view-selection-root.step-background .left-sidebar-drawer {
+    left: 0 !important;
+    right: auto !important;
+    width: 60% !important;
+    min-width: 60% !important;
+    max-width: 60% !important;
+    --left-drawer-min-width: 60% !important;
+    --left-drawer-max-width: 60% !important;
+    --left-drawer-content-width: 60% !important;
+    border-left: 0 !important;
+    border-right: 1px solid rgba(255,255,255,.10) !important;
+}
+
+/* Большой отдельный заголовок справа не нужен — как в финальном выборе подкласса. */
+.view-selection-root.step-class .cinematic-caption,
+.view-selection-root.step-race .cinematic-caption,
+.view-selection-root.step-background .cinematic-caption {
+    display: none !important;
+}
+
+/* Правая 40%-панель выбора. */
+.view-selection-root.step-class .cinematic-nav,
+.view-selection-root.step-race .cinematic-nav,
+.view-selection-root.step-background .cinematic-nav {
+    box-sizing: border-box !important;
+    position: absolute !important;
+    top: 14px !important;
+    right: 10px !important;
+    bottom: 72px !important;
+    left: auto !important;
+    width: calc(40% - 20px) !important;
+    max-width: calc(40% - 20px) !important;
+    height: auto !important;
+    transform: none !important;
+    display: block !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    outline: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Внутренний каталог скроллится целиком по вертикали. */
+.view-selection-root.step-class .cinematic-nav .class-nav-track,
+.view-selection-root.step-race .cinematic-nav .race-nav-track,
+.view-selection-root.step-background .cinematic-nav .background-nav-track {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 6px 4px 10px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border: 0 !important;
+    outline: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200,163,95), .48) transparent !important;
+    overscroll-behavior: contain !important;
+}
+
+.view-selection-root.step-class .cinematic-nav .class-nav-track::-webkit-scrollbar,
+.view-selection-root.step-race .cinematic-nav .race-nav-track::-webkit-scrollbar,
+.view-selection-root.step-background .cinematic-nav .background-nav-track::-webkit-scrollbar {
+    display: block !important;
+    width: 5px !important;
+    height: 0 !important;
+}
+
+.view-selection-root.step-class .cinematic-nav .class-nav-track::-webkit-scrollbar-thumb,
+.view-selection-root.step-race .cinematic-nav .race-nav-track::-webkit-scrollbar-thumb,
+.view-selection-root.step-background .cinematic-nav .background-nav-track::-webkit-scrollbar-thumb {
+    border-radius: 4px !important;
+    background: rgba(var(--originate-theme-accent-rgb, 200,163,95), .48) !important;
+}
+
+/* Две старые колонки классов превращаем в один последовательный каталог групп. */
+.view-selection-root.step-class .class-nav-left-stack,
+.view-selection-root.step-class .class-nav-right-stack {
+    display: contents !important;
+}
+
+/* Группы имеют ту же ширину, что сетка подклассов. */
+.view-selection-root.step-class .class-nav-group,
+.view-selection-root.step-race .race-nav-group,
+.view-selection-root.step-background .background-nav-group {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: min(728px, calc(100% - 8px)) !important;
+    max-width: calc(100% - 8px) !important;
+    min-width: 0 !important;
+    margin: 0 auto 12px !important;
+    padding: 0 !important;
+}
+
+.view-selection-root.step-class .class-nav-group:last-child,
+.view-selection-root.step-race .race-nav-group:last-child,
+.view-selection-root.step-background .background-nav-group:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Заголовки групп компактные, чтобы сетка оставалась главным элементом. */
+.view-selection-root.step-class .class-nav-heading,
+.view-selection-root.step-race .race-nav-heading,
+.view-selection-root.step-background .background-nav-heading {
+    margin: 0 0 5px !important;
+    padding: 0 0 4px !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200,163,95), .24) !important;
+    color: var(--originate-accent, #c8a35f) !important;
+    font-family: var(--originate-font-display, "Cinzel"), serif !important;
+    font-size: .78rem !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: .035em !important;
+    text-align: left !important;
+}
+
+/* Сетка выбора буквально повторяет финальную сетку подкласса 1.3.73. */
+.view-selection-root.step-class .class-nav-grid,
+.view-selection-root.step-race .race-nav-grid,
+.view-selection-root.step-background .background-nav-grid {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(8, 82px) !important;
+    grid-auto-rows: 100px !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    align-items: start !important;
+    align-content: start !important;
+    width: 728px !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+}
+
+/* Карточка — 64px иконка + подпись, без собственной декоративной рамки. */
+.view-selection-root.step-class .class-nav-grid .nav-item,
+.view-selection-root.step-race .race-nav-grid .nav-item,
+.view-selection-root.step-background .background-nav-grid .nav-item {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-rows: 64px auto !important;
+    align-content: start !important;
+    justify-items: center !important;
+    width: 82px !important;
+    min-width: 82px !important;
+    max-width: 82px !important;
+    height: 100px !important;
+    min-height: 100px !important;
+    max-height: 100px !important;
+    margin: 0 !important;
+    padding: 2px 1px 0 !important;
+    gap: 4px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    transform: none !important;
+}
+
+/* Иконки ровно 64x64, как у подклассов. */
+.view-selection-root.step-class .class-nav-grid .nav-icon-wrapper,
+.view-selection-root.step-race .race-nav-grid .nav-icon-wrapper,
+.view-selection-root.step-background .background-nav-grid .nav-icon-wrapper,
+.view-selection-root.step-class .class-nav-grid .nav-icon,
+.view-selection-root.step-race .race-nav-grid .nav-icon,
+.view-selection-root.step-background .background-nav-grid .nav-icon {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 64px !important;
+    height: 64px !important;
+    min-width: 64px !important;
+    min-height: 64px !important;
+    max-width: 64px !important;
+    max-height: 64px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 4px !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-icon,
+.view-selection-root.step-race .race-nav-grid .nav-icon,
+.view-selection-root.step-background .background-nav-grid .nav-icon {
+    object-fit: cover !important;
+    filter: grayscale(100%) brightness(.72) !important;
+    transition: filter .15s ease !important;
+}
+
+/* Размер текста строго как у выбора подкласса на 3-м уровне. */
+.view-selection-root.step-class .class-nav-grid .nav-label,
+.view-selection-root.step-race .race-nav-grid .nav-label,
+.view-selection-root.step-background .background-nav-grid .nav-label {
+    box-sizing: border-box !important;
+    display: -webkit-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    max-height: 2.3em !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 2px !important;
+    overflow: hidden !important;
+    color: rgba(220,220,220,.86) !important;
+    font-size: .62rem !important;
+    font-weight: 500 !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+/* Старое принудительное "каждое слово с новой строки" отключаем. */
+.view-selection-root.step-class .class-nav-grid .class-nav-label > span,
+.view-selection-root.step-race .race-nav-grid .race-label-word,
+.view-selection-root.step-background .background-nav-grid .background-label-word {
+    display: inline !important;
+    width: auto !important;
+    min-width: 0 !important;
+    text-align: inherit !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .class-nav-label > span:not(:last-child)::after,
+.view-selection-root.step-race .race-nav-grid .race-label-word:not(:last-child)::after,
+.view-selection-root.step-background .background-nav-grid .background-label-word:not(:last-child)::after {
+    content: " ";
+}
+
+/* Hover/selected совпадает с карточками подклассов. */
+.view-selection-root.step-class .class-nav-grid .nav-item:hover,
+.view-selection-root.step-race .race-nav-grid .nav-item:hover,
+.view-selection-root.step-background .background-nav-grid .nav-item:hover {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: 0 0 0 1px rgba(var(--originate-theme-accent-rgb, 200,163,95), .28) !important;
+    transform: translateY(-1px) !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-item.selected,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected,
+.view-selection-root.step-background .background-nav-grid .nav-item.selected {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: 0 0 0 1px var(--originate-accent) !important;
+    transform: none !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-item:hover .nav-icon-wrapper,
+.view-selection-root.step-class .class-nav-grid .nav-item.selected .nav-icon-wrapper,
+.view-selection-root.step-race .race-nav-grid .nav-item:hover .nav-icon-wrapper,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected .nav-icon-wrapper,
+.view-selection-root.step-background .background-nav-grid .nav-item:hover .nav-icon-wrapper,
+.view-selection-root.step-background .background-nav-grid .nav-item.selected .nav-icon-wrapper {
+    transform: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-item:hover .nav-icon,
+.view-selection-root.step-class .class-nav-grid .nav-item.selected .nav-icon,
+.view-selection-root.step-race .race-nav-grid .nav-item:hover .nav-icon,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected .nav-icon,
+.view-selection-root.step-background .background-nav-grid .nav-item:hover .nav-icon,
+.view-selection-root.step-background .background-nav-grid .nav-item.selected .nav-icon {
+    filter: grayscale(0%) brightness(1) !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-item.selected .nav-label,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected .nav-label,
+.view-selection-root.step-background .background-nav-grid .nav-item.selected .nav-label {
+    color: var(--originate-accent) !important;
+}
+
+/* Раскрывающий старый каталог больше не нужен: основной каталог уже полный. */
+.view-selection-root.step-class .nav-grid-expand-btn,
+.view-selection-root.step-race .nav-grid-expand-btn,
+.view-selection-root.step-background .nav-grid-expand-btn {
+    display: none !important;
+}
+
+/* Подтверждение — по центру правых 40%, как footer выбора подкласса. */
+.view-selection-root.step-class .cinematic-actions,
+.view-selection-root.step-race .cinematic-actions,
+.view-selection-root.step-background .cinematic-actions {
+    left: 80% !important;
+    right: auto !important;
+    bottom: 18px !important;
+    transform: translateX(-50%) !important;
+}
+
+/* Адаптивные колонки повторяют подклассы. */
+@media (max-width: 1500px) {
+    .view-selection-root.step-class .class-nav-group,
+    .view-selection-root.step-race .race-nav-group,
+    .view-selection-root.step-background .background-nav-group {
+        width: min(548px, calc(100% - 8px)) !important;
+    }
+
+    .view-selection-root.step-class .class-nav-grid,
+    .view-selection-root.step-race .race-nav-grid,
+    .view-selection-root.step-background .background-nav-grid {
+        width: 548px !important;
+        max-width: 100% !important;
+        grid-template-columns: repeat(6, 82px) !important;
+    }
+}
+
+@media (max-width: 1150px) {
+    .view-selection-root.step-class .class-nav-group,
+    .view-selection-root.step-race .race-nav-group,
+    .view-selection-root.step-background .background-nav-group {
+        width: min(368px, calc(100% - 8px)) !important;
+    }
+
+    .view-selection-root.step-class .class-nav-grid,
+    .view-selection-root.step-race .race-nav-grid,
+    .view-selection-root.step-background .background-nav-grid {
+        width: 368px !important;
+        max-width: 100% !important;
+        grid-template-columns: repeat(4, 82px) !important;
+    }
+}
+
+@media (max-height: 760px) {
+    .view-selection-root.step-class .class-nav-grid,
+    .view-selection-root.step-race .race-nav-grid,
+    .view-selection-root.step-background .background-nav-grid {
+        grid-auto-rows: 96px !important;
+        row-gap: 6px !important;
+    }
+
+    .view-selection-root.step-class .class-nav-grid .nav-item,
+    .view-selection-root.step-race .race-nav-grid .nav-item,
+    .view-selection-root.step-background .background-nav-grid .nav-item {
+        height: 96px !important;
+        min-height: 96px !important;
+        max-height: 96px !important;
+    }
+
+    .view-selection-root.step-class .class-nav-grid .nav-label,
+    .view-selection-root.step-race .race-nav-grid .nav-label,
+    .view-selection-root.step-background .background-nav-grid .nav-label {
+        font-size: .58rem !important;
+    }
+}
