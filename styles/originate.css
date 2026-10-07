@@ -15417,3 +15417,71 @@ body.originate-active .character-forge-item-sheet-front {
         max-height: 90px !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.71 — центрирование сетки и крупнее подписи
+   ============================================================ */
+
+/* Центрируем саму область из 8 колонок внутри правого блока. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+    width: min(100%, 736px) !important;
+    max-width: 736px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    grid-template-columns: repeat(8, 82px) !important;
+    grid-auto-rows: 100px !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    align-content: start !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+    padding: 8px !important;
+}
+
+/* Немного увеличиваем карточку только по высоте, чтобы крупная подпись не зажималась. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card {
+    height: 100px !important;
+    min-height: 100px !important;
+    max-height: 100px !important;
+}
+
+/* Подписи под иконками крупнее и читаемее. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-label {
+    max-height: 2.3em !important;
+    font-size: .62rem !important;
+    line-height: 1.1 !important;
+    font-weight: 500 !important;
+}
+
+@media (max-width: 1500px) {
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+        width: min(100%, 556px) !important;
+        max-width: 556px !important;
+        grid-template-columns: repeat(6, 82px) !important;
+    }
+}
+
+@media (max-width: 1150px) {
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+        width: min(100%, 376px) !important;
+        max-width: 376px !important;
+        grid-template-columns: repeat(4, 82px) !important;
+    }
+}
+
+@media (max-height: 760px) {
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+        grid-auto-rows: 96px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-card {
+        height: 96px !important;
+        min-height: 96px !important;
+        max-height: 96px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-label {
+        font-size: .58rem !important;
+    }
+}
