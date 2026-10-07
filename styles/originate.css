@@ -15915,3 +15915,117 @@ body.originate-active .character-forge-item-sheet-front {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.76 — tooltip заклинаний: скролл и формулы
+   ============================================================ */
+
+.originate-spell-tooltip {
+    max-width: min(520px, calc(100vw - 28px)) !important;
+    line-height: 1.48 !important;
+    overflow-wrap: anywhere;
+}
+
+.originate-spell-tooltip:not(.is-pinned) {
+    pointer-events: none !important;
+}
+
+.originate-spell-tooltip.is-pinned {
+    pointer-events: auto !important;
+}
+
+.originate-tooltip-meta {
+    margin: -0.05rem 0 0.65rem;
+    color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.78) !important;
+    font-size: 0.78rem;
+    font-style: italic;
+    line-height: 1.25;
+}
+
+.originate-spell-tooltip .originate-tooltip-content {
+    word-break: normal;
+    overflow-wrap: anywhere;
+}
+
+.originate-spell-tooltip .originate-tooltip-content p {
+    margin: 0 0 0.62rem !important;
+    line-height: 1.48 !important;
+}
+
+.originate-spell-tooltip .originate-tooltip-content p:last-child {
+    margin-bottom: 0 !important;
+}
+
+.originate-spell-tooltip .originate-tooltip-content h1,
+.originate-spell-tooltip .originate-tooltip-content h2,
+.originate-spell-tooltip .originate-tooltip-content h3,
+.originate-spell-tooltip .originate-tooltip-content h4 {
+    margin: 0.7rem 0 0.38rem !important;
+    color: var(--originate-accent, #c8a35f) !important;
+    line-height: 1.25 !important;
+}
+
+.originate-spell-tooltip .originate-tooltip-content ul,
+.originate-spell-tooltip .originate-tooltip-content ol {
+    margin: 0.35rem 0 0.7rem 1.25rem !important;
+    padding: 0 !important;
+}
+
+.originate-spell-tooltip .originate-tooltip-content li {
+    margin: 0.18rem 0 !important;
+    line-height: 1.45 !important;
+}
+
+.originate-spell-tooltip .originate-tooltip-content table {
+    width: 100% !important;
+    margin: 0.55rem 0 !important;
+    border-collapse: collapse !important;
+    font-size: 0.82rem !important;
+}
+
+.originate-spell-tooltip .originate-tooltip-content th,
+.originate-spell-tooltip .originate-tooltip-content td {
+    padding: 0.28rem 0.42rem !important;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.24) !important;
+}
+
+/* Foundry/D&D5e inline-roll и action-ссылки должны выглядеть как формулы,
+   а не как сырой текст /damage, /save и т.п. */
+.originate-spell-tooltip .originate-tooltip-content a.inline-roll,
+.originate-spell-tooltip .originate-tooltip-content .inline-roll,
+.originate-spell-tooltip .originate-tooltip-content a.roll,
+.originate-spell-tooltip .originate-tooltip-content .roll-link,
+.originate-spell-tooltip .originate-tooltip-content [data-roll],
+.originate-spell-tooltip .originate-tooltip-content [data-action="roll"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.22em !important;
+    max-width: 100%;
+    margin: 0 0.08em !important;
+    padding: 0.04em 0.34em !important;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.38) !important;
+    border-radius: 4px !important;
+    background: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.10) !important;
+    color: #ead7ad !important;
+    text-decoration: none !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    vertical-align: baseline !important;
+    box-shadow: none !important;
+}
+
+.originate-spell-tooltip .originate-tooltip-content a.inline-roll:hover,
+.originate-spell-tooltip .originate-tooltip-content .inline-roll:hover,
+.originate-spell-tooltip .originate-tooltip-content a.roll:hover,
+.originate-spell-tooltip .originate-tooltip-content .roll-link:hover,
+.originate-spell-tooltip .originate-tooltip-content [data-roll]:hover,
+.originate-spell-tooltip .originate-tooltip-content [data-action="roll"]:hover {
+    border-color: var(--originate-accent, #c8a35f) !important;
+    background: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), 0.16) !important;
+}
+
+/* Колесо на карточке всегда принадлежит списку браузера. */
+.spell-results-list .spell-card {
+    overscroll-behavior: auto;
+}
