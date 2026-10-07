@@ -934,12 +934,12 @@ export function renderSubclassCards(options, { selectedUuid = null } = {}) {
                 data-id="${escapeSubclassText(opt.id)}"
                 data-subclass-uuid="${escapeSubclassText(opt.uuid)}"
                 aria-pressed="${isSelected}"
+                aria-label="${escapeSubclassText(opt.name)}"
                 title="${escapeSubclassText(opt.name)}">
                 <span class="subclass-choice-icon-wrap">
                     <img src="${escapeSubclassText(opt.img || 'icons/svg/mystery-man.svg')}"
                         class="subclass-choice-icon" alt="">
                 </span>
-                <span class="subclass-choice-label">${escapeSubclassText(opt.name)}</span>
             </button>
         `;
     }).join('');
