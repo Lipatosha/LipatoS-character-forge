@@ -1538,9 +1538,37 @@ export class WizardUIMixin {
         const classIdentifier = this.levelUpManager.getClassIdentifier();
         const subclassOptions = await this.dataManager.getOptions('subclass', { classIdentifier });
         const selectedUuid = this._state.stepData[step.id]?.selectedSubclass || null;
-        step.subclassOptions = subclassOptions;
 
-        return renderSubclassSelectionPanel(subclassOptions, { selectedUuid });
+        // Описание подкласса приходит из Compendium сырым HTML. На этом шаге оно
+        // раньше вставлялось напрямую, поэтому @UUID[...] оставались обычным текстом.
+        // Обогащаем описание один раз перед рендером, с relativeTo исходного Item.
+        const TE = foundry.applications?.ux?.TextEditor?.implementation ?? TextEditor;
+        const preparedSubclassOptions = await Promise.all(
+            (subclassOptions || []).map(async option => {
+                const rawDescription = String(option?.description || '');
+                if (!rawDescription || !TE?.enrichHTML) return option;
+
+                try {
+                    const doc = option.uuid
+                        ? await this.dataManager.getDocument(option.uuid)
+                        : null;
+                    const description = await TE.enrichHTML(rawDescription, {
+                        async: true,
+                        relativeTo: doc || undefined
+                    });
+                    return { ...option, description };
+                } catch (error) {
+                    console.warn(
+                        `Character Forge | Не удалось обогатить описание подкласса "${option?.name || option?.uuid || ''}":`,
+                        error
+                    );
+                    return option;
+                }
+            })
+        );
+
+        step.subclassOptions = preparedSubclassOptions;
+        return renderSubclassSelectionPanel(preparedSubclassOptions, { selectedUuid });
     }
 
     async _triggerSubclassSelection(level) {
