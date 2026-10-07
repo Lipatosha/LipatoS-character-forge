@@ -1922,15 +1922,26 @@ export const UIMixin = (Base) => class extends Base {
                     window.OriginateLog(`Originate | 保存法术选择: ${selectedSpells.length} 个法术`);
                 } else {
                     // 普通物品选择
-                    // 修正选择器
-                    const checked = overlay.querySelectorAll(`.item-choices-list input[type="checkbox"]:checked, .feature-grid-list input[type="checkbox"]:checked`);
-                    data.items = Array.from(checked).map(cb => cb.value);
-                    // Replacement data...
-                    const replacementRadio = overlay.querySelector(`.replacement-section input[type="radio"]:checked`);
-                    if (replacementRadio && replacementRadio.value !== 'none') {
+                    const itemSection = overlay.querySelector(`.sub-section[data-type="item-choice"][data-idx="${idx}"]`)
+                        || overlay.querySelector('.sub-section[data-type="item-choice"]');
+                    const checked = Array.from(itemSection?.querySelectorAll(
+                        'input[type="checkbox"][name^="item-choice-"]:checked, .feature-grid-list input[type="checkbox"]:checked'
+                    ) || []);
+                    const replacementRadio = itemSection?.querySelector('.replacement-section input[type="radio"]:checked')
+                        || overlay.querySelector('.replacement-section input[type="radio"]:checked');
+                    const baseMax = Math.max(0, parseInt(itemSection?.dataset.count) || Number(event.count) || 0);
+                    const isReplacing = !!replacementRadio && replacementRadio.value !== 'none';
+                    const allowed = baseMax + (isReplacing ? 1 : 0);
+                    const cappedChecked = checked.slice(0, allowed);
+
+                    // Даже если DOM/старый черновик каким-то образом содержит лишние checkbox,
+                    // в состояние никогда не записываем больше разрешённого.
+                    data.items = cappedChecked.map(cb => cb.value);
+
+                    if (isReplacing) {
                         data.replacement = {
                             oldItemId: replacementRadio.dataset.itemId,
-                            newItemUuid: checked[0]?.value // Assumes first checked is replacement
+                            newItemUuid: cappedChecked[0]?.value // Assumes first checked is replacement
                         };
                         // Remove replacement from items list
                         if (data.items.length > 0) data.items.shift();
