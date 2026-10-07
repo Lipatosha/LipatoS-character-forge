@@ -1017,12 +1017,17 @@ export const ContextMixin = (Base) => class extends Base {
                     opt.heroImageIsVideo = isVideo(opt.heroImage);
                 });
 
-                // 获取当前选中的 ID
+                // UUID — главный идентификатор выбора. _id может совпадать между
+                // разными compendium, особенно у скопированных неофициальных материалов.
                 const currentSelectedId = this.context[this.currentStep];
-                window.OriginateLog(`_prepareContext: currentStep=${this.currentStep}, selectedId=${currentSelectedId}`);
+                const currentSelectedUuid = this.context[`${this.currentStep}Uuid`] || null;
+                window.OriginateLog(`_prepareContext: currentStep=${this.currentStep}, selectedId=${currentSelectedId}, selectedUuid=${currentSelectedUuid}`);
 
-                if (currentSelectedId) {
-                    let optionSummary = currentOptions.find(o => o.id === currentSelectedId);
+                if (currentSelectedId || currentSelectedUuid) {
+                    let optionSummary = (currentSelectedUuid
+                        ? currentOptions.find(o => o.uuid === currentSelectedUuid)
+                        : null)
+                        || currentOptions.find(o => o.id === currentSelectedId);
                     window.OriginateLog(`_prepareContext: found optionSummary=`, optionSummary);
 
                     if (optionSummary) {
@@ -1075,6 +1080,7 @@ export const ContextMixin = (Base) => class extends Base {
 
                 currentStep: this.currentStep,
                 currentSelectedId: this.context[this.currentStep],
+                currentSelectedUuid: this.context[`${this.currentStep}Uuid`] || null,
                 steps: steps.filter(s => !s.hidden), // 过滤掉隐藏的步骤，别让用户看到不该看的
                 options: currentOptions,
                 officialClassOptions,
@@ -1146,13 +1152,19 @@ export const ContextMixin = (Base) => class extends Base {
 
         // 尝试从当前选项中查找（如果当前步骤是 class）
         if (this.currentStep === 'class' && this.context.options) {
-            const selectedClass = this.context.options.find(o => o.id === this.context.class);
+            const selectedClass = (this.context.classUuid
+                ? this.context.options.find(o => o.uuid === this.context.classUuid)
+                : null)
+                || this.context.options.find(o => o.id === this.context.class);
             if (selectedClass && selectedClass.subclassLevel !== undefined) {
                 subclassLevel = selectedClass.subclassLevel;
             }
         } else if (this.context.availableClasses) {
-            // 如果在等级步骤，尝试从 availableClasses 中查找
-            const selectedClass = this.context.availableClasses.find(o => o.id === this.context.class);
+            // 如果 в уровне, сначала ищем точный UUID, и только потом старый id.
+            const selectedClass = (this.context.classUuid
+                ? this.context.availableClasses.find(o => o.uuid === this.context.classUuid)
+                : null)
+                || this.context.availableClasses.find(o => o.id === this.context.class);
             if (selectedClass && selectedClass.subclassLevel !== undefined) {
                 subclassLevel = selectedClass.subclassLevel;
             }
