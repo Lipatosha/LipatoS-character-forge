@@ -530,7 +530,10 @@ export function bindTooltips(container, dataManager) {
             fontSize: '0.85rem',
             lineHeight: '1.6',
             zIndex: '100000',
-            pointerEvents: 'auto',
+            // Незакреплённая подсказка не должна перекрывать колесо мыши:
+            // скролл проходит в список/страницу под ней. Интерактивность включаем
+            // только после закрепления средней кнопкой мыши.
+            pointerEvents: 'none',
             boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
             backdropFilter: 'blur(8px)'
         });
@@ -546,6 +549,7 @@ export function bindTooltips(container, dataManager) {
     const setPinned = (value) => {
         tooltip.dataset.pinned = value ? 'true' : 'false';
         tooltip.classList.toggle('is-pinned', !!value);
+        tooltip.style.pointerEvents = value ? 'auto' : 'none';
         if (value) {
             if (hideTimer) clearTimeout(hideTimer);
             hideTimer = null;
@@ -585,6 +589,9 @@ export function bindTooltips(container, dataManager) {
         tooltip.dataset.characterForgeTooltipListenersBound = 'true';
 
         tooltip.addEventListener('wheel', (e) => {
+            // Обычный hover-tooltip прозрачен для мыши и не должен блокировать
+            // прокрутку списка. Собственный скролл нужен только закреплённой подсказке.
+            if (!isPinned()) return;
             const hasOverflow = tooltip.scrollHeight > tooltip.clientHeight;
             if (!hasOverflow) return;
             const atTop = tooltip.scrollTop <= 0 && e.deltaY < 0;
@@ -740,6 +747,7 @@ export function bindTooltips(container, dataManager) {
         currentSourceEl = el;
         let text = el._enrichedTooltip;
         let itemName = el.querySelector('.feature-name, .feature-title, .spell-name')?.textContent || '';
+        let itemMeta = el._tooltipMeta || '';
 
         if (!text) {
             const plainTooltip = el.dataset.originateTooltip;
@@ -774,6 +782,22 @@ export function bindTooltips(container, dataManager) {
                     });
                     el._enrichedTooltip = enriched;
                     el._tooltipName = itemName;
+
+                    if (doc?.type === 'spell') {
+                        const spellLevel = Number(doc.system?.level ?? 0);
+                        const levelEntry = CONFIG.DND5E?.spellLevels?.[spellLevel];
+                        const levelLabel = typeof levelEntry === 'string'
+                            ? levelEntry
+                            : (levelEntry?.label || (spellLevel === 0 ? 'Фокус' : `${spellLevel} круг`));
+                        const schoolKey = doc.system?.school || '';
+                        const schoolEntry = CONFIG.DND5E?.spellSchools?.[schoolKey];
+                        const schoolLabel = typeof schoolEntry === 'string'
+                            ? schoolEntry
+                            : (schoolEntry?.label || schoolKey);
+                        itemMeta = [levelLabel, schoolLabel].filter(Boolean).join(' • ');
+                        el._tooltipMeta = itemMeta;
+                    }
+
                     text = enriched;
                 } else {
                     hideTooltip({ force: true });
@@ -801,11 +825,13 @@ export function bindTooltips(container, dataManager) {
         }
 
         itemName = el._tooltipName || itemName;
+        itemMeta = el._tooltipMeta || itemMeta;
         tooltip.innerHTML = `
             <div class="originate-tooltip-header">
                 <div class="originate-tooltip-title">${itemName}</div>
                 <i class="fas fa-thumbtack originate-tooltip-pin-indicator" aria-hidden="true"></i>
             </div>
+            ${itemMeta ? `<div class="originate-tooltip-meta">${itemMeta}</div>` : ''}
             <div class="originate-tooltip-content">${text}</div>
         `;
 
