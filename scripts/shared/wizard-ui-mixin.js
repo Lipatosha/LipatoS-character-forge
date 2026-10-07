@@ -1089,6 +1089,74 @@ export class WizardUIMixin {
 
     // 共享法术选择渲染
 
+    _getSpellChoiceRuleId(step) {
+        return normalizeSpellListId(
+            step?.classIdentifier
+            || this.levelUpManager?.classItem?.system?.identifier
+            || this.context?.classIdentifier
+            || this.blueprintData?.class?.items?.find?.(item => item?.type === 'class')?.system?.identifier
+            || ''
+        );
+    }
+
+    _getSpellChoiceClassIds(step, restriction = null) {
+        const effectiveRestriction = restriction || getSpellRestriction(step?.event || step);
+        const restricted = normalizeSpellListIds(effectiveRestriction?.list);
+        if (restricted.length) return restricted;
+
+        const stepLists = normalizeSpellListIds(step?.list);
+        if (stepLists.length) return stepLists;
+
+        const ruleId = this._getSpellChoiceRuleId(step);
+        const rules = ruleId ? SpellRules.getRules(ruleId) : null;
+        const ruleLists = normalizeSpellListIds(rules?.list);
+        if (ruleLists.length) return ruleLists;
+
+        return ruleId ? [ruleId] : [];
+    }
+
+    _getSpellChoiceClassLevel() {
+        if (this.levelUpManager) {
+            return Math.max(1, Number(this._state?.targetLevel)
+                || Number(this.levelUpManager.currentLevel) + 1
+                || 1);
+        }
+
+        return Math.max(1, Number(this._state?.currentLevel)
+            || Number(this.characterLevel)
+            || 1);
+    }
+
+    _getSpellChoiceMaxLevel(step, restriction = null) {
+        const effectiveRestriction = restriction || getSpellRestriction(step?.event || step);
+        const restrictedLevel = effectiveRestriction?.level;
+
+        if (restrictedLevel !== undefined
+            && restrictedLevel !== null
+            && restrictedLevel !== ''
+            && !isAvailableSpellLevel(restrictedLevel)) {
+            const numeric = Number.parseInt(restrictedLevel, 10);
+            return Number.isFinite(numeric) ? numeric : null;
+        }
+
+        const configured = Number(step?.event?._maxLevel ?? step?._maxLevel);
+        if (Number.isFinite(configured)) return configured;
+
+        const ruleId = this._getSpellChoiceRuleId(step);
+        const rules = ruleId ? SpellRules.getRules(ruleId) : null;
+        const classItem = this.levelUpManager?.classItem
+            || this.blueprintData?.class?.items?.find?.(item => item?.type === 'class');
+        const progression = rules?.progression || classItem?.system?.spellcasting?.progression;
+        const classLevel = this._getSpellChoiceClassLevel();
+
+        if (progression) {
+            return this.dataManager.getMaxSpellLevel(progression, classLevel);
+        }
+
+        // Не показываем высокие круги при неизвестной прогрессии.
+        return isAvailableSpellLevel(restrictedLevel) ? 1 : null;
+    }
+
     async _renderSpellChoice(step) {
         const event = step.event;
         const advId = event._original?._id || event.id || event.title;
@@ -1104,7 +1172,11 @@ export class WizardUIMixin {
             });
         }
 
-        const restriction = getSpellRestriction(event);
+        const restriction = foundry.utils.deepClone(getSpellRestriction(event) || {});
+        const classIds = this._getSpellChoiceClassIds(step, restriction);
+        restriction.list = classIds.map(id => `class:${id}`);
+        const maxSpellLevel = this._getSpellChoiceMaxLevel(step, restriction);
+
         if (normalizeSpellSchools(restriction.school).length) {
             for (const spell of selectedSpells) {
                 try { spell.school = (await fromUuid(spell.uuid))?.system?.school || ''; }
@@ -1116,8 +1188,14 @@ export class WizardUIMixin {
         const restrictedLevel = restriction?.level ?? '';
 
         return `
-        <div class="progression-feature-group spell-browser-section page-wrapper" data-type="spell_choice" data-count="${count}" data-adv-id="${advId}" data-step-type="${step.stepType}" data-restriction-level="${restrictedLevel}">
-            <h4><i class="fas fa-magic"></i> ${step.title || game.i18n.localize('ORIGINATE.UI.SelectSpells')} (${game.i18n.format('ORIGINATE.UI.Hint.SelectCount', { count: count })})</h4>
+        <div class="progression-feature-group spell-browser-section page-wrapper"
+             data-type="spell_choice"
+             data-count="${count}"
+             data-adv-id="${advId}"
+             data-step-type="${step.stepType}"
+             data-restriction-level="${restrictedLevel}"
+             data-class-lists="${classIds.join(',')}"
+             data-max-spell-level="${maxSpellLevel ?? ''}">
             ${spellSchoolHint(restriction) ? `<p class="selection-hint">${spellSchoolHint(restriction)}</p>` : ''}
             <p data-school-error role="alert" hidden>${game.i18n.localize('ORIGINATE.UI.Progression.InvalidSpellSchool')}</p>
             <div class="spell-browser-container">
@@ -1135,25 +1213,6 @@ export class WizardUIMixin {
                     <div class="filter-group">
                         <label>${game.i18n.localize('ORIGINATE.UI.SpellLevel')}</label>
                         <div class="filter-buttons level-filters"></div>
-                    </div>
-                    <div class="filter-group class-filter-group">
-                        <label>${game.i18n.localize('ORIGINATE.UI.ClassSpellList')}</label>
-                        <div class="class-filter-container">
-                            <div class="spell-filter-list primary-classes">
-                                <div class="loading-placeholder-small"><i class="fas fa-spinner fa-spin"></i></div>
-                            </div>
-                            <div class="subclass-section collapsed">
-                                <div class="subclass-toggle">
-                                    <i class="fas fa-caret-right"></i>
-                                    <span>${game.i18n.localize('ORIGINATE.UI.SubclassSpellList')}</span>
-                                </div>
-                                <div class="spell-filter-list subclass-classes" style="display: none;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="drag-drop-hint">
-                        <i class="fas fa-hand-pointer"></i>
-                        <span>${game.i18n.localize('ORIGINATE.UI.DragDropHint')}</span>
                     </div>
                 </div>
                 <div class="spell-browser-main">
@@ -2150,23 +2209,22 @@ export class WizardUIMixin {
 
         const searchInput = section.querySelector('.spell-search-input');
         const schoolButtons = section.querySelectorAll('.school-btn');
-        const classFilterContainer = section.querySelector('.class-filter-container');
         const resultsList = section.querySelector('.spell-results-list');
         const selectedList = section.querySelector('.selected-spells-list');
         const selectionCount = section.querySelector('.selection-count');
         const maxCount = parseInt(section.dataset.count);
         const restrictedLevel = section.dataset.restrictionLevel;
 
-        let restriction = getSpellRestriction(step.event || step);
-
-        // 这里先把各种来源的 list 收成统一 key，后面勾选扩展才不会被大小写坑到。
-        if (restriction?.list) {
-            restriction.list = normalizeSpellListIds(restriction.list).map(id => `class:${id}`);
-        }
+        let restriction = foundry.utils.deepClone(getSpellRestriction(step.event || step) || {});
+        const fixedClassIds = normalizeSpellListIds(section.dataset.classLists)
+            .concat(this._getSpellChoiceClassIds(step, restriction))
+            .filter(Boolean);
+        const uniqueClassIds = Array.from(new Set(fixedClassIds));
+        restriction.list = uniqueClassIds.map(id => `class:${id}`);
 
         let currentSchool = '';
         let currentLevel = '';
-        let currentClassFilters = new Set();
+        const currentClassFilters = new Set(uniqueClassIds);
         let currentSpells = [];
         const levelFilterContainer = section.querySelector('.level-filters');
         const levelButtons = section.querySelectorAll('.level-btn');
@@ -2186,80 +2244,9 @@ export class WizardUIMixin {
             };
         };
 
-        // 初始化默认选择
-        if (restriction.list && restriction.list.length > 0) {
-            normalizeSpellListIds(restriction.list).forEach(id => currentClassFilters.add(id));
-        }
-
-        // 加载法表
-        if (classFilterContainer) {
-            (async () => {
-                try {
-                    const primaryContainer = classFilterContainer.querySelector('.primary-classes');
-                    const subclassContainer = classFilterContainer.querySelector('.subclass-classes');
-                    const subclassSection = classFilterContainer.querySelector('.subclass-section');
-                    const subclassToggle = classFilterContainer.querySelector('.subclass-toggle');
-
-                    const [spellClasses, classOptions, subclassOptions] = await Promise.all([
-                        this.dataManager.getAvailableSpellClasses(),
-                        this.dataManager.getOptions('class', {}, { indexOnly: true }),
-                        this.dataManager.getOptions('subclass', {}, { indexOnly: true })
-                    ]);
-
-                    if (!spellClasses || spellClasses.length === 0) {
-                        primaryContainer.innerHTML = `<div class="empty-hint">${game.i18n.localize('ORIGINATE.UI.NoSpellLists')}</div>`;
-                        return;
-                    }
-
-                    const primaryMap = new Map(classOptions.map(c => [c.identifier, c]));
-                    const primaryList = [];
-                    const subclassList = [];
-                    for (const cls of spellClasses) {
-                        if (primaryMap.has(cls.id)) primaryList.push(cls);
-                        else subclassList.push(cls);
-                    }
-
-                    const renderCheckbox = (cls) => {
-                        const isRestricted = restriction.list && restriction.list.length > 0;
-                        const filterId = normalizeSpellListId(cls.id);
-                        const cleanList = isRestricted ? normalizeSpellListIds(restriction.list) : [];
-                        const isInList = isRestricted ? cleanList.includes(filterId) : false;
-                        let isChecked = currentClassFilters.has(filterId);
-                        if (isInList) { isChecked = true; currentClassFilters.add(filterId); }
-                        return `<label class="spell-filter-checkbox">
-                        <input type="checkbox" value="${filterId}" ${isChecked ? 'checked' : ''}>
-                        <span style="display:flex; flex-direction:column; line-height:1.2;">
-                            <span>${cls.name}</span>
-                            <span style="font-size: 0.7em; color: #888; font-family: monospace;">ID: ${filterId}</span>
-                        </span>
-                    </label>`;
-                    };
-
-                    primaryContainer.innerHTML = primaryList.map(renderCheckbox).join('');
-                    subclassContainer.innerHTML = subclassList.map(renderCheckbox).join('');
-                    if (subclassList.length === 0) subclassSection.style.display = 'none';
-                    else {
-                        subclassToggle?.addEventListener('click', () => {
-                            const isCollapsed = subclassSection.classList.contains('collapsed');
-                            subclassSection.classList.toggle('collapsed');
-                            subclassContainer.style.display = isCollapsed ? 'flex' : 'none';
-                            subclassToggle.querySelector('i').className = isCollapsed ? 'fas fa-caret-down' : 'fas fa-caret-right';
-                        });
-                    }
-
-                    classFilterContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                        cb.addEventListener('change', () => {
-                            if (cb.checked) currentClassFilters.add(cb.value);
-                            else currentClassFilters.delete(cb.value);
-                            refreshResults();
-                        });
-                    });
-
-                    if (currentClassFilters.size > 0) refreshResults();
-                } catch (e) {
-                    console.error("Originate | [LevelUp] Failed to load spell class list:", e);
-                }
-            })();
+        // Класс/список заклинаний фиксирован текущим шагом; ручной выбор списка удалён.
+        if (currentClassFilters.size === 0) {
+            console.warn('Character Forge | Spell choice has no resolved class spell list', step);
         }
 
         const refreshResults = async () => {
@@ -2273,32 +2260,10 @@ export class WizardUIMixin {
             // 'available' 是 DnD5e 的 "任意可使用等级" 特殊值，不应作为具体环阶传递
             const isNumericLevel = (restrictedLevel !== '' && restrictedLevel !== undefined && !isAvailableSpellLevel(restrictedLevel));
 
-            // 当 restriction.level 未指定或为 'available' 时，自动推断最大可学环阶
-            let computedMaxLevel = null;
-            const hasExplicitLevel = isNumericLevel || (searchRestriction.level !== undefined && searchRestriction.level !== null && searchRestriction.level !== '' && !isAvailableSpellLevel(searchRestriction.level));
-            if (!hasExplicitLevel) {
-                // 优先使用 SpellRules 提供的 _maxLevel（已按正确的 progression 计算）
-                if (step.event?._maxLevel != null) {
-                    computedMaxLevel = step.event._maxLevel;
-                    console.log(`Originate | [LevelUp] 使用 SpellRules._maxLevel=${computedMaxLevel}`);
-                } else {
-                    try {
-                        const classItem = this.levelUpManager?.classItem;
-                        const spellcastingType = classItem?.system?.spellcasting?.progression;
-                        const charLevel = this._state?.targetLevel || this.levelUpManager?.currentLevel || 1;
-                        console.log(`Originate | [LevelUp] 法术环阶推断: classItem="${classItem?.name}", spellcasting.progression="${spellcastingType}", charLevel=${charLevel}`);
-                        if (spellcastingType) {
-                            computedMaxLevel = this.dataManager.getMaxSpellLevel(spellcastingType, charLevel);
-                            console.log(`Originate | [LevelUp] Auto-detected maxLevel=${computedMaxLevel} for "${spellcastingType}" caster at level ${charLevel}`);
-                        } else {
-                            computedMaxLevel = this.dataManager.getMaxSpellLevel('full', charLevel);
-                            console.log(`Originate | [LevelUp] No spellcastingType found, fallback maxLevel=${computedMaxLevel} (full caster at level ${charLevel})`);
-                        }
-                    } catch (e) {
-                        console.warn("Originate | [LevelUp] Failed to auto-detect max spell level:", e);
-                    }
-                }
-            }
+            // Создание и повышение уровня используют одну и ту же прогрессию класса.
+            let computedMaxLevel = this._getSpellChoiceMaxLevel(step, restriction);
+            const datasetMaxLevel = Number.parseInt(section.dataset.maxSpellLevel || '', 10);
+            if (Number.isFinite(datasetMaxLevel)) computedMaxLevel = datasetMaxLevel;
 
             try {
                 let results = await this.dataManager.getSpellsByRestriction(searchRestriction, searchInput?.value, computedMaxLevel);
@@ -2462,16 +2427,9 @@ export class WizardUIMixin {
         });
         // 环阶筛选按钮（动态生成，等 computedMaxLevel 计算完后再渲染）
         const initLevelFilters = async () => {
-            // 计算最大环阶
-            let maxLvl = 9;
-            try {
-                const classItem = this.levelUpManager?.classItem;
-                const spellcastingType = classItem?.system?.spellcasting?.progression;
-                const charLevel = this._state?.targetLevel || this.levelUpManager?.currentLevel || 1;
-                if (spellcastingType) {
-                    maxLvl = this.dataManager.getMaxSpellLevel(spellcastingType, charLevel) || 9;
-                }
-            } catch (e) { /* fallback to 9 */ }
+            // Фильтры кругов строятся только до реально доступного круга.
+            let maxLvl = this._getSpellChoiceMaxLevel(step, restriction);
+            if (!Number.isFinite(maxLvl)) maxLvl = 1;
 
             if (levelFilterContainer) {
                 // 如果是限定环阶，不显示筛选
