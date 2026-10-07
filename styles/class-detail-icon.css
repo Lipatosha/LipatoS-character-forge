@@ -779,3 +779,18 @@
     grid-template-columns: repeat(4, 82px) !important;
   }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.83 — final class category heading size
+   ============================================================ */
+
+/* Категории классов — ровно в 2 раза крупнее прежних .78rem. */
+.view-selection-root.step-class .cinematic-nav .class-nav-group > .class-nav-heading,
+.view-selection-root.step-class .class-nav-heading {
+  font-size: 1.56rem !important;
+  line-height: 1.15 !important;
+  margin: 0 0 8px !important;
+  padding: 0 0 6px !important;
+  text-align: center !important;
+}
