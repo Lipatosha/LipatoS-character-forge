@@ -173,7 +173,10 @@ export const CreationTimelineMixin = (Base) => class extends Base {
 
         this._syncLeftDrawerStateFromDom?.();
         const navTrack = root.querySelector('.nav-track');
-        if (navTrack) this._scrollPos = navTrack.scrollLeft;
+        if (navTrack) {
+            this._scrollPos = navTrack.scrollLeft;
+            this._scrollTop = navTrack.scrollTop;
+        }
     }
 
     _captureCreationCheckpoint() {
@@ -194,6 +197,7 @@ export const CreationTimelineMixin = (Base) => class extends Base {
                 step: this.currentStep,
                 folderId: this._currentFolder ?? null,
                 scrollPos: this._scrollPos || 0,
+                scrollTop: this._scrollTop || 0,
                 leftDrawerExpanded: !!this._leftDrawerExpanded
             };
 
@@ -251,7 +255,8 @@ export const CreationTimelineMixin = (Base) => class extends Base {
 
         this.currentStep = screen.step;
         this._currentFolder = screen.kind === 'main' ? screen.folderId : null;
-        this._scrollPos = screen.kind === 'main' ? screen.scrollPos : 0;
+        this._scrollPos = screen.kind === 'main' ? (screen.scrollPos || 0) : 0;
+        this._scrollTop = screen.kind === 'main' ? (screen.scrollTop || 0) : 0;
         this._leftDrawerExpanded = screen.kind === 'main' && !!screen.leftDrawerExpanded;
         this._leftDrawerSwitching = false;
         this._gridSelectorKeepOpen = false;
