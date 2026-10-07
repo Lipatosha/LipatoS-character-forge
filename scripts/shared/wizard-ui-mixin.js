@@ -1671,10 +1671,17 @@ export class WizardUIMixin {
             };
         }
 
+        const replacementEnabled = !!section.querySelector('.enable-replacement:checked');
+        const baseMax = Math.max(0, parseInt(section.dataset.count) || 0);
+        const allowed = baseMax + (replacementEnabled ? 1 : 0);
+        const selectedUuids = Array.from(section.querySelectorAll('.item-choices-list input[type="checkbox"]:checked'))
+            .map(input => input.value)
+            .slice(0, allowed);
+
         return {
-            replacementEnabled: !!section.querySelector('.enable-replacement:checked'),
+            replacementEnabled,
             replaceTargetId,
-            selectedUuids: Array.from(section.querySelectorAll('.item-choices-list input[type="checkbox"]:checked')).map(input => input.value)
+            selectedUuids
         };
     }
 
