@@ -3003,14 +3003,64 @@ export const UIMixin = (Base) => class extends Base {
 
         // 物品选择限制（支持替换）
         overlay.querySelectorAll('.sub-section[data-type="item-choice"]').forEach(section => {
-            const baseMax = parseInt(section.dataset.count) || 0;
+            const baseMax = Math.max(0, parseInt(section.dataset.count) || 0);
             const canReplace = section.dataset.canReplace === 'true';
             const isPureReplacement = section.dataset.pureReplacement === 'true';
             // section сам является .item-choices-list в мастере создания,
-            // поэтому querySelectorAll('.item-choices-list input...') раньше не находил
-            // его прямые checkbox. Берём все item-choice checkbox внутри секции напрямую.
-            const checkboxes = section.querySelectorAll('input[type="checkbox"][name^="item-choice-"], .feature-grid-list input[type="checkbox"]');
+            // поэтому берём item-choice checkbox напрямую из текущей секции.
+            const checkboxes = Array.from(section.querySelectorAll('input[type="checkbox"][name^="item-choice-"], .feature-grid-list input[type="checkbox"]'));
             const replacementRadios = section.querySelectorAll('.replacement-section input[type="radio"]');
+            const replacementTargetList = section.querySelector('.replacement-target-list');
+
+            const syncItemChoiceCards = () => {
+                checkboxes.forEach(input => {
+                    input.closest('.option-card')?.classList.toggle('selected', !!input.checked);
+                });
+            };
+
+            const getAllowedMax = () => {
+                if (isPureReplacement) return baseMax;
+                if (!canReplace) return baseMax;
+
+                const selectedReplacement = section.querySelector('.replacement-section input[type="radio"]:checked');
+                return selectedReplacement && selectedReplacement.value !== 'none'
+                    ? baseMax + 1
+                    : baseMax;
+            };
+
+            const enforceItemChoiceLimit = (changedCheckbox = null, notify = true) => {
+                if (isPureReplacement) {
+                    syncItemChoiceCards();
+                    return;
+                }
+
+                const max = getAllowedMax();
+                let checkedBoxes = checkboxes.filter(input => input.checked);
+                if (checkedBoxes.length <= max) {
+                    syncItemChoiceCards();
+                    return;
+                }
+
+                // Для одиночного выбора новый клик заменяет предыдущий выбор.
+                if (max === 1 && changedCheckbox?.checked) {
+                    checkedBoxes.forEach(input => {
+                        if (input !== changedCheckbox) input.checked = false;
+                    });
+                } else if (changedCheckbox?.checked) {
+                    // Для множественного выбора лишний новый пункт не принимаем.
+                    changedCheckbox.checked = false;
+                }
+
+                checkedBoxes = checkboxes.filter(input => input.checked);
+                while (checkedBoxes.length > max) {
+                    checkedBoxes.pop().checked = false;
+                }
+
+                syncItemChoiceCards();
+                if (notify) {
+                    ui.notifications.warn(game.i18n.format("ORIGINATE.UI.Progression.MaxSelectWarn", { count: max }));
+                }
+            };
 
             // Не полагаемся на нативное поведение <label>: в Foundry 13 / D&D5e 6
             // оно может теряться из-за перекрывающих слоёв/tooltip. Карточка сама
@@ -3029,10 +3079,11 @@ export const UIMixin = (Base) => class extends Base {
 
                     cb.checked = !cb.checked;
                     cb.dispatchEvent(new Event('change', { bubbles: true }));
-                    card.classList.toggle('selected', cb.checked);
+                    // change может снять предыдущий выбор или отклонить лишний.
+                    // Всегда синхронизируем подсветку со фактическим checked.
+                    syncItemChoiceCards();
                 });
             });
-            const replacementTargetList = section.querySelector('.replacement-target-list');
 
             if (isPureReplacement) {
                 // 纯替换模式：当选择要替换的物品时，显示新物品选择列表
@@ -3042,74 +3093,35 @@ export const UIMixin = (Base) => class extends Base {
                         if (replacementTargetList) {
                             replacementTargetList.style.display = isReplacing ? 'block' : 'none';
                         }
+                        syncItemChoiceCards();
                     });
                 });
             } else {
-                // 选择+可替换模式
-                // 计算当前允许的最大选择数
-                const getAllowedMax = () => {
-                    if (!canReplace) return baseMax;
-                    // 检查是否选择了替换模式
-                    const selectedReplacement = section.querySelector('.replacement-section input[type="radio"]:checked');
-                    if (selectedReplacement && selectedReplacement.value !== 'none') {
-                        // 选择了替换，允许额外选择 1 个
-                        return baseMax + 1;
-                    }
-                    return baseMax;
-                };
+                // Любой ItemChoice использует один и тот же жёсткий лимит,
+                // независимо от класса, подкласса или источника Advancement.
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        enforceItemChoiceLimit(cb, true);
+                    });
+                });
 
                 // 绑定替换模式切换
                 replacementRadios.forEach(radio => {
                     radio.addEventListener('change', () => {
-                        const isReplacing = radio.value !== 'none';
-                        // 更新选择限制提示
-                        const max = getAllowedMax();
-                        const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
-
-                        // 如果切换到非替换模式，且已选择超过限制，取消多余的选择
-                        if (!isReplacing && checked > baseMax) {
-                            const toUncheck = checked - baseMax;
-                            const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked);
-                            for (let i = 0; i < toUncheck; i++) {
-                                checkedBoxes[checkedBoxes.length - 1 - i].checked = false;
-                            }
-                            ui.notifications.info(game.i18n.format('ORIGINATE.UI.Message.AutoUncheck', { count: toUncheck }));
+                        const wasOverLimit = checkboxes.filter(input => input.checked).length > getAllowedMax();
+                        enforceItemChoiceLimit(null, false);
+                        if (wasOverLimit) {
+                            ui.notifications.info(game.i18n.format('ORIGINATE.UI.Message.AutoUncheck', { count: 1 }));
                         }
                     });
                 });
 
-                // 优化单选体验
-                if (baseMax === 1 && !canReplace) {
-                    checkboxes.forEach(cb => {
-                        cb.addEventListener('change', () => {
-                            if (cb.checked) {
-                                // 取消其他所有选中的项
-                                checkboxes.forEach(other => {
-                                    if (other !== cb && other.checked) {
-                                        other.checked = false;
-                                    }
-                                });
-                            }
-                        });
-                    });
-                } else {
-                    // 多选限制
-                    checkboxes.forEach(cb => {
-                        cb.addEventListener('change', () => {
-                            const max = getAllowedMax();
-                            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
-                            if (checked > max) {
-                                cb.checked = false;
-                                if (canReplace && max === baseMax) {
-                                    ui.notifications.warn(game.i18n.format("ORIGINATE.UI.Progression.MaxSelectWithReplaceWarn", { count: max }));
-                                } else {
-                                    ui.notifications.warn(game.i18n.format("ORIGINATE.UI.Progression.MaxSelectWarn", { count: max }));
-                                }
-                            }
-                        });
-                    });
-                }
+                // Защита старых черновиков: если там уже сохранено больше допустимого,
+                // сразу обрезаем выбор до текущего лимита и выравниваем подсветку.
+                enforceItemChoiceLimit(null, false);
             }
+
+            syncItemChoiceCards();
         });
     }
 
