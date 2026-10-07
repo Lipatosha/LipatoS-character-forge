@@ -16029,3 +16029,478 @@ body.originate-active .character-forge-item-sheet-front {
 .spell-results-list .spell-card {
     overscroll-behavior: auto;
 }
+
+
+/* ============================================================
+   Character Forge 1.3.77 — actor spellbook and feature book
+   ============================================================ */
+
+.character-forge-book-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 100090 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    padding: 16px !important;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .08), transparent 34%),
+        rgba(3, 3, 5, .965) !important;
+    backdrop-filter: blur(4px);
+    overflow: hidden !important;
+    color: var(--originate-text-main, #e8dcc8);
+}
+
+.character-forge-book-shell {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    width: min(1720px, 100%);
+    height: 100%;
+    min-height: 0;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .42);
+    border-radius: 9px;
+    background: rgba(6, 6, 9, .97);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .82);
+}
+
+.character-forge-book-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 72px;
+    padding: 10px 18px;
+    border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .25);
+    background: linear-gradient(180deg, rgba(30, 26, 20, .72), rgba(10, 10, 13, .86));
+}
+
+.character-forge-book-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.character-forge-book-heading > i {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .45);
+    border-radius: 50%;
+    color: var(--originate-accent, #c8a35f);
+    background: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .07);
+    font-size: 20px;
+}
+
+.character-forge-book-heading h2 {
+    margin: 0;
+    color: var(--originate-accent, #c8a35f);
+    font-family: var(--originate-font-display, "Cinzel"), serif;
+    font-size: 1.5rem;
+    letter-spacing: .035em;
+}
+
+.character-forge-book-actor {
+    margin-top: 2px;
+    color: rgba(232, 220, 200, .66);
+    font-size: .8rem;
+}
+
+.character-forge-book-close {
+    width: 38px;
+    height: 38px;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid rgba(255, 255, 255, .12) !important;
+    border-radius: 5px !important;
+    background: rgba(255, 255, 255, .035) !important;
+    color: #ddd !important;
+    cursor: pointer;
+}
+
+.character-forge-book-close:hover {
+    border-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .55) !important;
+    color: var(--originate-accent, #c8a35f) !important;
+}
+
+.character-forge-book-slots {
+    padding: 9px 14px 11px;
+    border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .18);
+    background: rgba(255, 255, 255, .018);
+}
+
+.character-forge-book-section-title {
+    margin-bottom: 7px;
+    color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .82);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.character-forge-book-section-title i {
+    margin-right: 5px;
+}
+
+.character-forge-book-slot-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.character-forge-book-slot {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    gap: 2px 9px;
+    min-width: 126px;
+    padding: 7px 9px;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .24);
+    border-radius: 5px;
+    background: rgba(20, 20, 25, .82);
+}
+
+.character-forge-book-slot-label {
+    color: #ddd;
+    font-size: .76rem;
+    font-weight: 600;
+}
+
+.character-forge-book-slot-count {
+    justify-self: end;
+    color: var(--originate-accent, #c8a35f);
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.character-forge-book-slot-pips {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 4px;
+    padding-top: 2px;
+}
+
+.character-forge-book-slot-pips span {
+    width: 7px;
+    height: 7px;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .55);
+    border-radius: 50%;
+    background: transparent;
+}
+
+.character-forge-book-slot-pips span.available {
+    background: var(--originate-accent, #c8a35f);
+    box-shadow: 0 0 6px rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .3);
+}
+
+.character-forge-book-slot-pips span.spent {
+    opacity: .36;
+}
+
+.character-forge-book-slots-empty {
+    color: rgba(255, 255, 255, .45);
+    font-size: .8rem;
+}
+
+.character-forge-book-body {
+    display: grid;
+    grid-template-columns: 255px minmax(0, 1fr);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.character-forge-book-sidebar {
+    min-width: 0;
+    padding: 12px;
+    overflow-y: auto;
+    border-right: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .2);
+    background: linear-gradient(180deg, rgba(24, 24, 29, .92), rgba(12, 12, 16, .95));
+}
+
+.character-forge-book-search {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 12px;
+    padding: 0 8px;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .28);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, .28);
+}
+
+.character-forge-book-search i {
+    color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .58);
+    font-size: .82rem;
+}
+
+.character-forge-book-search input {
+    width: 100%;
+    height: 36px !important;
+    padding: 0 4px !important;
+    border: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    color: #ddd !important;
+    box-shadow: none !important;
+}
+
+.character-forge-book-filter-group {
+    margin-bottom: 13px;
+}
+
+.character-forge-book-filter-label {
+    margin-bottom: 6px;
+    color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .76);
+    font-size: .71rem;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.character-forge-book-filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.character-forge-book-filter-buttons button {
+    min-width: 0 !important;
+    width: auto !important;
+    height: 29px !important;
+    margin: 0 !important;
+    padding: 0 8px !important;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .22) !important;
+    border-radius: 4px !important;
+    background: rgba(45, 45, 54, .76) !important;
+    color: rgba(232, 220, 200, .72) !important;
+    font-size: .71rem !important;
+    line-height: 1 !important;
+    cursor: pointer;
+}
+
+.character-forge-book-filter-buttons button:hover,
+.character-forge-book-filter-buttons button.active {
+    border-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .65) !important;
+    background: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .14) !important;
+    color: var(--originate-accent, #c8a35f) !important;
+}
+
+.character-forge-book-main {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+    padding: 11px 13px 13px;
+    overflow: hidden;
+}
+
+.character-forge-book-main-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 34px;
+    padding: 0 3px 8px;
+    color: rgba(232, 220, 200, .66);
+    font-size: .76rem;
+}
+
+.character-forge-book-main-head > div:first-child {
+    color: var(--originate-accent, #c8a35f);
+    font-weight: 700;
+    letter-spacing: .03em;
+}
+
+.character-forge-book-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: min-content;
+    align-content: start;
+    gap: 8px;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 5px 8px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .45) transparent;
+}
+
+.character-forge-book-card {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) 20px;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    min-height: 82px;
+    padding: 8px 9px;
+    border: 1px solid rgba(90, 90, 105, .55);
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(34, 34, 41, .84), rgba(22, 22, 28, .93));
+    overflow: hidden;
+    cursor: default;
+    transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.character-forge-book-card:hover {
+    border-color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .55);
+    background: linear-gradient(135deg, rgba(48, 44, 35, .82), rgba(24, 23, 27, .95));
+    transform: translateY(-1px);
+}
+
+.character-forge-book-card.is-owned {
+    border-color: rgba(96, 172, 103, .44);
+}
+
+.character-forge-book-card.is-prepared {
+    box-shadow: inset 3px 0 0 rgba(102, 206, 113, .72);
+}
+
+.character-forge-book-card[hidden] {
+    display: none !important;
+}
+
+.character-forge-book-card > img {
+    width: 54px !important;
+    height: 54px !important;
+    min-width: 54px;
+    min-height: 54px;
+    margin: 0 !important;
+    border: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .28) !important;
+    border-radius: 5px !important;
+    background: #111;
+    object-fit: cover;
+}
+
+.character-forge-book-card-main {
+    min-width: 0;
+}
+
+.character-forge-book-card-name {
+    overflow: hidden;
+    color: #e7e2da;
+    font-size: .9rem;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.character-forge-book-card-meta {
+    margin-top: 3px;
+    overflow: hidden;
+    color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .7);
+    font-size: .69rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.character-forge-book-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 5px;
+}
+
+.character-forge-book-card-badges span {
+    max-width: 100%;
+    padding: 2px 5px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .035);
+    color: rgba(232, 220, 200, .61);
+    font-size: .61rem;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.character-forge-book-card.is-owned .character-forge-book-card-badges span:first-child {
+    border-color: rgba(96, 172, 103, .26);
+    color: #a7d7aa;
+}
+
+.character-forge-book-card-state {
+    justify-self: end;
+    color: rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .7);
+    font-size: .82rem;
+}
+
+.character-forge-book-card.is-owned .character-forge-book-card-state {
+    color: #78be7d;
+}
+
+.character-forge-book-empty,
+.character-forge-book-loading,
+.character-forge-book-error {
+    color: rgba(232, 220, 200, .62);
+}
+
+.character-forge-book-empty {
+    grid-column: 1 / -1;
+    padding: 38px;
+    text-align: center;
+}
+
+.character-forge-book-loading,
+.character-forge-book-error {
+    margin: auto;
+    text-align: center;
+}
+
+.character-forge-book-loading i,
+.character-forge-book-error > i {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--originate-accent, #c8a35f);
+    font-size: 28px;
+}
+
+.character-forge-book-error button {
+    margin-top: 14px !important;
+}
+
+/* Двойной клик по уже полученной записи открывает её обычный лист. */
+.character-forge-book-card[data-owned="true"] {
+    cursor: pointer;
+}
+
+@media (max-width: 1380px) {
+    .character-forge-book-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1050px) {
+    .character-forge-book-overlay {
+        padding: 8px !important;
+    }
+
+    .character-forge-book-body {
+        grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .character-forge-book-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .character-forge-book-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .character-forge-book-sidebar {
+        max-height: 205px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(var(--originate-theme-accent-rgb, 200, 163, 95), .2);
+    }
+
+    .character-forge-book-grid {
+        grid-template-columns: 1fr;
+    }
+}
