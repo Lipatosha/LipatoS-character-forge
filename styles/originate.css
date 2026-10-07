@@ -17283,3 +17283,51 @@ body.originate-active .character-forge-item-sheet-front {
         column-gap: 0 !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.82 — section headings and persistent selection
+   ============================================================ */
+
+/* Заголовки разделов класса / расы / предыстории в 2 раза крупнее. */
+.view-selection-root.step-class .class-nav-heading,
+.view-selection-root.step-race .race-nav-heading,
+.view-selection-root.step-background .background-nav-heading {
+    font-size: 1.56rem !important;
+    line-height: 1.15 !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 6px !important;
+    text-align: center !important;
+}
+
+/* Выбранные класс и раса должны сохранять тот же визуальный эффект,
+   который виден при наведении мышью: цветная иконка и активное состояние. */
+.view-selection-root.step-class .class-nav-grid .nav-item.selected,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected {
+    background: transparent !important;
+    box-shadow: 0 0 0 1px var(--originate-accent, #c8a35f) !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-item.selected .nav-icon-wrapper,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected .nav-icon-wrapper {
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-item.selected .nav-icon,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected .nav-icon {
+    filter: grayscale(0%) brightness(1) !important;
+}
+
+.view-selection-root.step-class .class-nav-grid .nav-item.selected .nav-label,
+.view-selection-root.step-race .race-nav-grid .nav-item.selected .nav-label {
+    color: var(--originate-accent, #c8a35f) !important;
+    text-shadow: none !important;
+}
+
+/* Hover и selected используют одинаковую цветность иконки. */
+.view-selection-root.step-class .class-nav-grid .nav-item:hover .nav-icon,
+.view-selection-root.step-race .race-nav-grid .nav-item:hover .nav-icon {
+    filter: grayscale(0%) brightness(1) !important;
+}
