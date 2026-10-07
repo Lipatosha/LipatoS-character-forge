@@ -1,8 +1,13 @@
 const STYLE_ID = 'character-forge-runtime-style';
-const STYLE_HREF = 'modules/character-forge/styles/originate.css';
+const STYLE_PATH = 'modules/character-forge/styles/originate.css';
 
 const owners = new Set();
 let loadingPromise = null;
+
+function getStyleHref() {
+    const version = game.modules?.get('character-forge')?.version || 'dev';
+    return `${STYLE_PATH}?v=${encodeURIComponent(version)}`;
+}
 
 function ownerKey(owner) {
     if (!owner) return 'anonymous';
@@ -14,7 +19,17 @@ export async function acquireForgeStyles(owner) {
     const key = ownerKey(owner);
     owners.add(key);
 
+    const desiredHref = new URL(getStyleHref(), document.baseURI).href;
     let link = document.getElementById(STYLE_ID);
+
+    // После обновления модуля нельзя оставлять уже загруженный CSS старой версии.
+    // JS Foundry обновляет корректно, а статический stylesheet браузер мог держать в кеше.
+    if (link && link.href !== desiredHref) {
+        link.remove();
+        link = null;
+        loadingPromise = null;
+    }
+
     if (link?.sheet) return link;
     if (loadingPromise) return loadingPromise;
 
@@ -22,7 +37,7 @@ export async function acquireForgeStyles(owner) {
         link = document.createElement('link');
         link.id = STYLE_ID;
         link.rel = 'stylesheet';
-        link.href = STYLE_HREF;
+        link.href = desiredHref;
         document.head.appendChild(link);
     }
 
