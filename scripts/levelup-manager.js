@@ -4397,7 +4397,9 @@ export class LevelUpManager {
             return;
         }
 
-        const newValue = foundry.utils.deepClone(adv.value || {});
+        const newValue = adv.value?.toObject instanceof Function
+            ? adv.value.toObject()
+            : foundry.utils.deepClone(adv.value || {});
 
         // 根据 Advancement 类型更新
         if (adv.type === 'ItemGrant') {
@@ -4458,7 +4460,9 @@ export class LevelUpManager {
             return;
         }
 
-        const newValue = foundry.utils.deepClone(adv.value || {});
+        const newValue = adv.value?.toObject instanceof Function
+            ? adv.value.toObject()
+            : foundry.utils.deepClone(adv.value || {});
 
         if (adv.type === 'ItemChoice') {
             if (!newValue.replaced) newValue.replaced = {};
