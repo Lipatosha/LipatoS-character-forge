@@ -2,6 +2,7 @@ import { meetsLevelRequirement } from '../shared/feat-catalog.js';
 import { getToolsByCategory, getWeaponLabel, getWeaponMasteryOptions, getToolLabel, getWeaponMasteryInfo, normalizeToolId, normalizeAbilityKey, getClassPrimaryAbilityKey } from '../mapping.js';
 import { getThemeClassList } from '../theme-registry.js';
 import { cleanDescription, processHtmlDescription, bindTooltips, updateTooltipPosition, traverseLanguageTree, findLanguageLabel, expandWildcardPool, getTraitLabel } from '../shared/progression-renderer.js';
+import { closeAllForgeTooltips } from '../shared/tooltip-lifecycle.js';
 import {
     applySpellConfigToItemData,
     collectWeaponProficiencyKeys,
@@ -1639,6 +1640,10 @@ export const UIMixin = (Base) => class extends Base {
 
 
     _bindTooltips(overlay) {
+        // Если экран уже перерисовался, старый tooltip находится в document.body
+        // и сам по себе не исчезает вместе с карточкой. Перед новой привязкой
+        // всегда закрываем старые окна.
+        closeAllForgeTooltips();
         return bindTooltips(overlay, this.dataManager);
     }
 
