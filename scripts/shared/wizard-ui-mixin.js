@@ -2117,6 +2117,24 @@ export class WizardUIMixin {
                 const replacementToggle = section.querySelector('.enable-replacement');
                 const replacementSelection = section.querySelector('.replacement-selection');
 
+                section.querySelectorAll('.item-choices-list .option-card').forEach(card => {
+                    const cb = card.querySelector('input[type="checkbox"]');
+                    if (!cb || card.dataset.characterForgeItemClickBound === 'true') return;
+                    card.dataset.characterForgeItemClickBound = 'true';
+
+                    card.addEventListener('click', event => {
+                        if (event.button !== undefined && event.button !== 0) return;
+                        if (event.target.closest('a, button, select, textarea')) return;
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        cb.checked = !cb.checked;
+                        cb.dispatchEvent(new Event('change', { bubbles: true }));
+                        card.classList.toggle('selected', cb.checked);
+                    });
+                });
+
                 if (replacementToggle) {
                     replacementToggle.addEventListener('change', () => {
                         if (replacementSelection) replacementSelection.style.display = replacementToggle.checked ? 'block' : 'none';
