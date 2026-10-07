@@ -669,7 +669,9 @@ export const ProgressionMixin = (Base) => {
 
             // 尝试从职业选项中获取
             const classOptions = await this.dataManager.getOptions('class');
-            const selectedClass = classOptions.find(o => o.id === this.context.class);
+            const selectedClass = classOptions.find(o => this.context.classUuid && o.uuid === this.context.classUuid)
+                || classOptions.find(o => this.context.classIdentifier && o.identifier === this.context.classIdentifier)
+                || classOptions.find(o => o.id === this.context.class);
             if (selectedClass && selectedClass.subclassLevel !== undefined) {
                 subclassLevel = selectedClass.subclassLevel;
             }
@@ -1720,7 +1722,9 @@ export const ProgressionMixin = (Base) => {
                 // 检查是否需要触发子职选择
                 // 获取子职选取等级
                 const classOptions = await this.dataManager.getOptions('class');
-                const selectedClass = classOptions.find(o => o.id === this.context.class);
+                const selectedClass = classOptions.find(o => this.context.classUuid && o.uuid === this.context.classUuid)
+                || classOptions.find(o => this.context.classIdentifier && o.identifier === this.context.classIdentifier)
+                || classOptions.find(o => o.id === this.context.class);
                 const subclassLevel = selectedClass?.subclassLevel ?? 3;
 
                 // 如果当前等级 >= 子职获得等级，且尚未选择子职
@@ -2971,35 +2975,53 @@ export const ProgressionMixin = (Base) => {
 
                     // 进入子职详情和确认界面
                     await this._renderSubInterfaceForProgression(selectedSubclassOption, level, async () => {
-                        // 子职选择完成后的回调
-                        // 1. 记录子职选择
+                        // Подкласс уже записан _onFinishWizard() из ТОЧНО выбранного UUID.
+                        // Здесь только закрепляем идентичность выбора и проверяем, что в blueprint
+                        // не осталось другого root-subclass из старого рендера/коллизии _id.
                         this.context.subclass = selectedSubclassOption.id;
+                        this.context.subclassUuid = selectedSubclassOption.uuid;
                         this.context.subclassName = selectedSubclassOption.name;
                         this.context.subclassIdentifier = selectedSubclassOption.identifier || this.context.subclassIdentifier || null;
 
-                        // 2. 将子职 Item 添加到 blueprint
-                        const doc = await this.dataManager.getDocument(selectedSubclassOption.uuid);
-                        if (doc) {
-                            const itemData = doc.toObject();
-                            itemData.uuid = selectedSubclassOption.uuid; // Adrian: 修复 UUID 缺失
-                            // 设置 classIdentifier
-                            const classOptions = await this.dataManager.getOptions('class');
-                            const selectedClass = classOptions.find(o => o.id === this.context.class);
-                            if (selectedClass) {
-                                foundry.utils.setProperty(itemData, "system.classIdentifier", selectedClass.identifier);
-                            }
-                            this.context.subclassIdentifier = this.context.subclassIdentifier || itemData.system?.identifier || selectedSubclassOption.name;
-                            this._stampCharacterFinalizeItemMeta(itemData, {
-                                sourceUuid: selectedSubclassOption.uuid,
-                                level,
-                                stepType: 'subclass',
-                                isSubclass: true
-                            });
+                        const selectedSourceKey = String(selectedSubclassOption.uuid || '').replace('.Item.', '.');
+                        const subclassItems = this.blueprintData.subclass?.items || [];
+                        let exactRoot = subclassItems.find(item => {
+                            if (item?.type !== 'subclass') return false;
+                            const source = resolveItemSourceUuid(item) || item._sourceUuid || item.uuid || '';
+                            return String(source).replace('.Item.', '.') === selectedSourceKey;
+                        });
 
-                            this.blueprintData.subclass.items.push(itemData);
+                        if (!exactRoot) {
+                            const doc = await this.dataManager.getDocument(selectedSubclassOption.uuid);
+                            if (doc?.type === 'subclass') {
+                                exactRoot = doc.toObject();
+                                exactRoot.uuid = selectedSubclassOption.uuid;
+                                stampSourceTracking(exactRoot, selectedSubclassOption.uuid);
+                                this._stampCharacterFinalizeItemMeta(exactRoot, {
+                                    sourceUuid: selectedSubclassOption.uuid,
+                                    level,
+                                    stepType: 'subclass',
+                                    isSubclass: true
+                                });
+                            }
                         }
 
-                        // 3. 继续加载当前等级的其他特性
+                        if (exactRoot) {
+                            if (this.context.classIdentifier) {
+                                foundry.utils.setProperty(exactRoot, 'system.classIdentifier', this.context.classIdentifier);
+                            }
+                            this.context.subclassIdentifier = exactRoot.system?.identifier
+                                || selectedSubclassOption.identifier
+                                || this.context.subclassIdentifier
+                                || null;
+
+                            this.blueprintData.subclass.items = [
+                                ...subclassItems.filter(item => item?.type !== 'subclass'),
+                                exactRoot
+                            ];
+                        }
+
+                        // 3. 继续加载 текущего уровня
                         await this._loadLevelFeatures(level);
                     });
                 });
@@ -3018,7 +3040,9 @@ export const ProgressionMixin = (Base) => {
 
             // 清理上下文中的子职选择
             this.context.subclass = null;
+            this.context.subclassUuid = null;
             this.context.subclassName = null;
+            this.context.subclassIdentifier = null;
 
             // 清理蓝图中的子职数据
             // Adrian: 这是关键，不清这个的话，之前选的子职特性还会被带到最终角色里
@@ -3039,7 +3063,9 @@ export const ProgressionMixin = (Base) => {
             // 获取子职获得等级
             let subclassLevel = 3;
             const classOptions = await this.dataManager.getOptions('class');
-            const selectedClass = classOptions.find(o => o.id === this.context.class);
+            const selectedClass = classOptions.find(o => this.context.classUuid && o.uuid === this.context.classUuid)
+                || classOptions.find(o => this.context.classIdentifier && o.identifier === this.context.classIdentifier)
+                || classOptions.find(o => o.id === this.context.class);
             if (selectedClass && selectedClass.subclassLevel !== undefined) {
                 subclassLevel = selectedClass.subclassLevel;
             }
@@ -3676,7 +3702,31 @@ export const ProgressionMixin = (Base) => {
         }
 
         _getCharacterFinalizeSubclassItem(finalBlueprint) {
-            return finalBlueprint.items.find(item => item?.type === 'subclass') || null;
+            const subclasses = finalBlueprint.items.filter(item => item?.type === 'subclass');
+            if (!subclasses.length) return null;
+
+            const selectedUuid = String(this.context.subclassUuid || '').replace('.Item.', '.');
+            if (selectedUuid) {
+                const exact = subclasses.find(item => {
+                    const source = this._getFinalBlueprintSourceUuid(item);
+                    return String(source || '').replace('.Item.', '.') === selectedUuid;
+                });
+                if (exact) return exact;
+            }
+
+            if (this.context.subclassIdentifier) {
+                const byIdentifier = subclasses.find(item =>
+                    item.system?.identifier === this.context.subclassIdentifier
+                );
+                if (byIdentifier) return byIdentifier;
+            }
+
+            if (this.context.subclassName) {
+                const byName = subclasses.find(item => item.name === this.context.subclassName);
+                if (byName) return byName;
+            }
+
+            return subclasses[0];
         }
 
         _getNativeSubclassAdvancementId(classItem) {
@@ -3791,7 +3841,7 @@ export const ProgressionMixin = (Base) => {
                     classIdentifier: this.context.classIdentifier || classItem?.system?.identifier || null,
                     subclassIdentifier: this.context.subclassIdentifier || subclassItem?.system?.identifier || null,
                     classUuid,
-                    subclassUuid,
+                    subclassUuid: this.context.subclassUuid || subclassUuid,
                     lockedLevel: this.characterLevel || 1
                 },
                 scaffold: {
