@@ -14701,3 +14701,228 @@ body.originate-active .character-forge-item-sheet-front {
         font-size: .54rem !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.66 — изолированная сетка подклассов
+   ============================================================ */
+
+/* Этот блок не использует cinematic-nav/nav-track/nav-item вообще,
+   поэтому старые стили выбора класса больше не могут его сжать. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-panel {
+    position: absolute !important;
+    top: 8.5rem !important;
+    right: 24px !important;
+    bottom: 2rem !important;
+    left: 24px !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    z-index: 4 !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-auto-rows: 82px !important;
+    align-content: start !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 8px 6px !important;
+    column-gap: 10px !important;
+    row-gap: 8px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(var(--originate-theme-accent-rgb, 200,163,95), .42) transparent !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-grid::-webkit-scrollbar {
+    width: 5px !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-grid::-webkit-scrollbar-thumb {
+    background: rgba(var(--originate-theme-accent-rgb, 200,163,95), .42) !important;
+    border-radius: 4px !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card {
+    box-sizing: border-box !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    display: grid !important;
+    grid-template-rows: 40px 1fr !important;
+    align-content: start !important;
+    align-items: start !important;
+    justify-items: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 82px !important;
+    min-height: 82px !important;
+    max-height: 82px !important;
+    margin: 0 !important;
+    padding: 4px 4px 3px !important;
+    gap: 3px !important;
+    overflow: hidden !important;
+    color: rgba(205,205,205,.78) !important;
+    background: rgba(255,255,255,.015) !important;
+    border: 1px solid rgba(255,255,255,.06) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    font: inherit !important;
+    line-height: 1 !important;
+    text-transform: none !important;
+    cursor: pointer !important;
+    transition: border-color .16s ease, background .16s ease, transform .16s ease !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card:hover,
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card:focus-visible {
+    transform: translateY(-1px) !important;
+    background: rgba(var(--originate-theme-accent-rgb, 200,163,95), .045) !important;
+    border-color: rgba(var(--originate-theme-accent-rgb, 200,163,95), .35) !important;
+    outline: none !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected {
+    transform: none !important;
+    background: rgba(var(--originate-theme-accent-rgb, 200,163,95), .075) !important;
+    border-color: rgba(var(--originate-theme-accent-rgb, 200,163,95), .65) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-icon-wrap {
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid transparent !important;
+    border-radius: 4px !important;
+    background: rgba(0,0,0,.35) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected .subclass-choice-icon-wrap {
+    border-color: var(--originate-accent) !important;
+    box-shadow: 0 0 10px rgba(var(--originate-theme-accent-rgb, 200,163,95), .35) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-icon {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    filter: grayscale(100%) brightness(.72) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card:hover .subclass-choice-icon,
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected .subclass-choice-icon {
+    filter: grayscale(0%) brightness(1) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-label {
+    box-sizing: border-box !important;
+    display: -webkit-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 2.2em !important;
+    min-height: 2.2em !important;
+    max-height: 2.2em !important;
+    margin: 0 !important;
+    padding: 0 2px !important;
+    overflow: hidden !important;
+    color: inherit !important;
+    font-family: inherit !important;
+    font-size: .62rem !important;
+    font-weight: 400 !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0 !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    text-align: center !important;
+    text-overflow: ellipsis !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-card.selected .subclass-choice-label {
+    color: var(--originate-accent) !important;
+}
+
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-empty {
+    grid-column: 1 / -1 !important;
+    margin: 1rem !important;
+    color: rgba(220,220,220,.65) !important;
+    text-align: center !important;
+}
+
+@media (max-width: 1400px), (max-height: 760px) {
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-panel {
+        top: 7rem !important;
+        right: 16px !important;
+        bottom: 1.25rem !important;
+        left: 16px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        grid-auto-rows: 72px !important;
+        column-gap: 6px !important;
+        row-gap: 5px !important;
+        padding: 4px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-card {
+        grid-template-rows: 34px 1fr !important;
+        height: 72px !important;
+        min-height: 72px !important;
+        max-height: 72px !important;
+        padding: 3px 2px 2px !important;
+        gap: 2px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-icon-wrap {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+        max-width: 34px !important;
+        max-height: 34px !important;
+    }
+
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-label {
+        font-size: .55rem !important;
+    }
+}
