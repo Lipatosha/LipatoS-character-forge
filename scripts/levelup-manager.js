@@ -2963,18 +2963,20 @@ export class LevelUpManager {
             const sourceUuid = this._normalizeResolutionSourceUuid(pending.itemData);
 
             if (pending?.itemData?.type === 'subclass' && pending.isSubclass && sourceUuid) {
-                // Нативному SubclassAdvancement нужен реальный UUID для fromUuid(), а не
-                // сокращённый ключ, который Character Forge использует только для сравнений.
-                const nativeSourceUuid = resolveItemSourceUuid(pending.itemData)
-                    || pending.itemData?._sourceUuid
-                    || pending.itemData?.uuid
-                    || sourceUuid;
-                nativeSubclassSelection = {
-                    level: pending.level ?? normalizedInput.level,
-                    stepType: pending.stepType || 'class',
-                    sourceUuid: nativeSourceUuid,
-                    entry: foundry.utils.deepClone(pending)
-                };
+                // Подкласс всегда создаём из ТОЧНО выбранного Item вручную.
+                // Некоторые сторонние классы содержат повреждённое/скопированное
+                // SubclassAdvancement.value, из-за чего native apply() способен
+                // привязать другой подкласс (например Assassin вместо Witch Doctor).
+                // После создания мы отдельно записываем правильные document+uuid
+                // в Subclass advancement, поэтому системная связь D&D5e сохраняется.
+                const exactPending = foundry.utils.deepClone(pending);
+                const classIdentifier = normalizedInput.context?.classIdentifier
+                    || this._getResolutionClassIdentifier(this.actor, normalizedInput.context)
+                    || null;
+                if (classIdentifier) {
+                    foundry.utils.setProperty(exactPending.itemData, 'system.classIdentifier', classIdentifier);
+                }
+                manualInput.itemChanges.pendingItems.push(exactPending);
                 continue;
             }
 
@@ -3893,7 +3895,24 @@ export class LevelUpManager {
         const resolvedItems = [];
 
         for (const group of groupedItems) {
-            const createdOrUpdated = await this.addItems(group.itemsData, group.advancementId, group.level, {
+            let itemsData = group.itemsData;
+
+            if (group.isSubclass) {
+                const classIdentifier = this.classItem?.system?.identifier
+                    || this._getResolutionClassIdentifier(this.actor, {})
+                    || group.sourceClass
+                    || null;
+
+                itemsData = group.itemsData.map(itemData => {
+                    const exact = foundry.utils.deepClone(itemData);
+                    if (classIdentifier) {
+                        foundry.utils.setProperty(exact, 'system.classIdentifier', classIdentifier);
+                    }
+                    return exact;
+                });
+            }
+
+            const createdOrUpdated = await this.addItems(itemsData, group.advancementId, group.level, {
                 stepType: group.stepType,
                 sourceClass: group.sourceClass
             });
@@ -4205,6 +4224,20 @@ export class LevelUpManager {
                 if (sourceUuid) {
                     newValue.added[level][item.id] = sourceUuid;
                 }
+            }
+        } else if (adv.type === 'Subclass') {
+            const subclassItem = createdItems.find(item => item?.type === 'subclass') || createdItems[0];
+            const sourceUuid = subclassItem
+                ? (resolveItemSourceUuid(subclassItem)
+                    || resolveAdvancementItemSourceUuid(subclassItem)
+                    || subclassItem.flags?.['hero-genesis']?.sourceUuid
+                    || subclassItem.flags?.originate?.sourceUuid
+                    || null)
+                : null;
+
+            if (subclassItem && sourceUuid) {
+                newValue.document = subclassItem.id;
+                newValue.uuid = sourceUuid;
             }
         }
 
