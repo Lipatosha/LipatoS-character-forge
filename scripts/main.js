@@ -8,6 +8,7 @@ import { hasOriginateActorMarkers, resolveItemSourceUuid } from './shared/resolu
 import { registerTheme as registerOriginateTheme } from './theme-registry.js';
 import { acquireForgeStyles, forceUnloadForgeStyles } from './runtime-style.js';
 import { injectActorBookButtons, refreshOpenActorBook } from './actor-books.js';
+import { installForgeTooltipLifecycle } from './shared/tooltip-lifecycle.js';
 import {
     applyCreationGrantSelection,
     applyLevelUpGrantSelection,
@@ -276,6 +277,7 @@ async function migrateLaaruSourcePackSelections() {
 }
 
 Hooks.once('init', () => {
+    installForgeTooltipLifecycle();
     forceUnloadForgeStyles();
     window.OriginateLog('Originate | 正在初始化角色创建器模块... 希望这次别炸。');
     registerSettings();
