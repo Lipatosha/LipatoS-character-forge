@@ -3943,13 +3943,20 @@ export class LevelUpManager {
                 }
             }
 
+            const subclassAdvancement = group.isSubclass
+                ? this.classItem?.advancement?.byType?.Subclass?.[0]
+                : null;
+            const effectiveAdvancementId = group.isSubclass
+                ? (subclassAdvancement?.id || subclassAdvancement?._id || group.advancementId)
+                : group.advancementId;
+
             let createdOrUpdated;
             if (group.isSubclass && existingExactSubclass) {
                 createdOrUpdated = [existingExactSubclass];
-                await this._updateAdvancementValue(group.advancementId, createdOrUpdated, group.stepType);
+                await this._updateAdvancementValue(effectiveAdvancementId, createdOrUpdated, 'class');
             } else {
-                createdOrUpdated = await this.addItems(itemsData, group.advancementId, group.level, {
-                    stepType: group.stepType,
+                createdOrUpdated = await this.addItems(itemsData, effectiveAdvancementId, group.level, {
+                    stepType: group.isSubclass ? 'class' : group.stepType,
                     sourceClass: group.sourceClass
                 });
             }
