@@ -192,10 +192,11 @@ export const NavigationMixin = (Base) => class extends Base {
 
     async _onSelectOption(event, target) {
         const id = target.dataset.id;
-        await this._selectOptionById(id);
+        const uuid = target.dataset.uuid || null;
+        await this._selectOptionById(id, uuid);
     }
 
-    async _selectOptionById(id) {
+    async _selectOptionById(id, uuid = null) {
         const type = this.currentStep;
         const previousId = this.context[type];
         this._syncLeftDrawerStateFromDom();
@@ -209,7 +210,8 @@ export const NavigationMixin = (Base) => class extends Base {
         }
 
         const options = await this.dataManager.getOptions(type, this.context, this._currentFolder);
-        const option = options.find(o => o.id === id);
+        const option = (uuid ? options.find(o => o.uuid === uuid) : null)
+            || options.find(o => o.id === id);
 
         if (!option) return;
 
@@ -220,8 +222,10 @@ export const NavigationMixin = (Base) => class extends Base {
             this._scrollTop = 0;
             this.render();
         } else {
-            // 选中选项
-            this.context[type] = id;
+            // 选中选项. _id внутри разных compendium может совпадать,
+            // поэтому UUID хранится как главный идентификатор выбора.
+            this.context[type] = option.id || id;
+            if (option.uuid) this.context[`${type}Uuid`] = option.uuid;
             const displayName = type === 'background'
                 ? String(option.displayName || option.name || '')
                     .replace(/\s*\(([A-Z0-9][A-Z0-9&+.'’\- ]{1,24})\)\s*$/u, '')
@@ -361,6 +365,7 @@ export const NavigationMixin = (Base) => class extends Base {
         }
 
         const currentSelectedId = this.context[type];
+        const currentSelectedUuid = this.context[`${type}Uuid`] || null;
         const allLabel = game.i18n.localize('ORIGINATE.UI.GridSelector.All');
         const searchPlaceholder = game.i18n.localize('ORIGINATE.UI.GridSelector.Search');
 
@@ -376,11 +381,13 @@ export const NavigationMixin = (Base) => class extends Base {
         let cardsHtml = '';
         for (const opt of nonFolderOptions) {
             const optSource = this._extractSourceId(opt);
-            const isSelected = opt.id === currentSelectedId;
+            const isSelected = currentSelectedUuid
+                ? opt.uuid === currentSelectedUuid
+                : opt.id === currentSelectedId;
             const localizedName = game.i18n.has(opt.name) ? game.i18n.localize(opt.name) : opt.name;
             cardsHtml += `
                 <div class="grid-selector-card ${isSelected ? 'selected' : ''}" 
-                     data-id="${opt.id}" data-source="${optSource}" data-name="${localizedName.toLowerCase()}">
+                     data-id="${opt.id}" data-uuid="${opt.uuid || ''}" data-source="${optSource}" data-name="${localizedName.toLowerCase()}">
                     <div class="grid-card-icon">
                         ${opt.img ? `<img src="${opt.img}" alt="">` : `<i class="fas fa-question"></i>`}
                     </div>
@@ -505,10 +512,11 @@ export const NavigationMixin = (Base) => class extends Base {
         drawer.querySelectorAll('.grid-selector-card').forEach(card => {
             card.addEventListener('click', async () => {
                 const id = card.dataset.id;
+                const uuid = card.dataset.uuid || null;
                 drawer.querySelectorAll('.grid-selector-card').forEach(c => c.classList.remove('selected'));
                 card.classList.add('selected');
                 this._gridSelectorKeepOpen = true;
-                await this._selectOptionById(id);
+                await this._selectOptionById(id, uuid);
             });
         });
 
