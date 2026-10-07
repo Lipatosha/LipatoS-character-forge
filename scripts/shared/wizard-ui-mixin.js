@@ -1194,7 +1194,7 @@ export class WizardUIMixin {
              data-adv-id="${advId}"
              data-step-type="${step.stepType}"
              data-restriction-level="${restrictedLevel}"
-             data-class-lists="${classIds.join(',')}"
+             data-class-lists="${classIds.join('|')}"
              data-max-spell-level="${maxSpellLevel ?? ''}">
             ${spellSchoolHint(restriction) ? `<p class="selection-hint">${spellSchoolHint(restriction)}</p>` : ''}
             <p data-school-error role="alert" hidden>${game.i18n.localize('ORIGINATE.UI.Progression.InvalidSpellSchool')}</p>
@@ -2216,7 +2216,9 @@ export class WizardUIMixin {
         const restrictedLevel = section.dataset.restrictionLevel;
 
         let restriction = foundry.utils.deepClone(getSpellRestriction(step.event || step) || {});
-        const fixedClassIds = normalizeSpellListIds(section.dataset.classLists)
+        const fixedClassIds = normalizeSpellListIds(
+            String(section.dataset.classLists || '').split('|').filter(Boolean)
+        )
             .concat(this._getSpellChoiceClassIds(step, restriction))
             .filter(Boolean);
         const uniqueClassIds = Array.from(new Set(fixedClassIds));
@@ -2326,13 +2328,6 @@ export class WizardUIMixin {
 
         const bindCardEvents = () => {
             resultsList.querySelectorAll('.spell-card').forEach(card => {
-                card.addEventListener('dragstart', (ev) => {
-                    ev.dataTransfer.setData("text/plain", JSON.stringify({
-                        uuid: card.dataset.uuid,
-                        type: "Item"
-                    }));
-                });
-
                 card.addEventListener('click', () => addSelection(card.dataset.uuid));
 
                 // Описание заклинания обрабатывается общим tooltip-механизмом по data-uuid.
@@ -2459,22 +2454,7 @@ export class WizardUIMixin {
         saveDraft();
         refreshResults();
 
-        // 拖放支持
-        section.addEventListener('dragover', (ev) => ev.preventDefault());
-        section.addEventListener('drop', async (ev) => {
-            ev.preventDefault();
-            let data;
-            try {
-                data = JSON.parse(ev.dataTransfer.getData("text/plain"));
-            } catch (e) { return; }
 
-            if (data && data.uuid) {
-                const item = await fromUuid(data.uuid);
-                if (item && item.type === 'spell') {
-                    addSelection(data.uuid);
-                }
-            }
-        });
     }
 
     _generateSpellCards(spells) {
@@ -2499,7 +2479,7 @@ export class WizardUIMixin {
             }
 
             return `
-        <div class="spell-card${spell._owned ? ' owned-spell' : ''}" data-uuid="${spell.uuid}" draggable="true">
+        <div class="spell-card${spell._owned ? ' owned-spell' : ''}" data-uuid="${spell.uuid}">
             <img src="${spell.img}" class="spell-icon">
             <div class="spell-info">
                 <div class="spell-name" title="${spell.name}">${spell.name}</div>
