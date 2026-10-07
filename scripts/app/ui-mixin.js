@@ -3692,122 +3692,19 @@ export const UIMixin = (Base) => class extends Base {
             }
         };
 
-        // 绑定卡片事件
+        // Карточки выбираются кликом, а описание полностью отдаём общему tooltip-рендереру.
+        // Он использует Foundry TextEditor.enrichHTML, поэтому inline-roll и команды D&D5e
+        // не превращаются в сырой текст вида "/damage ...".
         const bindCardEvents = () => {
             resultsList.querySelectorAll('.spell-card').forEach(card => {
                 card.addEventListener('click', () => {
                     addSelection(card.dataset.uuid);
                 });
-
-                // 悬停预览 - 使用自定义 tooltip 避免被容器裁剪
-                card.addEventListener('pointerenter', async (ev) => {
-                    const uuid = card.dataset.uuid;
-                    const spell = currentSpells.find(s => s.uuid === uuid);
-
-                    // 如果没有描述，尝试异步加载
-                    if (!spell.description) {
-                        try {
-                            const doc = await fromUuid(uuid);
-                            if (doc) spell.description = doc.system.description?.value || '';
-                        } catch (e) {
-                            console.warn(`Originate | Failed to load spell for tooltip: ${uuid}`, e);
-                        }
-                    }
-
-                    if (spell?.description) {
-                        const descText = this._processHtmlDescription(spell.description);
-
-                        // 获取或创建自定义 tooltip
-                        let tooltip = document.querySelector('.originate-spell-tooltip');
-                        if (!tooltip) {
-                            tooltip = document.createElement('div');
-                            tooltip.className = 'originate-spell-tooltip';
-                            Object.assign(tooltip.style, {
-                                position: 'fixed',
-                                zIndex: '100000',
-                                maxWidth: '450px',
-                                minWidth: '250px',
-                                width: 'auto',
-                                maxHeight: '350px',
-                                overflowY: 'auto',
-                                background: 'linear-gradient(135deg, rgba(20,18,15,0.97), rgba(35,30,25,0.97))',
-                                border: '1px solid rgba(200,163,95,0.4)',
-                                borderRadius: '6px',
-                                padding: '12px 14px',
-                                color: '#e8dcc8',
-                                boxShadow: '0 4px 20px rgba(0,0,0,0.6)',
-                                backdropFilter: 'blur(8px)',
-                                pointerEvents: 'auto',
-                                fontSize: '0.85rem',
-                                lineHeight: '1.6'
-                            });
-                            tooltip.addEventListener('mouseleave', () => {
-                                tooltip.style.display = 'none';
-                            });
-                            tooltip.addEventListener('wheel', (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                tooltip.scrollTop += e.deltaY;
-                            }, { passive: false });
-                            document.body.appendChild(tooltip);
-                        }
-
-                        tooltip.innerHTML = `
-                            <div style="font-weight:bold; color:#c8a35f; font-size:1rem; margin-bottom:0.4rem; border-bottom:1px solid rgba(200,163,95,0.3); padding-bottom:0.3rem;">${spell.name}</div>
-                            <div style="color:rgba(200,163,95,0.7); font-size:0.75rem; margin-bottom:0.6rem; font-style:italic;">${CONFIG.DND5E.spellLevels[spell.level] || ''} • ${CONFIG.DND5E.spellSchools[spell.school]?.label || ''}</div>
-                            <div style="word-wrap:break-word;">${descText}</div>
-                        `;
-
-                        // 定位 tooltip
-                        const rect = card.getBoundingClientRect();
-                        tooltip.style.display = 'block';
-                        tooltip.scrollTop = 0;
-
-                        // 获取 tooltip 实际尺寸
-                        const tooltipRect = tooltip.getBoundingClientRect();
-
-                        let left = rect.right + 12;
-                        let top = rect.top;
-
-                        // 右侧空间不够，放左侧
-                        if (left + tooltipRect.width > window.innerWidth - 10) {
-                            left = rect.left - tooltipRect.width - 12;
-                        }
-                        // 如果左侧也不够，居中显示
-                        if (left < 10) {
-                            left = Math.max(10, (window.innerWidth - tooltipRect.width) / 2);
-                        }
-                        // 底部边界检查
-                        if (top + tooltipRect.height > window.innerHeight - 10) {
-                            top = window.innerHeight - tooltipRect.height - 10;
-                        }
-                        if (top < 10) top = 10;
-
-                        tooltip.style.left = `${left}px`;
-                        tooltip.style.top = `${top}px`;
-                    }
-                });
-
-                card.addEventListener('wheel', (e) => {
-                    const tooltip = document.querySelector('.originate-spell-tooltip');
-                    if (tooltip && tooltip.style.display === 'block') {
-                        e.preventDefault();
-                        tooltip.scrollTop += e.deltaY;
-                    }
-                }, { passive: false });
-
-                card.addEventListener('pointerleave', (e) => {
-                    const tooltip = document.querySelector('.originate-spell-tooltip');
-                    if (tooltip) {
-                        const tooltipRect = tooltip.getBoundingClientRect();
-                        if (e.clientX >= tooltipRect.left && e.clientX <= tooltipRect.right &&
-                            e.clientY >= tooltipRect.top && e.clientY <= tooltipRect.bottom) {
-                            return;
-                        }
-                        tooltip.style.display = 'none';
-                    }
-                });
             });
+
+            // Важно: не перехватываем wheel на карточках. Колесо должно продолжать
+            // прокручивать список фокусов/заклинаний даже при открытой подсказке.
+            this._bindTooltips(resultsList);
         };
 
         // 添加到已选
