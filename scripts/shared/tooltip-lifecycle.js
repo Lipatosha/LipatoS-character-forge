@@ -82,13 +82,9 @@ export function installForgeTooltipLifecycle() {
             if (tooltip.style.display === 'none') return;
             if (tooltip.contains(event.target)) return;
 
-            const owner = getOwner(tooltip);
-            const clickedSource = owner?.contains(event.target)
-                && event.target.closest?.('[data-originate-tooltip], [data-originate-tooltip-html], [data-uuid]');
-            if (clickedSource) return;
-
             // Даже закреплённая подсказка закрывается обычным кликом вне неё.
-            // Так она не может остаться висеть поверх следующего экрана.
+            // Клик по другой карточке тоже закрывает старое окно, чтобы закреплённый
+            // tooltip не блокировал следующий hover/выбор.
             hideTooltip(tooltip);
         });
     }, true);
