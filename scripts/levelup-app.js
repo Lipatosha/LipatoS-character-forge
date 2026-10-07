@@ -2687,15 +2687,23 @@ export class LevelUpApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
         // 这里先把本级提交收成一份正式结构。
         // 后面真要切原生执行时，只改这一层，不用再回头从 UI 状态里东拼西凑。
+        const hasNewSubclassSelection = !!selectedSubclassContext.uuid;
         const levelResolutionInput = this.levelUpManager.createLevelResolutionInput({
             level: state.targetLevel,
             context: {
                 classItemId: this.levelUpManager.classItem?.id || null,
-                subclassItemId: this.levelUpManager.subclassItem?.id || null,
-                classIdentifier: this.levelUpManager.classItem?.system?.identifier || null,
-                subclassIdentifier: this.levelUpManager.subclassItem?.system?.identifier || selectedSubclassContext.identifier || null,
+                // Если подкласс выбран на ЭТОМ уровне, выбранный UUID/identifier всегда
+                // важнее уже лежащего на Actor subclassItem. Иначе повреждённый старый
+                // Subclass advancement (например Assassin у Шамана) перетирает выбор игрока.
+                subclassItemId: hasNewSubclassSelection ? null : (this.levelUpManager.subclassItem?.id || null),
+                classIdentifier: this.levelUpManager.classItem?.system?.identifier || selectedSubclassContext.classIdentifier || null,
+                subclassIdentifier: selectedSubclassContext.identifier
+                    || this.levelUpManager.subclassItem?.system?.identifier
+                    || null,
                 classUuid: this.levelUpManager.classUuid || null,
-                subclassUuid: this.levelUpManager.subclassUuid || selectedSubclassContext.uuid || null,
+                subclassUuid: selectedSubclassContext.uuid
+                    || this.levelUpManager.subclassUuid
+                    || null,
                 lockedLevel: state.targetLevel
             },
             hpGain: state.hpGain,
