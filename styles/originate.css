@@ -15742,3 +15742,176 @@ body.originate-active .character-forge-item-sheet-front {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.75 — фокусы используют тот же браузер, что и заклинания
+   ============================================================ */
+
+/* В старом мастере выбора (originate-sub-interface) больше не показываем
+   ручной список классов, drag&drop и внутренний заголовок браузера. */
+.originate-sub-interface .spell-browser-section > h4,
+.originate-sub-interface .spell-browser-section .class-filter-group,
+.originate-sub-interface .spell-browser-section .drag-drop-hint {
+    display: none !important;
+}
+
+/* Экран фокусов/заклинаний занимает всю рабочую область между шапкой и кнопками. */
+.originate-sub-interface:has(.spell-browser-section) {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+}
+
+.originate-sub-interface:has(.spell-browser-section) .sub-interface-header {
+    margin-bottom: 0 !important;
+}
+
+.originate-sub-interface:has(.spell-browser-section) .sub-interface-content {
+    box-sizing: border-box !important;
+    display: flex !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+}
+
+.originate-sub-interface:has(.spell-browser-section) .wizard-step-content.choice-step {
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Убираем старое fixed-позиционирование и карточную рамку. */
+.originate-sub-interface .spell-browser-section.page-wrapper {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    z-index: auto !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.originate-sub-interface .spell-browser-container {
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Слева остаются только поиск и школа. */
+.originate-sub-interface .spell-browser-sidebar {
+    box-sizing: border-box !important;
+    flex: 0 0 260px !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: .8rem .9rem !important;
+    gap: .7rem !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* Список фокусов/заклинаний использует всё оставшееся место. */
+.originate-sub-interface .spell-browser-main {
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: .5rem .75rem .35rem !important;
+    gap: .4rem !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.originate-sub-interface .spell-results-list {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: .6rem !important;
+    padding: .25rem .45rem .25rem .25rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+/* Выбранные фокусы остаются снизу, но без отдельной карточной рамки. */
+.originate-sub-interface .selected-spells-area {
+    box-sizing: border-box !important;
+    flex: 0 0 86px !important;
+    margin: 0 !important;
+    padding: .45rem .65rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+@media (max-width: 1300px) {
+    .originate-sub-interface .spell-browser-sidebar {
+        flex-basis: 230px !important;
+        width: 230px !important;
+        min-width: 230px !important;
+        max-width: 230px !important;
+        padding-left: .65rem !important;
+        padding-right: .65rem !important;
+    }
+
+    .originate-sub-interface .spell-results-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
