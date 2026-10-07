@@ -17356,3 +17356,12 @@ body.originate-active .character-forge-item-sheet-front {
     padding: 0 0 6px !important;
     text-align: left !important;
 }
+
+
+/* ============================================================
+   Character Forge 1.3.84 — class heading alignment
+   ============================================================ */
+
+.view-selection-root.step-class .cinematic-nav .class-nav-heading {
+    text-align: left !important;
+}
