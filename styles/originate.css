@@ -15485,3 +15485,53 @@ body.originate-active .character-forge-item-sheet-front {
         font-size: .58rem !important;
     }
 }
+
+
+/* ============================================================
+   Character Forge 1.3.72 — точное центрирование сетки подклассов
+   ============================================================ */
+
+/* Убираем влияние flex-раскладки: панель обычная, сетка центрируется margin:auto. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-panel {
+    display: block !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+}
+
+/* 8 × 82px + 7 × 8px + 16px внутренних отступов = 728px.
+   Фиксированная контентная ширина убирает лишний отступ слева. */
+.originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+    box-sizing: border-box !important;
+    width: 728px !important;
+    max-width: calc(100% - 8px) !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    margin: 0 auto !important;
+    padding: 8px !important;
+    grid-template-columns: repeat(8, 82px) !important;
+    justify-content: center !important;
+    justify-items: center !important;
+    align-content: start !important;
+    column-gap: 8px !important;
+    row-gap: 8px !important;
+    scrollbar-gutter: auto !important;
+}
+
+/* Сохраняем симметричное центрирование и на адаптивных вариантах. */
+@media (max-width: 1500px) {
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+        width: 548px !important;
+        max-width: calc(100% - 8px) !important;
+        grid-template-columns: repeat(6, 82px) !important;
+        margin: 0 auto !important;
+    }
+}
+
+@media (max-width: 1150px) {
+    .originate-progression-wizard .subclass-progression-selection .subclass-choice-grid {
+        width: 368px !important;
+        max-width: calc(100% - 8px) !important;
+        grid-template-columns: repeat(4, 82px) !important;
+        margin: 0 auto !important;
+    }
+}
