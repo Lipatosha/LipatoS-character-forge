@@ -919,9 +919,9 @@ function getSubclassOptionKey(option = {}) {
  * @param {string|null} config.selectedUuid 已选子职 UUID
  * @returns {string} 卡片区域 HTML（不含 header/footer）
  */
-export function renderSubclassCards(options, { selectedUuid = null, grid = false } = {}) {
+export function renderSubclassCards(options, { selectedUuid = null } = {}) {
     if (!options || options.length === 0) {
-        return `<p class="subclass-nav-empty">${game.i18n.localize('ORIGINATE.UI.Progression.NoSubclassAvailable')}</p>`;
+        return `<p class="subclass-choice-empty">${game.i18n.localize('ORIGINATE.UI.Progression.NoSubclassAvailable')}</p>`;
     }
 
     const selectedKey = String(selectedUuid || '');
@@ -930,16 +930,16 @@ export function renderSubclassCards(options, { selectedUuid = null, grid = false
             && (selectedKey === String(opt.uuid || '') || selectedKey === String(opt.id || ''));
         return `
             <button type="button"
-                class="nav-item subclass-progression-nav-item${grid ? ' subclass-grid-item' : ''}${isSelected ? ' selected' : ''}"
+                class="subclass-choice-card${isSelected ? ' selected' : ''}"
                 data-id="${escapeSubclassText(opt.id)}"
                 data-subclass-uuid="${escapeSubclassText(opt.uuid)}"
                 aria-pressed="${isSelected}"
                 title="${escapeSubclassText(opt.name)}">
-                <span class="nav-icon-wrapper">
+                <span class="subclass-choice-icon-wrap">
                     <img src="${escapeSubclassText(opt.img || 'icons/svg/mystery-man.svg')}"
-                        class="nav-icon" alt="">
+                        class="subclass-choice-icon" alt="">
                 </span>
-                <span class="nav-label">${escapeSubclassText(opt.name)}</span>
+                <span class="subclass-choice-label">${escapeSubclassText(opt.name)}</span>
             </button>
         `;
     }).join('');
@@ -977,28 +977,10 @@ export function renderSubclassSelectionPanel(options, { selectedUuid = null } = 
                     ${escapeSubclassText(initialTitle)}
                 </h2>
 
-                <nav class="cinematic-nav subclass-progression-nav"
+                <div class="subclass-choice-panel"
                     aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}">
-                    <div class="nav-track" data-subclass-track>
+                    <div class="subclass-choice-grid" data-subclass-track>
                         ${renderSubclassCards(options, { selectedUuid })}
-                    </div>
-                    <button type="button" class="nav-grid-expand-btn subclass-expand-btn"
-                        data-subclass-expand hidden
-                        data-tooltip="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.GridSelector.Expand'))}">
-                        <i class="fas fa-th"></i>
-                    </button>
-                </nav>
-
-                <div class="subclass-expanded-grid" data-subclass-grid hidden>
-                    <div class="subclass-expanded-grid-header">
-                        <h3>${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Progression.SelectSubclass'))}</h3>
-                        <button type="button" class="subclass-grid-close" data-subclass-grid-close
-                            aria-label="${escapeSubclassText(game.i18n.localize('ORIGINATE.UI.Button.Close'))}">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="subclass-expanded-grid-items">
-                        ${renderSubclassCards(options, { selectedUuid, grid: true })}
                     </div>
                 </div>
             </section>
@@ -1012,9 +994,6 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
     const content = panel?.querySelector?.('[data-subclass-detail-content]');
     const stageTitle = panel?.querySelector?.('[data-subclass-stage-title]');
     const track = panel?.querySelector?.('[data-subclass-track]');
-    const expandButton = panel?.querySelector?.('[data-subclass-expand]');
-    const grid = panel?.querySelector?.('[data-subclass-grid]');
-    const closeGrid = panel?.querySelector?.('[data-subclass-grid-close]');
     if (!panel || !content) return null;
 
     const optionByKey = new Map();
@@ -1023,7 +1002,7 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         if (option?.id) optionByKey.set(String(option.id), option);
     }
 
-    const cards = Array.from(panel.querySelectorAll('.subclass-progression-nav-item'));
+    const cards = Array.from(panel.querySelectorAll('.subclass-choice-card'));
 
     const showDetails = option => {
         if (!option) return;
@@ -1049,7 +1028,6 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         }
 
         showDetails(option);
-        if (grid) grid.hidden = true;
         if (notify && typeof onSelect === 'function') onSelect(option, card);
         return option;
     };
@@ -1063,21 +1041,9 @@ export function bindSubclassSelectionPanel(root, options, { selectedUuid = null,
         });
     }
 
-    expandButton?.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (grid) grid.hidden = false;
-    });
-    closeGrid?.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (grid) grid.hidden = true;
-    });
-
     const updateOverflowButton = () => {
-        if (!track || !expandButton) return;
-        const hasOverflow = track.scrollWidth > track.clientWidth + 4;
-        expandButton.hidden = !hasOverflow;
+        if (!track) return;
+        track.classList.toggle('has-vertical-overflow', track.scrollHeight > track.clientHeight + 4);
     };
     requestAnimationFrame(updateOverflowButton);
     window.addEventListener('resize', updateOverflowButton, { passive: true, once: true });
