@@ -10,6 +10,7 @@ import {
     processHtmlDescription,
     renderSubclassSelectionPanel
 } from '../shared/progression-renderer.js';
+import { prepareSubclassOptions } from '../shared/subclass-description.js';
 import {
     applyPreparedListSpell,
     applySpellConfigToItemData,
@@ -2915,7 +2916,8 @@ export const ProgressionMixin = (Base) => {
 
             // 1. 获取所有可用子职
             // Adrian: 这里会根据你选的职业过滤子职，别想着法师选狂战士子职
-            const subclassOptions = await this.dataManager.getOptions('subclass', this.context);
+            const rawSubclassOptions = await this.dataManager.getOptions('subclass', this.context);
+            const subclassOptions = await prepareSubclassOptions(rawSubclassOptions, this.dataManager);
 
             // 2. 渲染子职选择界面 (使用统一的图三样式)
             let overlay = this.element.querySelector('.originate-progression-wizard');
