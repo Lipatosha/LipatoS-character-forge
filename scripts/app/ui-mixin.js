@@ -3006,9 +3006,32 @@ export const UIMixin = (Base) => class extends Base {
             const baseMax = parseInt(section.dataset.count) || 0;
             const canReplace = section.dataset.canReplace === 'true';
             const isPureReplacement = section.dataset.pureReplacement === 'true';
-            // 支持 .item-choices-list 和 .feature-grid-list（紧凑视图）
-            const checkboxes = section.querySelectorAll('.item-choices-list input[type="checkbox"], .feature-grid-list input[type="checkbox"]');
+            // section сам является .item-choices-list в мастере создания,
+            // поэтому querySelectorAll('.item-choices-list input...') раньше не находил
+            // его прямые checkbox. Берём все item-choice checkbox внутри секции напрямую.
+            const checkboxes = section.querySelectorAll('input[type="checkbox"][name^="item-choice-"], .feature-grid-list input[type="checkbox"]');
             const replacementRadios = section.querySelectorAll('.replacement-section input[type="radio"]');
+
+            // Не полагаемся на нативное поведение <label>: в Foundry 13 / D&D5e 6
+            // оно может теряться из-за перекрывающих слоёв/tooltip. Карточка сама
+            // переключает скрытый checkbox и отправляет обычный change.
+            section.querySelectorAll('.option-card').forEach(card => {
+                const cb = card.querySelector('input[type="checkbox"][name^="item-choice-"]');
+                if (!cb || card.dataset.characterForgeItemClickBound === 'true') return;
+                card.dataset.characterForgeItemClickBound = 'true';
+
+                card.addEventListener('click', event => {
+                    if (event.button !== undefined && event.button !== 0) return;
+                    if (event.target.closest('a, button, select, textarea')) return;
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    cb.checked = !cb.checked;
+                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                    card.classList.toggle('selected', cb.checked);
+                });
+            });
             const replacementTargetList = section.querySelector('.replacement-target-list');
 
             if (isPureReplacement) {
