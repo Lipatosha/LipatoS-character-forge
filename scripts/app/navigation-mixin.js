@@ -118,6 +118,7 @@ export const NavigationMixin = (Base) => class extends Base {
             await this._animateTransition(() => {
                 this.currentStep = nextStep;
                 this._scrollPos = 0; // 重置滚动位置，新的一页，新的开始
+                this._scrollTop = 0;
                 this._currentFolder = null; // 退出文件夹，别迷路了
                 this._resetLeftDrawerState();
             });
@@ -165,6 +166,7 @@ export const NavigationMixin = (Base) => class extends Base {
             await this._animateTransition(() => {
                 this.currentStep = prevStep;
                 this._scrollPos = 0;
+                this._scrollTop = 0;
                 this._currentFolder = null;
                 this._resetLeftDrawerState();
             });
@@ -198,11 +200,12 @@ export const NavigationMixin = (Base) => class extends Base {
         const previousId = this.context[type];
         this._syncLeftDrawerStateFromDom();
 
-        // 保存当前滚动位置，防止重新渲染时重置
-        // 用户体验细节，虽然他们可能根本注意不到
+        // Сохраняем обе координаты: классы/расы/предыстории прокручиваются
+        // вертикально и не должны прыгать наверх после выбора карточки.
         const navTrack = this.element.querySelector('.nav-track');
         if (navTrack) {
             this._scrollPos = navTrack.scrollLeft;
+            this._scrollTop = navTrack.scrollTop;
         }
 
         const options = await this.dataManager.getOptions(type, this.context, this._currentFolder);
@@ -214,6 +217,7 @@ export const NavigationMixin = (Base) => class extends Base {
             // 进入文件夹，就像爱丽丝掉进兔子洞
             this._currentFolder = id;
             this._scrollPos = 0;
+            this._scrollTop = 0;
             this.render();
         } else {
             // 选中选项
@@ -312,6 +316,7 @@ export const NavigationMixin = (Base) => class extends Base {
         }
 
         this._scrollPos = 0;
+        this._scrollTop = 0;
         this.render();
     }
 
